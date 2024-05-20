@@ -2,6 +2,7 @@
 // https://tailwindcss.com/docs/configuration
 
 const plugin = require("tailwindcss/plugin")
+const { colors: defaultColors } = require('tailwindcss/defaultTheme')
 const fs = require("fs")
 const path = require("path")
 
@@ -12,10 +13,63 @@ module.exports = {
     "../lib/ride_along_web/**/*.*ex"
   ],
   theme: {
+    fontFamily: {
+      "inter-thin": ["InterThin"],
+      "inter-extralight": ["InterExtraLight"],
+      "inter-light": ["InterLight"],
+      "inter-normal": ["InterNormal"],
+      "inter-medium": ["InterMedium"],
+      "inter-semibold": ["InterSemiBold"],
+      "inter-bold": ["InterBold"],
+      "inter-extrabold": ["InterExtraBold"],
+      "inter-black": ["InterBlack"],
+      helvetica: ["Helvetica Neue", "system-ui", "sans-serif"],
+      sans: ["InterNormal", "system-ui", "sans-serif"],
+    },
     extend: {
       colors: {
-        brand: "#FD4F00",
-      }
+        ...defaultColors,
+        "mbta-blue": "#003DA5",
+        "mbta-green": "#00843D",
+        "mbta-red": "#DA291C",
+        "mbta-orange": "#ED8B00",
+        "mbta-silver": "#7C878E",
+        "mbta-purple": "#80276C",
+        "mbta-bus": "#FFC72C",
+        "mbta-ferry": "#008EAA",
+        "mbta-ride": "#59BEC9",
+        "mbta-swa": "#00B5E2",
+        "mbta-gray-dark": "#212322",
+        "mbta-winter-blue": "#13294B",
+        "mbta-midwinter-blue": "#147BD1",
+        "light-silver": "#D9D9D9",
+        blue: {
+          300: "#A1C6ED",
+          500: "#165C96",
+          600: "#092E4D",
+        },
+        red: {
+          500: "#F2DEDE",
+          600: "#B3000F",
+        },
+        yellow: {
+          500: "#E59700",
+        },
+        gray: {
+          200: "#E9EAED"
+        },
+        "callout-light-blue": "#CFE2FF",
+        "callout-light-yellow": "#FFF7BF",
+        "callout-light-green": "#DFF0D8",
+        "callout-light-red": "#F2DEDE",
+        "callout-outline-blue": "#B6D4FE",
+        "callout-outline-yellow": "#FFDD00",
+        "callout-outline-green": "#BADBCC",
+        "callout-outline-red": "#B3000F",
+        "callout-dark-blue": "#084298",
+        "callout-dark-green": "#145A06",
+        "callout-dark-red": "#B3000F",
+      },
     },
   },
   plugins: [

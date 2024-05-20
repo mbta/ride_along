@@ -32,6 +32,10 @@ defmodule RideAlongWeb.ConnCase do
   end
 
   setup _tags do
-    {:ok, conn: Phoenix.ConnTest.build_conn()}
+    conn =
+      Phoenix.ConnTest.build_conn()
+      |> Plug.Conn.put_req_header("x-forwarded-proto", "https")
+
+    {:ok, conn: conn}
   end
 end

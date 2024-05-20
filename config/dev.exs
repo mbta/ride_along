@@ -33,6 +33,8 @@ config :ride_along, RideAlongWeb.Endpoint,
     ]
   ]
 
+config :ride_along, RideAlongWeb.PageController, redirect_to: nil
+
 # Enable dev routes for dashboard and mailbox
 config :ride_along, dev_routes: true
 

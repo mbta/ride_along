@@ -21,6 +21,9 @@ config :ride_along, RideAlongWeb.Endpoint,
   pubsub_server: RideAlong.PubSub,
   live_view: [signing_salt: "oH49ZB9T"]
 
+config :ride_along, RideAlongWeb.PageController,
+  redirect_to: "https://www.mbta.com/accessibility/the-ride"
+
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.17.11",
