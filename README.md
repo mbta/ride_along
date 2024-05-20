@@ -6,6 +6,8 @@ A small pair of apps to enable paratransit riders to see the location and ETA of
 
 To start your Phoenix server:
 
+  * Run `mise install` to install the correct versions of Elixir/Erlang/NodeJS
+  * Run `npm i --prefix assets` to install NodeJS packages
   * Run `mix setup` to install and setup dependencies
   * Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
 
