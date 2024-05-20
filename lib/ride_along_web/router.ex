@@ -2,6 +2,7 @@ defmodule RideAlongWeb.Router do
   use RideAlongWeb, :router
 
   pipeline :browser do
+    plug Plug.SSL, host: nil, rewrite_on: [:x_forwarded_proto]
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
