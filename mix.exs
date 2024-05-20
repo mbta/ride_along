@@ -5,9 +5,12 @@ defmodule RideAlong.MixProject do
     [
       app: :ride_along,
       version: "0.1.0",
-      elixir: "~> 1.14",
+      elixir: "~> 1.16",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
+      test_coverage: [
+        summary: [threshold: 30]
+      ],
       aliases: aliases(),
       deps: deps()
     ]
@@ -52,7 +55,10 @@ defmodule RideAlong.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
-      {:bandit, "~> 1.2"}
+      {:bandit, "~> 1.2"},
+      {:credo, "~> 1.7", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.4", only: :dev, runtime: false},
+      {:sobelow, "~> 0.13.0", only: :dev, runtime: false}
     ]
   end
 
@@ -64,7 +70,7 @@ defmodule RideAlong.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get", "assets.setup", "assets.build"],
+      setup: ["deps.get", "assets.setup", "assets.build", "phx.gen.cert"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.build": ["tailwind ride_along", "esbuild ride_along"],
       "assets.deploy": [
