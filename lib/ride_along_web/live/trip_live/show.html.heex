@@ -1,0 +1,18 @@
+<div class="flex flex-col-reverse h-dvh">
+  <div class="p-2 basis-24 bg-slate-600 text-white">
+    <div>
+      <.link
+        class="float-right rounded-full border-solid border border-white p-1"
+        navigate="tel:844-427-7433"
+      >
+        <.icon name="hero-phone" class="aspect-square w-3 h-3" />
+        <span class="sr-only"><% gettext("Call The RIDE") %></span>
+      </.link>
+    </div>
+    <div><span class="font-bold"><%= gettext("Driver Name") %>:</span> Baby Driver</div>
+    <div><span class="font-bold"><%= gettext("Vehicle") %>:</span> MA 123456</div>
+  </div>
+  <div phx-ignore class="flex-1">
+    <div id="map" class="h-full" phx-hook="Leaflet"></div>
+  </div>
+</div>

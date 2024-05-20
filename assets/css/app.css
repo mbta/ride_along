@@ -1,5 +1,23 @@
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
+@import "leaflet/dist/leaflet.css";
 
 /* This file is for your main application CSS */
+@font-face {
+    font-family: "InterNormal";
+    font-weight: 400;
+    src: url("../fonts/Inter-Normal.ttf");
+}
+
+@font-face {
+    font-family: "InterBold";
+    font-weight: 700;
+    src: url("../fonts/Inter-Bold.ttf");
+}
+
+body {
+  font-family: "InterNormal", system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+}
