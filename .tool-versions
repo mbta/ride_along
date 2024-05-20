@@ -1,0 +1,4 @@
+elixir    1.16.2-otp-26
+erlang    26.2.5
+nodejs    20.13.1
+adr-tools 3.0.0
