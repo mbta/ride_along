@@ -24,15 +24,27 @@ import topbar from "../vendor/topbar"
 // Leaflet for maps
 import "leaflet";
 
+let locationIcon = L.icon({
+  iconUrl: "/images/icon-circle-locations-default.svg",
+  iconAnchor: [15, 15],
+  iconSize: [30, 30],
+});
+
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let Hooks = {}
 Hooks.Leaflet = {
   mounted() {
-    this.map = L.map(this.el).setView([42.3516728,-71.0718109], 15);
+    const centerOfBoston = [42.3516728,-71.0718109]
+    this.map = L.map(this.el).setView(centerOfBoston, 15);
     L.tileLayer('https://cdn.mbta.com/osm_tiles/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(this.map);
+    L.marker(centerOfBoston,
+             {
+               icon: locationIcon,
+               alt: 'Boston, MA'}
+            ).addTo(this.map);
   }
 }
 let liveSocket = new LiveSocket("/live", Socket, {

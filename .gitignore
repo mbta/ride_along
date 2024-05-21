@@ -37,3 +37,4 @@ npm-debug.log
 /assets/node_modules/
 
 /priv/cert/*.pem
+.DS_Store
