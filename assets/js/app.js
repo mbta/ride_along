@@ -23,11 +23,18 @@ import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 // Leaflet for maps
 import "leaflet";
+import "leaflet-rotatedmarker";
 
 let locationIcon = L.icon({
   iconUrl: "/images/icon-circle-locations-default.svg",
   iconAnchor: [15, 15],
   iconSize: [30, 30],
+});
+
+let vehicleIcon = L.icon({
+  iconUrl: "/images/icon-vehicle-bordered.svg",
+  iconAnchor: [20, 20],
+  iconSize: [40, 40],
 });
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
@@ -43,8 +50,15 @@ Hooks.Leaflet = {
     L.marker(centerOfBoston,
              {
                icon: locationIcon,
-               alt: 'Boston, MA'}
-            ).addTo(this.map);
+               alt: 'Boston, MA'
+             }).addTo(this.map);
+
+    L.marker([42.3516768,-71.0695149],
+             {
+               icon: vehicleIcon,
+               rotationOrigin: "center center",
+               rotationAngle: 65
+             }).addTo(this.map);
   }
 }
 let liveSocket = new LiveSocket("/live", Socket, {
