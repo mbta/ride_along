@@ -34,8 +34,8 @@ defmodule RideAlongWeb.TripLive.Show do
       |> assign(:destination, @destination)
       |> assign(:now, DateTime.utc_now())
       |> assign(:route, nil)
+    |> request_route()
 
-    request_route!(socket)
     {:noreply, socket}
   end
 
@@ -43,25 +43,19 @@ defmodule RideAlongWeb.TripLive.Show do
   def handle_event("vehicle-moved", data, socket) do
     vehicle = socket.assigns.vehicle
     new_vehicle = %{vehicle | lat: data["lat"], lon: data["lng"]}
-    socket = assign(socket, :vehicle, new_vehicle)
 
-    if vehicle != new_vehicle do
-      request_route!(socket)
-    end
-
-    {:noreply, socket}
+    {:noreply, socket
+    |> assign(:vehicle, new_vehicle)
+    |> request_route()}
   end
 
   def handle_event("destination-moved", data, socket) do
     destination = socket.assigns.destination
     new_destination = %{destination | lat: data["lat"], lon: data["lng"]}
-    socket = assign(socket, :destination, new_destination)
 
-    if destination != new_destination do
-      request_route!(socket)
-    end
-
-    {:noreply, socket}
+    {:noreply, socket
+    |> assign(:destination, new_destination)
+    |> request_route()}
   end
 
   @impl true
@@ -69,7 +63,8 @@ defmodule RideAlongWeb.TripLive.Show do
     {:noreply, assign(socket, :now, DateTime.utc_now())}
   end
 
-  def handle_info({_ref, {:ok, %Route{} = route}}, socket) do
+  @impl true
+  def handle_async(:route, {:ok, %Route{} = route}, socket) do
     {bbox1, bbox2} = route.bbox
     vehicle = socket.assigns.vehicle
     new_vehicle = %{vehicle | bearing: route.bearing}
@@ -85,20 +80,15 @@ defmodule RideAlongWeb.TripLive.Show do
      })}
   end
 
-  def handle_info({_ref, {:error, _}}, socket) do
+  def handle_async(:route, _, socket) do
     # ignore for now
     {:noreply, socket}
   end
 
-  def handle_info({:DOWN, _, _, _, _}, socket) do
-    {:noreply, socket}
-  end
-
-  defp request_route!(socket) do
+  defp request_route(socket) do
     source = socket.assigns.vehicle
     destination = socket.assigns.destination
-    # TODO replace with |> start_async
-    Task.async(OpenRouteService, :directions, [source, destination])
+    start_async(socket, :route, fn -> OpenRouteService.directions(source, destination) end)
   end
 
   def calculate_eta(%{route: %Route{}} = assigns) do
