@@ -1,0 +1,87 @@
+defmodule RideAlong.OpenRouteService do
+  @moduledoc """
+  Interface to the OpenRouteService API.
+
+  Currently, we're using this to calculate the route between a vehicle and the
+  destination, along with the ETA (based on the latest GPS ping and the travel
+  time).
+  """
+
+  defmodule Location do
+    @moduledoc """
+    Struct representing a location to query (either source or destination).
+
+    Mostly so that clients don't need to remember the order of latitude/longitude.
+    """
+    defstruct [:lat, :lon]
+
+    def from_coordinations([lon, lat]) do
+      %__MODULE__{lat: lat, lon: lon}
+    end
+  end
+
+  defmodule Route do
+    @moduledoc """
+    A single route returned from the OpenRouteServiceAPI.
+    """
+    defstruct [:timestamp, :bbox, :polyline, :distance, :duration]
+  end
+
+  def directions(source, destination) do
+    query = %{
+      id: request_id(),
+      units: "mi",
+      coordinates: [
+        [source.lon, source.lat],
+        [destination.lon, destination.lat]
+      ]
+    }
+
+    case Req.post(req(), url: "/ors/v2/directions/driving-car", json: query) do
+      {:ok, %{status: 200, body: body}} ->
+        {:ok, parse_response(body)}
+
+      {:error, _} = error ->
+        error
+    end
+  end
+
+  defp req do
+    Req.new(Application.get_env(:ride_along, __MODULE__)[:req_config])
+  end
+
+  defp request_id do
+    16
+    |> :crypto.strong_rand_bytes()
+    |> Base.url_encode64(padding: false)
+  end
+
+  defp parse_response(body) do
+    %{
+      "metadata" => %{
+        "timestamp" => timestamp_ms
+      },
+      "routes" => [
+        %{
+          "summary" => %{
+            "distance" => distance,
+            "duration" => duration
+          },
+          "bbox" => [bbox_lon1, bbox_lat1, bbox_lon2, bbox_lat2],
+          "geometry" => polyline
+        }
+        | _
+      ]
+    } = body
+
+    %__MODULE__.Route{
+      timestamp: DateTime.from_unix!(timestamp_ms, :millisecond),
+      bbox:
+        {%__MODULE__.Location{lat: bbox_lat1, lon: bbox_lon1},
+         %__MODULE__.Location{lat: bbox_lat2, lon: bbox_lon2}},
+      polyline: polyline,
+      distance: distance,
+      duration: duration
+    }
+  end
+end

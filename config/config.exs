@@ -24,6 +24,11 @@ config :ride_along, RideAlongWeb.Endpoint,
 config :ride_along, RideAlongWeb.PageController,
   redirect_to: "https://www.mbta.com/accessibility/the-ride"
 
+config :ride_along, RideAlong.OpenRouteService,
+  req_config: [
+    base_url: "http://localhost:8082/"
+  ]
+
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.17.11",

@@ -7,6 +7,11 @@ config :ride_along, RideAlongWeb.Endpoint,
   secret_key_base: "j4HS1A9X2jrCQn8zLal1ivgnrqqjvyX1kJqUlCIkxrAVIrb6mTf9nfvh4xCmGFRV",
   server: false
 
+config :ride_along, RideAlong.OpenRouteService,
+  req_config: [
+    plug: {Req.Test, RideAlong.OpenRouteService}
+  ]
+
 # Print only warnings and errors during test
 config :logger, level: :warning
 
