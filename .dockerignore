@@ -1,0 +1,10 @@
+**/*~
+**/.*
+/_build
+/deps
+/assets/node_modules
+**/test
+erl_crash.dump
+/priv/static/*
+Dockerfile
+.dockerignore
