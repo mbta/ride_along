@@ -21,6 +21,5 @@ defmodule RideAlongWeb.TripLiveTest do
     end)
 
     :ok
-
   end
 end

@@ -17,6 +17,8 @@ defmodule RideAlongWeb.TripLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
+    :timer.send_interval(1_000, self(), :countdown)
+
     {:ok,
      socket
      |> push_event("destination", @destination)
@@ -30,7 +32,8 @@ defmodule RideAlongWeb.TripLive.Show do
       |> assign(:page_title, "Track your Trip")
       |> assign(:vehicle, @vehicle)
       |> assign(:destination, @destination)
-      |> assign(:trip, nil)
+      |> assign(:now, DateTime.utc_now())
+      |> assign(:route, nil)
 
     request_route!(socket)
     {:noreply, socket}
@@ -62,6 +65,10 @@ defmodule RideAlongWeb.TripLive.Show do
   end
 
   @impl true
+  def handle_info(:countdown, socket) do
+    {:noreply, assign(socket, :now, DateTime.utc_now())}
+  end
+
   def handle_info({_ref, {:ok, %Route{} = route}}, socket) do
     {bbox1, bbox2} = route.bbox
     vehicle = socket.assigns.vehicle
@@ -70,6 +77,7 @@ defmodule RideAlongWeb.TripLive.Show do
     {:noreply,
      socket
      |> assign(:vehicle, new_vehicle)
+     |> assign(:route, route)
      |> push_event("vehicle", new_vehicle)
      |> push_event("route", %{
        bbox: [[bbox1.lat, bbox1.lon], [bbox2.lat, bbox2.lon]],
@@ -89,6 +97,31 @@ defmodule RideAlongWeb.TripLive.Show do
   defp request_route!(socket) do
     source = socket.assigns.vehicle
     destination = socket.assigns.destination
+    # TODO replace with |> start_async
     Task.async(OpenRouteService, :directions, [source, destination])
+  end
+
+  def calculate_eta(%{route: %Route{}} = assigns) do
+    now = assigns.now
+    query_timestamp = assigns.route.timestamp
+    duration_ms = trunc(assigns.route.duration * 1000)
+    eta = DateTime.add(query_timestamp, duration_ms, :millisecond)
+    time_remaining = DateTime.diff(eta, now, :second)
+
+    cond do
+      time_remaining >= 60 * 60 ->
+        gettext("> 1 hour")
+
+      time_remaining >= 60 ->
+        minutes = div(time_remaining, 60)
+        ngettext("%{count} minute", "%{count} minutes", minutes)
+
+      true ->
+        gettext("< 1 minute")
+    end
+  end
+
+  def calculate_eta(_assigns) do
+    "Unknown"
   end
 end

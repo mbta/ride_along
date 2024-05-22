@@ -11,8 +11,9 @@
     </div>
     <div><span class="font-bold"><%= gettext("Driver Name") %>:</span> Baby Driver</div>
     <div><span class="font-bold"><%= gettext("Vehicle") %>:</span> MA 123456</div>
+    <div><span class="font-bold"><%= gettext("ETA") %>:</span> <%= calculate_eta(assigns) %></div>
   </div>
-  <div phx-ignore class="flex-1">
-    <div id="map" class="h-full" phx-hook="Leaflet"></div>
+  <div class="flex-1">
+    <div id="map" class="h-full" phx-update="ignore" phx-hook="Leaflet"></div>
   </div>
 </div>
