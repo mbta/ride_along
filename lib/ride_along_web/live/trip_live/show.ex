@@ -34,7 +34,7 @@ defmodule RideAlongWeb.TripLive.Show do
       |> assign(:destination, @destination)
       |> assign(:now, DateTime.utc_now())
       |> assign(:route, nil)
-    |> request_route()
+      |> request_route()
 
     {:noreply, socket}
   end
@@ -44,18 +44,20 @@ defmodule RideAlongWeb.TripLive.Show do
     vehicle = socket.assigns.vehicle
     new_vehicle = %{vehicle | lat: data["lat"], lon: data["lng"]}
 
-    {:noreply, socket
-    |> assign(:vehicle, new_vehicle)
-    |> request_route()}
+    {:noreply,
+     socket
+     |> assign(:vehicle, new_vehicle)
+     |> request_route()}
   end
 
   def handle_event("destination-moved", data, socket) do
     destination = socket.assigns.destination
     new_destination = %{destination | lat: data["lat"], lon: data["lng"]}
 
-    {:noreply, socket
-    |> assign(:destination, new_destination)
-    |> request_route()}
+    {:noreply,
+     socket
+     |> assign(:destination, new_destination)
+     |> request_route()}
   end
 
   @impl true
@@ -64,7 +66,7 @@ defmodule RideAlongWeb.TripLive.Show do
   end
 
   @impl true
-  def handle_async(:route, {:ok, %Route{} = route}, socket) do
+  def handle_async(:route, {:ok, {:ok, %Route{} = route}}, socket) do
     {bbox1, bbox2} = route.bbox
     vehicle = socket.assigns.vehicle
     new_vehicle = %{vehicle | bearing: route.bearing}
@@ -88,7 +90,20 @@ defmodule RideAlongWeb.TripLive.Show do
   defp request_route(socket) do
     source = socket.assigns.vehicle
     destination = socket.assigns.destination
-    start_async(socket, :route, fn -> OpenRouteService.directions(source, destination) end)
+
+    old_route =
+      if socket.assigns.route do
+        socket.assigns.route
+      else
+        %{source: %{}, destination: %{}}
+      end
+
+    if Map.take(source, [:lat, :lon]) == Map.take(old_route.source, [:lat, :lon]) and
+         Map.take(destination, [:lat, :lon]) == Map.take(old_route.destination, [:lat, :lon]) do
+      socket
+    else
+      start_async(socket, :route, fn -> OpenRouteService.directions(source, destination) end)
+    end
   end
 
   def calculate_eta(%{route: %Route{}} = assigns) do

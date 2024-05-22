@@ -14,17 +14,22 @@ defmodule RideAlong.OpenRouteService do
     Mostly so that clients don't need to remember the order of latitude/longitude.
     """
     defstruct [:lat, :lon]
-
-    def from_coordinations([lon, lat]) do
-      %__MODULE__{lat: lat, lon: lon}
-    end
   end
 
   defmodule Route do
     @moduledoc """
     A single route returned from the OpenRouteServiceAPI.
     """
-    defstruct [:timestamp, :bbox, :polyline, :bearing, :distance, :duration]
+    defstruct [
+      :timestamp,
+      :bbox,
+      :source,
+      :destination,
+      :polyline,
+      :bearing,
+      :distance,
+      :duration
+    ]
   end
 
   def directions(source, destination) do
@@ -58,7 +63,13 @@ defmodule RideAlong.OpenRouteService do
   defp parse_response(body) do
     %{
       "metadata" => %{
-        "timestamp" => timestamp_ms
+        "timestamp" => timestamp_ms,
+        "query" => %{
+          "coordinates" => [
+            [source_lon, source_lat],
+            [destination_lon, destination_lat]
+          ]
+        }
       },
       "routes" => [
         %{
@@ -91,6 +102,8 @@ defmodule RideAlong.OpenRouteService do
       bbox:
         {%__MODULE__.Location{lat: bbox_lat1, lon: bbox_lon1},
          %__MODULE__.Location{lat: bbox_lat2, lon: bbox_lon2}},
+      source: %__MODULE__.Location{lat: source_lat, lon: source_lon},
+      destination: %__MODULE__.Location{lat: destination_lat, lon: destination_lon},
       bearing: bearing,
       polyline: polyline,
       distance: distance,
