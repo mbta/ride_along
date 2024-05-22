@@ -11,7 +11,8 @@ defmodule RideAlong.OpenRouteServiceTest do
     test "basic route response" do
       destination = %Location{lat: 42.3516728, lon: -71.0718109}
       source = %Location{lat: 42.3516768, lon: -71.0695149}
-      assert {:ok, %Route{}} = OpenRouteService.directions(source, destination)
+      assert {:ok, %Route{} = route} = OpenRouteService.directions(source, destination)
+      assert route.bearing == 255
     end
   end
 
@@ -40,6 +41,27 @@ defmodule RideAlong.OpenRouteServiceTest do
         %{
           "bbox" => [-71.073062, 42.350431, -71.069449, 42.351597],
           "geometry" => "ywnaG`wwpLNjAFPz@hAz@|EbAzFcA^_Bn@eAaG",
+          "segments" => [
+            %{
+              "distance" => 0.314,
+              "duration" => 57.1,
+              "steps" => [
+                %{
+                  "distance" => 0.184,
+                  "duration" => 31.9,
+                  "instruction" => "Head west on Park Plaza",
+                  "maneuver" => %{
+                    "bearing_after" => 255,
+                    "bearing_before" => 0,
+                    "location" => [-71.069449, 42.351488]
+                  },
+                  "name" => "Park Plaza",
+                  "type" => 11,
+                  "way_points" => [0, 5]
+                }
+              ]
+            }
+          ],
           "summary" => %{"distance" => 0.314, "duration" => 57.1},
           "way_points" => [0, 8]
         }

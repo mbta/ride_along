@@ -24,22 +24,27 @@ defmodule RideAlong.OpenRouteService do
     @moduledoc """
     A single route returned from the OpenRouteServiceAPI.
     """
-    defstruct [:timestamp, :bbox, :polyline, :distance, :duration]
+    defstruct [:timestamp, :bbox, :polyline, :bearing, :distance, :duration]
   end
 
   def directions(source, destination) do
-    query = %{
-      id: request_id(),
-      units: "mi",
-      coordinates: [
-        [source.lon, source.lat],
-        [destination.lon, destination.lat]
-      ]
-    }
+    query =
+      %{
+        maneuvers: true,
+        continue_straight: true,
+        units: "mi",
+        coordinates: [
+          [source.lon, source.lat],
+          [destination.lon, destination.lat]
+        ]
+      }
 
     case Req.post(req(), url: "/ors/v2/directions/driving-car", json: query) do
       {:ok, %{status: 200, body: body}} ->
         {:ok, parse_response(body)}
+
+      {:ok, response} ->
+        {:error, response}
 
       {:error, _} = error ->
         error
@@ -48,12 +53,6 @@ defmodule RideAlong.OpenRouteService do
 
   defp req do
     Req.new(Application.get_env(:ride_along, __MODULE__)[:req_config])
-  end
-
-  defp request_id do
-    16
-    |> :crypto.strong_rand_bytes()
-    |> Base.url_encode64(padding: false)
   end
 
   defp parse_response(body) do
@@ -67,6 +66,19 @@ defmodule RideAlong.OpenRouteService do
             "distance" => distance,
             "duration" => duration
           },
+          "segments" => [
+            %{
+              "steps" => [
+                %{
+                  "maneuver" => %{
+                    "bearing_after" => bearing
+                  }
+                }
+                | _
+              ]
+            }
+            | _
+          ],
           "bbox" => [bbox_lon1, bbox_lat1, bbox_lon2, bbox_lat2],
           "geometry" => polyline
         }
@@ -79,6 +91,7 @@ defmodule RideAlong.OpenRouteService do
       bbox:
         {%__MODULE__.Location{lat: bbox_lat1, lon: bbox_lon1},
          %__MODULE__.Location{lat: bbox_lat2, lon: bbox_lon2}},
+      bearing: bearing,
       polyline: polyline,
       distance: distance,
       duration: duration

@@ -24,6 +24,7 @@ import topbar from "../vendor/topbar"
 // Leaflet for maps
 import "leaflet"
 import "leaflet-rotatedmarker"
+import polyline from "polyline-encoded"
 
 let locationIcon = L.icon({
   iconUrl: "/images/icon-circle-locations-default.svg",
@@ -70,18 +71,28 @@ Hooks.Leaflet = {
     this.handleEvent("vehicle", (v) => {
       let location = [v.lat, v.lon]
       if (this.vehicle) {
-        this.vehicle.setLatLng(location)
+        this.vehicle.setLatLng(location).setRotationAngle(v.bearing)
       } else {
         this.vehicle = L.marker(location, {
           icon: vehicleIcon,
           rotationOrigin: "center center",
-          rotationAngle: 65,
+          rotationAngle: v.bearing,
           draggable: true,
           autoPan: true,
         })
           .addTo(this.map)
           .on("move", (e) => this.pushEvent("vehicle-moved", e.latlng))
       }
+    })
+
+    this.handleEvent("route", (r) => {
+      let decoded = polyline.decode(r.polyline)
+      if (this.polyline) {
+        this.polyline.setLatLngs(decoded)
+      } else {
+        this.polyline = L.polyline(decoded, { color: "blue" }).addTo(this.map)
+      }
+      this.map.fitBounds(r.bbox, { padding: [1, 1] })
     })
   },
 }
