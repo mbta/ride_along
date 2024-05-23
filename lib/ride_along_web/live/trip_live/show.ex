@@ -34,6 +34,7 @@ defmodule RideAlongWeb.TripLive.Show do
       |> assign(:destination, @destination)
       |> assign(:now, DateTime.utc_now())
       |> assign(:route, nil)
+      |> assign_eta()
       |> request_route()
 
     {:noreply, socket}
@@ -62,7 +63,10 @@ defmodule RideAlongWeb.TripLive.Show do
 
   @impl true
   def handle_info(:countdown, socket) do
-    {:noreply, assign(socket, :now, DateTime.utc_now())}
+    {:noreply,
+     socket
+     |> assign(:now, DateTime.utc_now())
+     |> assign_eta()}
   end
 
   @impl true
@@ -75,6 +79,7 @@ defmodule RideAlongWeb.TripLive.Show do
      socket
      |> assign(:vehicle, new_vehicle)
      |> assign(:route, route)
+     |> assign_eta()
      |> push_event("vehicle", new_vehicle)
      |> push_event("route", %{
        bbox: [[bbox1.lat, bbox1.lon], [bbox2.lat, bbox2.lon]],
@@ -104,6 +109,10 @@ defmodule RideAlongWeb.TripLive.Show do
     else
       start_async(socket, :route, fn -> OpenRouteService.directions(source, destination) end)
     end
+  end
+
+  defp assign_eta(socket) do
+    assign(socket, :eta_text, calculate_eta(socket.assigns))
   end
 
   def calculate_eta(%{route: %Route{}} = assigns) do
