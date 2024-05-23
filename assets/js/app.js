@@ -86,7 +86,7 @@ Hooks.Leaflet = {
         this.polyline = L.polyline(decoded, { color: "blue" }).addTo(this.map);
       }
 
-      this.map.fitBounds(p.bbox, { padding: [1, 1] });
+      this.map.fitBounds(p.bbox, { padding: [5, 5] });
     });
   },
 };

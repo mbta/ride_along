@@ -75,7 +75,10 @@ defmodule RideAlong.Adept do
     ]
 
     state = %__MODULE__{routes: routes, trips: trips, vehicles: vehicles}
-    Phoenix.PubSub.broadcast!(RideAlong.PubSub, "trips:updated", %{})
+    Phoenix.PubSub.broadcast!(RideAlong.PubSub, "trips:updated", :trips_updated)
+
+    :timer.send_interval(5_000, :update_vehicle)
+
     {:ok, state}
   end
 
@@ -95,5 +98,33 @@ defmodule RideAlong.Adept do
 
   def handle_call({:get_vehicle, vehicle_id}, _from, state) do
     {:reply, Enum.find(state.vehicles, &(&1.vehicle_id == vehicle_id)), state}
+  end
+
+  @impl GenServer
+  def handle_info(:update_vehicle, state) do
+    vehicles =
+      for v <- state.vehicles do
+        v = %{
+          v
+          | lat: float_in_range(42.22786, 42.444343),
+            lon: float_in_range(-71.192145, -70.951662)
+        }
+
+        Phoenix.PubSub.broadcast!(
+          RideAlong.PubSub,
+          "vehicle:#{v.vehicle_id}",
+          {:vehicle_updated, v}
+        )
+
+        v
+      end
+
+    state = %{state | vehicles: vehicles}
+    {:noreply, state}
+  end
+
+  defp float_in_range(low, high) do
+    r = :rand.uniform()
+    low + r * (high - low)
   end
 end

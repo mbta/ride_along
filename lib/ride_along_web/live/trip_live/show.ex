@@ -44,6 +44,13 @@ defmodule RideAlongWeb.TripLive.Show do
      |> assign_eta()}
   end
 
+  def handle_info({:vehicle_updated, v}, socket) do
+    {:noreply,
+     socket
+     |> assign(:vehicle, v)
+     |> request_path()}
+  end
+
   @impl true
   def handle_async(:path, {:ok, {:ok, %Path{} = path}}, socket) do
     {bbox1, bbox2} = path.bbox
@@ -115,16 +122,20 @@ defmodule RideAlongWeb.TripLive.Show do
       [
         trip.house_number,
         trip.address1,
-        trip.address2,
+        trip.address2
       ]
       |> Enum.reject(&(&1 in ["", nil]))
       |> Enum.intersperse(" ")
 
-    alt = Enum.join([
-      street,
-      trip.city,
-      "MA"
-    ], ", ")
+    alt =
+      Enum.join(
+        [
+          street,
+          trip.city,
+          "MA"
+        ],
+        ", "
+      )
 
     Jason.encode_to_iodata!(
       %{
