@@ -49,62 +49,44 @@ Hooks.Leaflet = {
     const centerOfBoston = [42.3516728, -71.0718109];
     this.map = L.map(this.el).setView(centerOfBoston, 15);
     L.tileLayer("https://cdn.mbta.com/osm_tiles/{z}/{x}/{y}.png", {
-      maxZoom: 19,
+      maxZoom: 18,
+      minZoom: 9,
       attribution:
         '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(this.map);
 
-    this.handleEvent("destination", (d) => {
-      let location = [d.lat, d.lon];
-      if (this.destination) {
-        this.destination.setLatLng(location);
-      } else {
-        this.destination = L.marker(location, {
-          icon: locationIcon,
-          alt: d.alt,
-          draggable: true,
-          autoPan: true,
-        })
-          .addTo(this.map)
-          .on(
-            "move",
-            _.debounce(
-              (e) => this.pushEvent("destination-moved", e.latlng),
-              200,
-            ),
-          );
-      }
-    });
+    let destination = JSON.parse(this.el.dataset.destination);
+    let vehicle = this.el.dataset.vehicle;
 
-    this.handleEvent("vehicle", (v) => {
-      let location = [v.lat, v.lon];
+    this.destination = L.marker([destination.lat, destination.lon], {
+          icon: locationIcon,
+          alt: destination.alt
+        })
+          .addTo(this.map);
+
+    this.handleEvent("path", (p) => {
+      let decoded = polyline.decode(p.polyline);
+      let location = decoded[0];
+
       if (this.vehicle) {
-        this.vehicle.setLatLng(location).setRotationAngle(v.bearing);
+        this.vehicle.setLatLng(location).setRotationAngle(p.bearing);
       } else {
         this.vehicle = L.marker(location, {
           icon: vehicleIcon,
-          alt: `${v.vehicle_id}`,
+          alt: vehicle,
           rotationOrigin: "center center",
-          rotationAngle: v.bearing,
-          draggable: true,
-          autoPan: true,
+          rotationAngle: p.bearing,
         })
           .addTo(this.map)
-          .on(
-            "move",
-            _.debounce((e) => this.pushEvent("vehicle-moved", e.latlng), 200),
-          );
       }
-    });
 
-    this.handleEvent("route", (r) => {
-      let decoded = polyline.decode(r.polyline);
       if (this.polyline) {
         this.polyline.setLatLngs(decoded);
       } else {
         this.polyline = L.polyline(decoded, { color: "blue" }).addTo(this.map);
       }
-      this.map.fitBounds(r.bbox, { padding: [1, 1] });
+
+      this.map.fitBounds(p.bbox, { padding: [1, 1] });
     });
   },
 };

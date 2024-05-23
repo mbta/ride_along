@@ -10,11 +10,19 @@
       </.link>
     </div>
     <h1 class="sr-only"><%= @page_title %></h1>
-    <.labeled_field title={gettext("Driver Name")} value="Baby Driver" />
-    <.labeled_field title={gettext("Vehicle")} value={@vehicle.vehicle_id} />
+    <.labeled_field title={gettext("Driver Name")} value={@route.driver_name} />
+    <.labeled_field title={gettext("Vehicle #")} value={@vehicle.vehicle_id} />
     <.labeled_field title={gettext("ETA")} value={@eta_text} />
   </div>
   <div class="flex-1">
-    <div id="map" class="h-full" phx-update="ignore" phx-hook="Leaflet"></div>
+    <div
+      id="map"
+      class="h-full"
+      phx-update="ignore"
+      phx-hook="Leaflet"
+      data-vehicle={gettext("Vehicle number %{vehicle_id}", vehicle_id: @vehicle.vehicle_id)}
+      data-destination={destination(@trip)}
+    >
+    </div>
   </div>
 </div>

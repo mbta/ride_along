@@ -1,65 +1,39 @@
 defmodule RideAlongWeb.TripLive.Show do
   use RideAlongWeb, :live_view
 
+  alias RideAlong.Adept
+  alias RideAlong.Adept.{Route, Trip, Vehicle}
   alias RideAlong.OpenRouteService
-  alias RideAlong.OpenRouteService.Route
-
-  @destination %{
-    alt: "Boston, MA",
-    lat: 42.3516728,
-    lon: -71.0718109
-  }
-  @vehicle %{
-    vehicle_id: 1234,
-    lat: 42.3516768,
-    lon: -71.0695149,
-    bearing: 65
-  }
+  alias RideAlong.OpenRouteService.Route, as: Path
 
   @impl true
-  def mount(_params, _session, socket) do
-    :timer.send_interval(1_000, self(), :countdown)
+  def mount(%{"token" => id}, _session, socket) do
+    with trip = %Trip{} <- Adept.get_trip(id),
+         route = %Route{} <- Adept.get_route(trip.route_id),
+         vehicle = %Vehicle{} <- Adept.get_vehicle(route.vehicle_id) do
+      :timer.send_interval(1_000, :countdown)
+      Phoenix.PubSub.subscribe(RideAlong.PubSub, "vehicle:#{vehicle.vehicle_id}")
 
-    {:ok,
-     socket
-     |> push_event("destination", @destination)
-     |> push_event("vehicle", @vehicle)}
+      socket =
+        socket
+        |> assign(:now, DateTime.utc_now())
+        |> assign(:page_title, gettext("Track your Trip"))
+        |> assign(:trip, trip)
+        |> assign(:route, route)
+        |> assign(:vehicle, vehicle)
+        |> assign(:path, nil)
+        |> assign_eta()
+        |> request_path()
+
+      {:ok, socket}
+    else
+      _ -> raise RideAlongWeb.NotFoundException
+    end
   end
 
   @impl true
-  def handle_params(%{"token" => _id}, _, socket) do
-    socket =
-      socket
-      |> assign(:page_title, gettext("Track your Trip"))
-      |> assign(:vehicle, @vehicle)
-      |> assign(:destination, @destination)
-      |> assign(:now, DateTime.utc_now())
-      |> assign(:route, nil)
-      |> assign_eta()
-      |> request_route()
-
+  def handle_params(_, _, socket) do
     {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("vehicle-moved", data, socket) do
-    vehicle = socket.assigns.vehicle
-    new_vehicle = %{vehicle | lat: data["lat"], lon: data["lng"]}
-
-    {:noreply,
-     socket
-     |> assign(:vehicle, new_vehicle)
-     |> request_route()}
-  end
-
-  def handle_event("destination-moved", data, socket) do
-    destination = socket.assigns.destination
-    new_destination = %{destination | lat: data["lat"], lon: data["lng"]}
-
-    {:noreply,
-     socket
-     |> assign(:destination, new_destination)
-     |> request_route()}
   end
 
   @impl true
@@ -71,44 +45,40 @@ defmodule RideAlongWeb.TripLive.Show do
   end
 
   @impl true
-  def handle_async(:route, {:ok, {:ok, %Route{} = route}}, socket) do
-    {bbox1, bbox2} = route.bbox
-    vehicle = socket.assigns.vehicle
-    new_vehicle = %{vehicle | bearing: route.bearing}
+  def handle_async(:path, {:ok, {:ok, %Path{} = path}}, socket) do
+    {bbox1, bbox2} = path.bbox
 
     {:noreply,
      socket
-     |> assign(:vehicle, new_vehicle)
-     |> assign(:route, route)
+     |> assign(:path, path)
      |> assign_eta()
-     |> push_event("vehicle", new_vehicle)
-     |> push_event("route", %{
+     |> push_event("path", %{
        bbox: [[bbox1.lat, bbox1.lon], [bbox2.lat, bbox2.lon]],
-       polyline: route.polyline
+       bearing: path.bearing,
+       polyline: path.polyline
      })}
   end
 
-  def handle_async(:route, _, socket) do
+  def handle_async(:path, _, socket) do
     # ignore for now
     {:noreply, socket}
   end
 
-  defp request_route(socket) do
+  defp request_path(socket) do
     source = socket.assigns.vehicle
-    destination = socket.assigns.destination
+    destination = socket.assigns.trip
 
-    old_route =
-      if socket.assigns.route do
-        socket.assigns.route
+    old_source =
+      if socket.assigns.path do
+        socket.assigns.path.source
       else
-        %{source: %{}, destination: %{}}
+        %{}
       end
 
-    if Map.take(source, [:lat, :lon]) == Map.take(old_route.source, [:lat, :lon]) and
-         Map.take(destination, [:lat, :lon]) == Map.take(old_route.destination, [:lat, :lon]) do
+    if Map.take(source, [:lat, :lon]) == Map.take(old_source, [:lat, :lon]) do
       socket
     else
-      start_async(socket, :route, fn -> OpenRouteService.directions(source, destination) end)
+      start_async(socket, :path, fn -> OpenRouteService.directions(source, destination) end)
     end
   end
 
@@ -116,11 +86,11 @@ defmodule RideAlongWeb.TripLive.Show do
     assign(socket, :eta_text, calculate_eta(socket.assigns))
   end
 
-  def calculate_eta(%{route: %Route{}} = assigns) do
+  def calculate_eta(%{path: %Path{}} = assigns) do
     now = assigns.now
-    query_timestamp = assigns.route.timestamp
-    duration_ms = trunc(assigns.route.duration * 1000)
-    eta = DateTime.add(query_timestamp, duration_ms, :millisecond)
+    vehicle_timestamp = assigns.vehicle.timestamp
+    duration_ms = trunc(assigns.path.duration * 1000)
+    eta = DateTime.add(vehicle_timestamp, duration_ms, :millisecond)
     time_remaining = DateTime.diff(eta, now, :second)
 
     cond do
@@ -138,6 +108,32 @@ defmodule RideAlongWeb.TripLive.Show do
 
   def calculate_eta(_assigns) do
     "Unknown"
+  end
+
+  def destination(trip) do
+    street =
+      [
+        trip.house_number,
+        trip.address1,
+        trip.address2,
+      ]
+      |> Enum.reject(&(&1 in ["", nil]))
+      |> Enum.intersperse(" ")
+
+    alt = Enum.join([
+      street,
+      trip.city,
+      "MA"
+    ], ", ")
+
+    Jason.encode_to_iodata!(
+      %{
+        lat: trip.lat,
+        lon: trip.lon,
+        alt: alt
+      },
+      escape: :html_safe
+    )
   end
 
   attr :title, :string, required: true
