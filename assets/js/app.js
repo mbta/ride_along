@@ -83,6 +83,7 @@ Hooks.Leaflet = {
       } else {
         this.vehicle = L.marker(location, {
           icon: vehicleIcon,
+          alt: `${v.vehicle_id}`,
           rotationOrigin: "center center",
           rotationAngle: v.bearing,
           draggable: true,

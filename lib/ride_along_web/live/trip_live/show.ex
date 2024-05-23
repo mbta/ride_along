@@ -10,6 +10,7 @@ defmodule RideAlongWeb.TripLive.Show do
     lon: -71.0718109
   }
   @vehicle %{
+    vehicle_id: 1234,
     lat: 42.3516768,
     lon: -71.0695149,
     bearing: 65
@@ -29,7 +30,7 @@ defmodule RideAlongWeb.TripLive.Show do
   def handle_params(%{"token" => _id}, _, socket) do
     socket =
       socket
-      |> assign(:page_title, "Track your Trip")
+      |> assign(:page_title, gettext("Track your Trip"))
       |> assign(:vehicle, @vehicle)
       |> assign(:destination, @destination)
       |> assign(:now, DateTime.utc_now())
