@@ -11,9 +11,7 @@ defmodule RideAlong.Application do
       RideAlongWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:ride_along, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: RideAlong.PubSub},
-      # Start a worker by calling: RideAlong.Worker.start_link(arg)
-      # {RideAlong.Worker, arg},
-      # Start to serve requests, typically the last entry
+      RideAlong.Adept,
       RideAlongWeb.Endpoint
     ]
 
