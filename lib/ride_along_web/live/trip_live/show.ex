@@ -139,4 +139,13 @@ defmodule RideAlongWeb.TripLive.Show do
   def calculate_eta(_assigns) do
     "Unknown"
   end
+
+  attr :title, :string, required: true
+  attr :value, :any, required: true
+
+  def labeled_field(assigns) do
+    ~H"""
+    <div><span class="font-bold"><%= @title %>:</span> <%= @value %></div>
+    """
+  end
 end
