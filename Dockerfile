@@ -64,7 +64,7 @@ ENV MIX_ENV=prod TERM=xterm LANG="C.UTF-8" PORT=4000 PHX_SERVER=true
 COPY --from=app-builder --chown=nobody:root /app/_build/prod/rel/ride_along .
 
 # Ensure SSL support is enabled
-RUN env SECRET_KEY_BASE=fake \
+RUN env SECRET_KEY_BASE=fake ORS_BASE_URL=fake \
   sh -c ' \
      /app/bin/ride_along eval ":crypto.supports()" && \
      /app/bin/ride_along eval ":ok = :public_key.cacerts_load"'

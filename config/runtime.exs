@@ -38,6 +38,11 @@ if config_env() == :prod do
 
   config :ride_along, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
+config :ride_along, RideAlong.OpenRouteService,
+  req_config: [
+    base_url: System.fetch_env!("ORS_BASE_URL")
+  ]
+
   config :ride_along, RideAlongWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
     http: [
