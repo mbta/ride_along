@@ -3,12 +3,13 @@ defmodule RideAlongWeb.TripLive.Show do
 
   alias RideAlong.Adept
   alias RideAlong.Adept.{Route, Trip, Vehicle}
+  alias RideAlong.LinkShortener
   alias RideAlong.OpenRouteService
   alias RideAlong.OpenRouteService.Route, as: Path
 
   @impl true
-  def mount(%{"token" => id}, _session, socket) do
-    with trip = %Trip{} <- Adept.get_trip(id),
+  def mount(%{"token" => token}, _session, socket) do
+    with trip = %Trip{} <- LinkShortener.get_trip(token),
          route = %Route{} <- Adept.get_route(trip.route_id),
          vehicle = %Vehicle{} <- Adept.get_vehicle(route.vehicle_id) do
       :timer.send_interval(1_000, :countdown)

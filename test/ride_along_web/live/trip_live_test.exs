@@ -7,13 +7,15 @@ defmodule RideAlongWeb.TripLiveTest do
     setup :ors
 
     test "displays trip", %{conn: conn} do
-      {:ok, _show_live, html} = live(conn, ~p"/track/t12345")
+      trip = List.first(RideAlong.Adept.all_trips())
+      token = RideAlong.LinkShortener.get_token(trip.trip_id)
+      {:ok, _show_live, html} = live(conn, ~p"/t/#{token}")
       {:ok, document} = Floki.parse_document(html)
       assert Floki.get_by_id(document, "map") != nil
     end
 
     test "unknown trip raises 404", %{conn: conn} do
-      assert_raise RideAlongWeb.NotFoundException, fn -> live(conn, ~p"/track/missing") end
+      assert_raise RideAlongWeb.NotFoundException, fn -> live(conn, ~p"/t/missing") end
     end
   end
 

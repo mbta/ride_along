@@ -22,7 +22,7 @@ defmodule RideAlongWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
-    live "/track/:token", TripLive.Show
+    live "/t/:token", TripLive.Show
   end
 
   # Other scopes may use custom stacks.
