@@ -12,6 +12,7 @@ defmodule RideAlong.MixProject do
         summary: [threshold: 45]
       ],
       aliases: aliases(),
+      preferred_cli_env: ["checks.test": :test],
       deps: deps()
     ]
   end
@@ -79,7 +80,15 @@ defmodule RideAlong.MixProject do
         "tailwind ride_along --minify",
         "esbuild ride_along --minify",
         "phx.digest"
-      ]
+      ],
+      "checks.dev": [
+        "compile --warnings-as-errors",
+        "format --check-formatted",
+        "credo --strict",
+        "sobelow -i Config.HTTPS --skip --exit",
+        "dialyzer"
+      ],
+      "checks.test": ["test --cover"]
     ]
   end
 end
