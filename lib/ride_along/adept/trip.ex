@@ -17,9 +17,31 @@ defmodule RideAlong.Adept.Trip do
     :address1,
     :address2,
     :city,
+    :state,
+    :zip,
     :phone,
     :performed_at
   ]
+
+  def address(%__MODULE__{} = trip) do
+    street =
+      [
+        trip.house_number,
+        trip.address1,
+        trip.address2
+      ]
+      |> Enum.reject(&(&1 in ["", nil]))
+      |> Enum.intersperse(" ")
+
+    Enum.join(
+      [
+        street,
+        trip.city,
+        trip.state || "MA"
+      ],
+      ", "
+    )
+  end
 
   def compare(%__MODULE__{} = a, %__MODULE__{} = b) do
     date_compare = Date.compare(a.date, b.date)

@@ -119,30 +119,11 @@ defmodule RideAlongWeb.TripLive.Show do
   end
 
   def destination(trip) do
-    street =
-      [
-        trip.house_number,
-        trip.address1,
-        trip.address2
-      ]
-      |> Enum.reject(&(&1 in ["", nil]))
-      |> Enum.intersperse(" ")
-
-    alt =
-      Enum.join(
-        [
-          street,
-          trip.city,
-          "MA"
-        ],
-        ", "
-      )
-
     Jason.encode_to_iodata!(
       %{
         lat: trip.lat,
         lon: trip.lon,
-        alt: alt
+        alt: Trip.address(trip)
       },
       escape: :html_safe
     )
