@@ -12,6 +12,7 @@ defmodule RideAlong.Application do
       {DNSCluster, query: Application.get_env(:ride_along, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: RideAlong.PubSub},
       RideAlong.Adept,
+      RideAlong.LinkShortener,
       RideAlongWeb.Endpoint
     ]
 

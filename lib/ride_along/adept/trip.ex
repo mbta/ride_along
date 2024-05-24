@@ -20,4 +20,22 @@ defmodule RideAlong.Adept.Trip do
     :phone,
     :performed_at
   ]
+
+  def compare(%__MODULE__{} = a, %__MODULE__{} = b) do
+    date_compare = Date.compare(a.date, b.date)
+
+    cond do
+      date_compare != :eq ->
+        date_compare
+
+      a.trip_id < b.trip_id ->
+        :lt
+
+      a.trip_id > b.trip_id ->
+        :gt
+
+      true ->
+        :eq
+    end
+  end
 end

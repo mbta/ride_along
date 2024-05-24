@@ -9,7 +9,7 @@ defmodule RideAlong.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       test_coverage: [
-        summary: [threshold: 30]
+        summary: [threshold: 45]
       ],
       aliases: aliases(),
       deps: deps()
@@ -57,6 +57,7 @@ defmodule RideAlong.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.2"},
       {:req, "~> 0.4"},
+      {:stream_data, "~> 1.0", only: :test},
       {:credo, "~> 1.7", only: :dev, runtime: false},
       {:dialyxir, "~> 1.4", only: :dev, runtime: false},
       {:sobelow, "~> 0.13.0", only: :dev, runtime: false}
