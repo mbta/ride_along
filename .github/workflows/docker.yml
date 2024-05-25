@@ -11,7 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -t ride_along .
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          cache-to: type=gha,mode=max
+          cache-from: type=gha
+          tags: ride_along
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
