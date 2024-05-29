@@ -18,6 +18,7 @@ defmodule RideAlong.LinkShortener do
       - increment the last digit by 1 until it does not generate a duplicate
   """
   use GenServer
+  require Logger
 
   alias RideAlong.Adept.Trip
 
@@ -42,6 +43,10 @@ defmodule RideAlong.LinkShortener do
   def init([]) do
     token_map = generate_token_map(RideAlong.Adept.all_trips())
     trip_id_map = Map.new(token_map, fn {token, trip} -> {trip.trip_id, token} end)
+
+    for {trip_id, token} <- trip_id_map do
+      Logger.debug("#{__MODULE__} generated short link trip_id=#{trip_id} token=#{token}")
+    end
 
     state = %__MODULE__{
       token_map: token_map,
