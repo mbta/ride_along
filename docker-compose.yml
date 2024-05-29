@@ -1,0 +1,13 @@
+services:
+  ors:
+    image: ghcr.io/paulswartz/ors:latest
+    ports:
+      - "8082:8082"
+  mq:
+    image: ghcr.io/paulswartz/activemq:5.17.6
+    environment:
+      ACTIVEMQ_WEBADMIN_USERNAME: admin
+      ACTIVEMQ_WEBADMIN_PASSWORD: admin
+    ports:
+      - 1883:1883 # MQTT non-encrypted
+      - 8161:8161 # WebConsole
