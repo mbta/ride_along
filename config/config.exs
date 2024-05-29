@@ -8,6 +8,7 @@
 import Config
 
 config :ride_along,
+  time_zone: "America/New_York",
   generators: [timestamp_type: :utc_datetime],
   gzip_static_assets: false
 
@@ -24,6 +25,13 @@ config :ride_along, RideAlongWeb.Endpoint,
 
 config :ride_along, RideAlongWeb.PageController,
   redirect_to: "https://www.mbta.com/accessibility/the-ride"
+
+config :ride_along, RideAlong.MqttConnection,
+  broker_configs: [],
+  broker_client_prefix: "ride_along"
+
+config :ride_along, RideAlong.SqlPublisher,
+  start: false
 
 config :ride_along, RideAlong.OpenRouteService,
   req_config: [
@@ -59,6 +67,9 @@ config :logger, :console,
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
+
+# Use Tzdata for Elixir timezone actions
+config :elixir, :time_zone_database, Tzdata.TimeZoneDatabase
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

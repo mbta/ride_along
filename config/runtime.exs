@@ -20,6 +20,18 @@ if System.get_env("PHX_SERVER") do
   config :ride_along, RideAlongWeb.Endpoint, server: true
 end
 
+if System.get_env("SQLCMDSERVER") != nil and config_env() != :test do
+  config :ride_along, RideAlong.SqlPublisher,
+    database: [
+      hostname: System.fetch_env!("SQLCMDSERVER"),
+      port: 1433,
+      username: System.get_env("SQLCMDUSER") || "",
+      password: System.get_env("SQLCMDPASSWORD") || "",
+      database: "ADEPT6_GCS"
+    ],
+    start: true
+end
+
 if config_env() == :prod do
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you

@@ -13,6 +13,7 @@ defmodule RideAlong.Application do
       {Phoenix.PubSub, name: RideAlong.PubSub},
       RideAlong.Adept,
       RideAlong.LinkShortener,
+      {RideAlong.SqlPublisher, Application.get_env(:ride_along, RideAlong.SqlPublisher)},
       RideAlongWeb.Endpoint
     ]
 

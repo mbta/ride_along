@@ -38,6 +38,10 @@ config :ride_along, RideAlongWeb.PageController, redirect_to: nil
 config :ride_along, RideAlong.LinkShortener,
   secret: "UHZ0Lf/EGdIYNHWwTKoowoRJt+HFsrP8iwKPp/2XthQYE2BhRhjtfGJDLU0b70HI"
 
+config :ride_along, RideAlong.MqttConnection,
+  broker_configs: ["mqtt://system:manager@localhost/"],
+  broker_topic_prefix: "ride-along-local/"
+
 # Enable dev routes for dashboard and mailbox
 config :ride_along, dev_routes: true
 

@@ -7,3 +7,4 @@
 erl_crash.dump
 Dockerfile
 .dockerignore
+/priv/cert

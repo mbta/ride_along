@@ -9,7 +9,7 @@ scan:
   scanners:
     - vuln
     - secret
-    - config
+    - misconfig
 db:
   no-progress: true
 vulnerability:
