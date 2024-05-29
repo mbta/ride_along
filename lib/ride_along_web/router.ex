@@ -25,6 +25,10 @@ defmodule RideAlongWeb.Router do
     live "/t/:token", TripLive.Show
   end
 
+  scope "/", RideAlongWeb do
+    get "/_health", HealthController, :index
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", RideAlongWeb do
   #   pipe_through :api
