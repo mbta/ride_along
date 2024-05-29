@@ -8,7 +8,8 @@
 import Config
 
 config :ride_along,
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  gzip_static_assets: false
 
 # Configures the endpoint
 config :ride_along, RideAlongWeb.Endpoint,

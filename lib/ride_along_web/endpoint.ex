@@ -22,7 +22,7 @@ defmodule RideAlongWeb.Endpoint do
   plug Plug.Static,
     at: "/",
     from: :ride_along,
-    gzip: false,
+    gzip: Application.compile_env(:ride_along, :gzip_static_assets),
     only: RideAlongWeb.static_paths()
 
   # Code reloading can be explicitly enabled under the

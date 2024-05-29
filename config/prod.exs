@@ -8,6 +8,9 @@ import Config
 config :ride_along, RideAlongWeb.Endpoint,
   cache_static_manifest: "priv/static/cache_manifest.json"
 
+config :ride_along,
+  gzip_static_assets: true
+
 config :logger, level: :debug
 
 # Runtime production configuration, including reading
