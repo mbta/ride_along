@@ -66,32 +66,34 @@ defmodule RideAlong.Adept do
 
   def handle_cast({:set_vehicles, vehicles}, state) do
     vehicles =
-      Enum.reduce(vehicles, state.vehicles, fn v, acc ->
-        if old = Map.get(acc, v.route_id) do
-          if DateTime.compare(v.timestamp, old.timestamp) == :gt or
-          max(v.last_pick, v.last_drop) > max(old.last_pick, old.last_drop) do
-            Phoenix.PubSub.local_broadcast(
-              RideAlong.PubSub,
-              "vehicle:#{v.vehicle_id}",
-              {:vehicle_updated, v}
-            )
-
-            Map.put(acc, v.route_id, v)
-          else
-            acc
-          end
-        else
-          Phoenix.PubSub.local_broadcast(
-            RideAlong.PubSub,
-            "vehicle:#{v.vehicle_id}",
-            {:vehicle_updated, v}
-          )
-
-          Map.put(acc, v.route_id, v)
-        end
-      end)
+      Enum.reduce(vehicles, state.vehicles, &update_vehicle/2)
 
     state = %{state | vehicles: vehicles}
     {:noreply, state}
+  end
+
+  defp update_vehicle(v, acc) do
+    if old = Map.get(acc, v.route_id) do
+      if DateTime.compare(v.timestamp, old.timestamp) == :gt or
+           max(v.last_pick, v.last_drop) > max(old.last_pick, old.last_drop) do
+        Phoenix.PubSub.local_broadcast(
+          RideAlong.PubSub,
+          "vehicle:#{v.vehicle_id}",
+          {:vehicle_updated, v}
+        )
+
+        Map.put(acc, v.route_id, v)
+      else
+        acc
+      end
+    else
+      Phoenix.PubSub.local_broadcast(
+        RideAlong.PubSub,
+        "vehicle:#{v.vehicle_id}",
+        {:vehicle_updated, v}
+      )
+
+      Map.put(acc, v.route_id, v)
+    end
   end
 end

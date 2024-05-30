@@ -10,9 +10,39 @@
       </.link>
     </div>
     <h1 class="sr-only"><%= @page_title %></h1>
-    <.labeled_field title={gettext("Driver Name")} value={@route.driver_name} />
-    <.labeled_field title={gettext("Vehicle #")} value={@vehicle.vehicle_id} />
-    <.labeled_field title={gettext("ETA")} value={@eta_text} />
+    <div :if={@status in [:enqueued, :enroute]}>
+      <.labeled_field title={gettext("Destination")} value={RideAlong.Adept.Trip.address(@trip)} />
+      <.labeled_field title={gettext("ETA")} value={@eta_text} />
+    </div>
+    <div :if={@status == :enqueued}>
+      <%= ngettext(
+        "There is one stop ahead of you.",
+        " There are %{count} stops ahead of you.",
+        @trip.pick_order - max(@vehicle.last_pick, @vehicle.last_drop) - 1
+      ) %>
+    </div>
+    <div :if={@status == :picked_up}>
+      <%= gettext("You have been picked up!") %>
+    </div>
+    <div :if={Application.get_env(:ride_along, :dev_routes)}>
+      <.labeled_field title={gettext("Status")} value={inspect(@status)} />
+      <.labeled_field title={gettext("Trip ID")} value={@trip.trip_id} />
+      <.labeled_field title={gettext("Route ID")} value={@trip.route_id} />
+      <.labeled_field title={gettext("Current Time")} value={@now} />
+      <.labeled_field title={gettext("Promise Time")} value={@trip.promise_time} />
+      <.labeled_field title={gettext("Pick Time")} value={@trip.pick_time} />
+      <.labeled_field
+        :if={@route}
+        title={gettext("ETA")}
+        ,
+        value={DateTime.add(@vehicle.timestamp, trunc(@route.duration * 1000), :millisecond)}
+      />
+      <.labeled_field :if={@route} title={gettext("Duration (s)")} value={@route.duration} />
+      <.labeled_field title={gettext("Last Updated")} value={@vehicle.timestamp} />
+      <.labeled_field title={gettext("Pick Order")} value={@trip.pick_order} />
+      <.labeled_field title={gettext("Last Pick")} value={@vehicle.last_pick} />
+      <.labeled_field title={gettext("Last Drop")} value={@vehicle.last_drop} />
+    </div>
   </div>
   <div class="flex-1">
     <div

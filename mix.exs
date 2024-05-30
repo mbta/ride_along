@@ -61,6 +61,7 @@ defmodule RideAlong.MixProject do
       {:tzdata, "~> 1.1"},
       {:emqtt_failover, "~> 0.3.0"},
       {:tds, "~> 2.3"},
+      {:calendar, "~> 1.0.0"},
       {:stream_data, "~> 1.0", only: :test},
       {:credo, "~> 1.7", only: :dev, runtime: false},
       {:dialyxir, "~> 1.4", only: :dev, runtime: false},

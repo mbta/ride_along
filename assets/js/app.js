@@ -59,25 +59,25 @@ Hooks.Leaflet = {
     let vehicle = this.el.dataset.vehicle;
 
     this.destination = L.marker([destination.lat, destination.lon], {
-          icon: locationIcon,
-          alt: destination.alt
-        })
-          .addTo(this.map);
+      icon: locationIcon,
+      alt: destination.alt,
+    }).addTo(this.map);
 
-    this.handleEvent("path", (p) => {
-      let decoded = polyline.decode(p.polyline);
+    this.map.fitBounds([destination, destination], { padding: [5, 5] });
+
+    this.handleEvent("route", (r) => {
+      let decoded = polyline.decode(r.polyline);
       let location = decoded[0];
 
       if (this.vehicle) {
-        this.vehicle.setLatLng(location).setRotationAngle(p.bearing);
+        this.vehicle.setLatLng(location).setRotationAngle(r.bearing);
       } else {
         this.vehicle = L.marker(location, {
           icon: vehicleIcon,
           alt: vehicle,
           rotationOrigin: "center center",
-          rotationAngle: p.bearing,
-        })
-          .addTo(this.map)
+          rotationAngle: r.bearing,
+        }).addTo(this.map);
       }
 
       if (this.polyline) {
@@ -86,7 +86,16 @@ Hooks.Leaflet = {
         this.polyline = L.polyline(decoded, { color: "blue" }).addTo(this.map);
       }
 
-      this.map.fitBounds(p.bbox, { padding: [5, 5] });
+      this.map.fitBounds(r.bbox, { padding: [5, 5] });
+    });
+    this.handleEvent("clearRoute", () => {
+      if (this.vehicle) {
+        this.map.removeLayer(this.vehicle);
+      }
+      if (this.polyline) {
+        this.map.removeLayer(this.polyline);
+      }
+      this.vehicle = this.polyline = null;
     });
   },
 };

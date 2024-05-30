@@ -19,6 +19,7 @@ defmodule RideAlong.Adept.Trip do
     :city,
     :state,
     :zip,
+    :anchor,
     :pick_order,
     :drop_order,
     pickup_performed?: false,
@@ -40,8 +41,9 @@ defmodule RideAlong.Adept.Trip do
       "PickZip" => zip,
       "PickGridX" => grid_lon,
       "PickGridY" => grid_lat,
+      "Anchor" => anchor,
       "PickOrder" => pick_order,
-      "DropOrder"=> drop_order,
+      "DropOrder" => drop_order,
       "PerformPickup" => perform_pickup,
       "PerformDropoff" => perform_dropoff
     } = map
@@ -62,6 +64,7 @@ defmodule RideAlong.Adept.Trip do
       city: city,
       state: state,
       zip: zip,
+      anchor: anchor,
       pick_order: pick_order,
       drop_order: drop_order,
       pickup_performed?: perform_pickup != 0,

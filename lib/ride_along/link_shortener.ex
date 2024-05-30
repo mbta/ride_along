@@ -41,17 +41,8 @@ defmodule RideAlong.LinkShortener do
 
   @impl GenServer
   def init([]) do
-    token_map = generate_token_map(RideAlong.Adept.all_trips())
-    trip_id_map = Map.new(token_map, fn {token, trip} -> {trip.trip_id, token} end)
-
-    for {trip_id, token} <- trip_id_map do
-      Logger.debug("#{__MODULE__} generated short link trip_id=#{trip_id} token=#{token}")
-    end
-
-    state = %__MODULE__{
-      token_map: token_map,
-      trip_id_map: trip_id_map
-    }
+    state = update_token_maps()
+    Phoenix.PubSub.subscribe(RideAlong.PubSub, "trips:updated")
 
     {:ok, state}
   end
@@ -63,6 +54,34 @@ defmodule RideAlong.LinkShortener do
 
   def handle_call({:get_trip, token}, _from, state) do
     {:reply, Map.get(state.token_map, token), state}
+  end
+
+  @impl GenServer
+  def handle_info(:trips_updated, _state) do
+    state = update_token_maps()
+    {:noreply, state}
+  end
+
+  def update_token_maps do
+    token_map = generate_token_map(RideAlong.Adept.all_trips())
+    trip_id_map = Map.new(token_map, fn {token, trip} -> {trip.trip_id, token} end)
+
+    now = DateTime.utc_now()
+
+    for {token, trip} <- token_map do
+      diff = DateTime.diff(trip.pick_time, now)
+
+      if diff > 0 and diff < 3_600 and not trip.pickup_performed? do
+        IO.puts(
+          "#{__MODULE__} generated short link route_id=#{trip.route_id} trip_id=#{trip.trip_id} token=#{token} pick_time=#{trip.pick_time}"
+        )
+      end
+    end
+
+    %__MODULE__{
+      token_map: token_map,
+      trip_id_map: trip_id_map
+    }
   end
 
   def generate_token_map(trips) do

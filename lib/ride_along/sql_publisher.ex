@@ -122,7 +122,7 @@ defmodule RideAlong.SqlPublisher do
       trips: %{
         sql:
           ~s[SELECT t.Id, t.TripDate, t.RouteId,
-             PickTime, PromiseTime,
+             Anchor, PickTime, PromiseTime,
              PickHouseNumber, PickAddress1, PickAddress2, PickCity, PickSt, PickZip,
              PickGridX, PickGridY,
              PickOrder, DropOrder, PerformPickup, PerformDropoff
