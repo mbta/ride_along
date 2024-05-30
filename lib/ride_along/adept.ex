@@ -6,8 +6,6 @@ defmodule RideAlong.Adept do
   """
   use GenServer
 
-  alias RideAlong.Adept.{Route, Trip, Vehicle}
-
   @default_name __MODULE__
 
   def start_link(opts \\ []) do
@@ -19,112 +17,81 @@ defmodule RideAlong.Adept do
     GenServer.call(name, :all_trips)
   end
 
-  def get_trip(name \\ @default_name, trip_id) when is_binary(trip_id) do
+  def get_trip(name \\ @default_name, trip_id) when is_integer(trip_id) do
     GenServer.call(name, {:get_trip, trip_id})
   end
 
-  def get_route(name \\ @default_name, route_id) when is_binary(route_id) do
-    GenServer.call(name, {:get_route, route_id})
+  def set_trips(name \\ @default_name, trips) when is_list(trips) do
+    GenServer.cast(name, {:set_trips, trips})
   end
 
-  def get_vehicle(name \\ @default_name, vehicle_id) when is_binary(vehicle_id) do
-    GenServer.call(name, {:get_vehicle, vehicle_id})
+  def get_vehicle_by_route(name \\ @default_name, route_id) when is_integer(route_id) do
+    GenServer.call(name, {:get_vehicle_by_route, route_id})
   end
 
-  defstruct [
-    :routes,
-    :trips,
-    :vehicles
-  ]
+  def set_vehicles(name \\ @default_name, vehicles) do
+    GenServer.cast(name, {:set_vehicles, vehicles})
+  end
+
+  defstruct trips: %{},
+            vehicles: %{}
 
   @impl GenServer
   def init([]) do
-    route_id = "r23456"
-    trip_id = "t12345"
-    vehicle_id = "3456"
-
-    routes = [
-      %Route{
-        route_id: route_id,
-        driver_name: "DRIVER, BABY",
-        vehicle_id: vehicle_id
-      }
-    ]
-
-    trips = [
-      %Trip{
-        trip_id: trip_id,
-        date: Date.utc_today(),
-        route_id: route_id,
-        lat: 42.3516768,
-        lon: -71.0695149,
-        house_number: "10",
-        address1: "Park Plaza",
-        city: "Boston",
-        phone: "+16172223200"
-      }
-    ]
-
-    vehicles = [
-      %Vehicle{
-        vehicle_id: vehicle_id,
-        lat: 42.3982372,
-        lon: -71.0710461,
-        timestamp: DateTime.utc_now()
-      }
-    ]
-
-    state = %__MODULE__{routes: routes, trips: trips, vehicles: vehicles}
-    Phoenix.PubSub.broadcast!(RideAlong.PubSub, "trips:updated", :trips_updated)
-
-    :timer.send_interval(5_000, :update_vehicle)
+    state = %__MODULE__{}
 
     {:ok, state}
   end
 
   @impl GenServer
   def handle_call(:all_trips, _from, state) do
-    {:reply, state.trips, state}
+    {:reply, Map.values(state.trips), state}
   end
 
   @impl GenServer
   def handle_call({:get_trip, trip_id}, _from, state) do
-    {:reply, Enum.find(state.trips, &(&1.trip_id == trip_id)), state}
+    {:reply, Map.get(state.trips, trip_id), state}
   end
 
-  def handle_call({:get_route, route_id}, _from, state) do
-    {:reply, Enum.find(state.routes, &(&1.route_id == route_id)), state}
-  end
-
-  def handle_call({:get_vehicle, vehicle_id}, _from, state) do
-    {:reply, Enum.find(state.vehicles, &(&1.vehicle_id == vehicle_id)), state}
+  def handle_call({:get_vehicle_by_route, route_id}, _from, state) do
+    {:reply, Map.get(state.vehicles, route_id), state}
   end
 
   @impl GenServer
-  def handle_info(:update_vehicle, state) do
-    vehicles =
-      for v <- state.vehicles do
-        v = %{
-          v
-          | lat: float_in_range(42.22786, 42.444343),
-            lon: float_in_range(-71.192145, -70.951662)
-        }
-
-        Phoenix.PubSub.broadcast!(
-          RideAlong.PubSub,
-          "vehicle:#{v.vehicle_id}",
-          {:vehicle_updated, v}
-        )
-
-        v
-      end
-
-    state = %{state | vehicles: vehicles}
+  def handle_cast({:set_trips, trips}, state) do
+    state = %{state | trips: Map.new(trips, &{&1.trip_id, &1})}
+    Phoenix.PubSub.local_broadcast(RideAlong.PubSub, "trips:updated", :trips_updated)
     {:noreply, state}
   end
 
-  defp float_in_range(low, high) do
-    r = :rand.uniform()
-    low + r * (high - low)
+  def handle_cast({:set_vehicles, vehicles}, state) do
+    vehicles =
+      Enum.reduce(vehicles, state.vehicles, fn v, acc ->
+        if old = Map.get(acc, v.route_id) do
+          if DateTime.compare(v.timestamp, old.timestamp) == :gt or
+          max(v.last_pick, v.last_drop) > max(old.last_pick, old.last_drop) do
+            Phoenix.PubSub.local_broadcast(
+              RideAlong.PubSub,
+              "vehicle:#{v.vehicle_id}",
+              {:vehicle_updated, v}
+            )
+
+            Map.put(acc, v.route_id, v)
+          else
+            acc
+          end
+        else
+          Phoenix.PubSub.local_broadcast(
+            RideAlong.PubSub,
+            "vehicle:#{v.vehicle_id}",
+            {:vehicle_updated, v}
+          )
+
+          Map.put(acc, v.route_id, v)
+        end
+      end)
+
+    state = %{state | vehicles: vehicles}
+    {:noreply, state}
   end
 end

@@ -30,8 +30,9 @@ config :ride_along, RideAlong.MqttConnection,
   broker_configs: [],
   broker_client_prefix: "ride_along"
 
-config :ride_along, RideAlong.SqlPublisher,
-  start: false
+config :ride_along, RideAlong.MqttListener, start: false
+
+config :ride_along, RideAlong.SqlPublisher, start: false
 
 config :ride_along, RideAlong.OpenRouteService,
   req_config: [

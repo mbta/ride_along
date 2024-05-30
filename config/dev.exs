@@ -42,6 +42,8 @@ config :ride_along, RideAlong.MqttConnection,
   broker_configs: ["mqtt://system:manager@localhost/"],
   broker_topic_prefix: "ride-along-local/"
 
+config :ride_along, RideAlong.MqttListener, start: true
+
 # Enable dev routes for dashboard and mailbox
 config :ride_along, dev_routes: true
 
