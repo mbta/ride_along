@@ -107,7 +107,7 @@ defmodule RideAlong.OpenRouteService do
       bearing: bearing,
       polyline: polyline,
       distance: distance,
-      duration: duration
+      duration: duration * Application.get_env(:ride_along, __MODULE__)[:duration_scale]
     }
   end
 end
