@@ -24,7 +24,7 @@
     <div :if={@status == :arrived}>
       <%= gettext("Your vehicle has arrived!") %>
     </div>
-    <div :if={@status == :picked_up}>
+    <div :if={@status in [:picked_up, :closed]}>
       <%= gettext("You have been picked up!") %>
     </div>
     <div :if={Application.get_env(:ride_along, :dev_routes)}>
