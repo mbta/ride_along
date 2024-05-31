@@ -124,7 +124,7 @@ defmodule RideAlongWeb.TripLive.Show do
       now: now
     } = assigns
 
-    hours_before_pick = DateTime.diff(trip.pick_time, now, :hour)
+    hours_until_pick = DateTime.diff(trip.pick_time, now, :hour)
 
     cond do
       trip.pick_order - max(vehicle.last_pick, vehicle.last_drop) == 1 ->
@@ -136,7 +136,7 @@ defmodule RideAlongWeb.TripLive.Show do
       max(vehicle.last_pick, vehicle.last_drop) >= trip.drop_order ->
         :closed
 
-      hours_before_pick > 0 ->
+      hours_until_pick > 0 ->
         :closed
 
       trip.pickup_performed? ->
@@ -144,6 +144,9 @@ defmodule RideAlongWeb.TripLive.Show do
 
       max(vehicle.last_pick, vehicle.last_drop) >= trip.pick_order ->
         :picked_up
+
+      trip.trip_id == vehicle.last_arrived_trip ->
+        :arrived
 
       true ->
         :enqueued

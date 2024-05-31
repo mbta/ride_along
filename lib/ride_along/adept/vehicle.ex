@@ -12,7 +12,8 @@ defmodule RideAlong.Adept.Vehicle do
     :lon,
     :timestamp,
     :last_pick,
-    :last_drop
+    :last_drop,
+    :last_arrived_trip
   ]
 
   def from_sql_map(map) do
@@ -23,7 +24,8 @@ defmodule RideAlong.Adept.Vehicle do
       "Longitude" => lon,
       "LocationDate" => location_timestamp,
       "LastPick" => last_pick,
-      "LastDrop" => last_drop
+      "LastDrop" => last_drop,
+      "LastArrivedTrip" => last_arrived_trip
     } = map
 
     %__MODULE__{
@@ -33,7 +35,8 @@ defmodule RideAlong.Adept.Vehicle do
       lon: lon,
       timestamp: RideAlong.SqlParser.local_timestamp(location_timestamp),
       last_pick: last_pick,
-      last_drop: last_drop
+      last_drop: last_drop,
+      last_arrived_trip: last_arrived_trip
     }
   end
 end

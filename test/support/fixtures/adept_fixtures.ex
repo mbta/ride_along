@@ -5,6 +5,7 @@ defmodule RideAlong.AdeptFixtures do
 
   alias RideAlong.Adept.{Trip, Vehicle}
 
+  @trip_id 1234
   @route_id 4567
   @vehicle_id "9876"
 
@@ -13,7 +14,7 @@ defmodule RideAlong.AdeptFixtures do
     attrs =
       Map.merge(
         %{
-          trip_id: 1234,
+          trip_id: @trip_id,
           route_id: @route_id,
           date: DateTime.to_date(local_timestamp(0, :second)),
           pick_time: local_timestamp(30, :minute),
@@ -47,7 +48,8 @@ defmodule RideAlong.AdeptFixtures do
           lon: Decimal.new("-71.06166"),
           timestamp: local_timestamp(-1, :second),
           last_pick: 4,
-          last_drop: 2
+          last_drop: 2,
+          last_arrived_trip: @trip_id + 1
         },
         attrs
       )

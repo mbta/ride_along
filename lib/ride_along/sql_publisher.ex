@@ -137,7 +137,10 @@ defmodule RideAlong.SqlPublisher do
                (SELECT MAX(PickOrder) FROM dbo.TRIP t
                  WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.PerformPickup != 0) AS LastPick,
                (SELECT MAX(DropOrder) FROM dbo.TRIP t
-                 WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.PerformDropoff != 0) AS LastDrop
+                 WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.PerformDropoff != 0) AS LastDrop,
+               (SELECT TOP 1 TripId FROM dbo.MDCVEHICLELOCATION
+                 WHERE RouteId = l.RouteId AND LocationDate >= @service_date AND EventType='StopArrive'
+                 ORDER BY LocationDate DESC) AS LastArrivedTrip
                   FROM dbo.MDCVEHICLELOCATION l 
                   WHERE LocationDate >= @service_date AND 
                   LocationDate = (SELECT max(l1.LocationDate) from dbo.MDCVEHICLELOCATION l1 where l1.RouteId = l.RouteId)
