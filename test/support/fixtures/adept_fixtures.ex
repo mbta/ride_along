@@ -1,0 +1,63 @@
+defmodule RideAlong.AdeptFixtures do
+  @moduledoc """
+  Test helpers for creating resources in the RideAlong.Adept context.
+  """
+
+  alias RideAlong.Adept.{Trip, Vehicle}
+
+  @route_id 4567
+  @vehicle_id "9876"
+
+  @doc "Create a trip"
+  def trip_fixture(attrs \\ %{}) do
+    attrs =
+      Map.merge(
+        %{
+          trip_id: 1234,
+          route_id: @route_id,
+          date: DateTime.to_date(local_timestamp(0, :second)),
+          pick_time: local_timestamp(30, :minute),
+          promise_time: local_timestamp(35, :minute),
+          lat: Decimal.new("-42.3434"),
+          lon: Decimal.new("-71.06166"),
+          house_number: "144",
+          address1: "LUETTGEN VILLAGE",
+          address2: "APT 152",
+          city: "CASPERTON",
+          state: "AK",
+          zip: "50896",
+          anchor: "P",
+          pick_order: 5,
+          drop_order: 7
+        },
+        attrs
+      )
+
+    struct!(Trip, attrs)
+  end
+
+  @doc "Create a vehicle"
+  def vehicle_fixture(attrs \\ %{}) do
+    attrs =
+      Map.merge(
+        %{
+          route_id: @route_id,
+          vehicle_id: @vehicle_id,
+          lat: Decimal.new("-42.34340"),
+          lon: Decimal.new("-71.06166"),
+          timestamp: local_timestamp(-1, :second),
+          last_pick: 4,
+          last_drop: 2
+        },
+        attrs
+      )
+
+    struct!(Vehicle, attrs)
+  end
+
+  defp local_timestamp(add, unit) do
+    DateTime.utc_now()
+    |> DateTime.add(add, unit)
+    |> DateTime.shift_zone!(Application.get_env(:ride_along, :time_zone))
+  end
+end

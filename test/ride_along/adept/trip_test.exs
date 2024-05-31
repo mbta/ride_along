@@ -7,6 +7,8 @@ defmodule RideAlong.Adept.TripTest do
 
   describe "from_sql_map/1" do
     test "parses a sample map" do
+      time_zone = Application.get_env(:ride_along, :time_zone)
+
       sample = %{
         "Anchor" => "A",
         "Id" => 94_820_952,
@@ -22,7 +24,10 @@ defmodule RideAlong.Adept.TripTest do
         "PromiseTime" => "24:50",
         "RouteId" => 14_404,
         "TripDate" => {{2024, 05, 30}, {0, 0, 0, 0}},
-        "VehicleId" => nil
+        "PickOrder" => 14,
+        "DropOrder" => 16,
+        "PerformPickup" => 2,
+        "PerformDropoff" => 0
       }
 
       actual = Trip.from_sql_map(sample)
@@ -30,18 +35,22 @@ defmodule RideAlong.Adept.TripTest do
       expected = %Trip{
         trip_id: 94_820_952,
         route_id: 14_404,
-        vehicle_id: nil,
         date: ~D[2024-05-30],
-        pick_time: 3 * 3600 + 33 * 60,
-        promise_time: 24 * 3600 + 50 * 60,
-        lat: 42.3434,
-        lon: -71.06166,
+        pick_time: DateTime.new!(~D[2024-05-30], ~T[03:33:00], time_zone),
+        promise_time: DateTime.new!(~D[2024-05-31], ~T[00:50:00], time_zone),
+        lat: Decimal.new("42.3434"),
+        lon: Decimal.new("-71.06166"),
         house_number: "144",
         address1: "LUETTGEN VILLAGE",
         address2: "APT 152",
         city: "CASPERTON",
         state: "AK",
-        zip: "50896"
+        zip: "50896",
+        anchor: "A",
+        pick_order: 14,
+        drop_order: 16,
+        pickup_performed?: true,
+        dropoff_performed?: false
       }
 
       assert actual == expected

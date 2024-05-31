@@ -4,7 +4,7 @@ defmodule RideAlongWeb.TripLiveTest do
   import Phoenix.LiveViewTest
 
   describe "Show" do
-    setup :ors
+    setup [:ors, :adept]
 
     test "displays trip", %{conn: conn} do
       trip = List.first(RideAlong.Adept.all_trips())
@@ -25,6 +25,13 @@ defmodule RideAlongWeb.TripLiveTest do
       |> put_status(500)
       |> Req.Test.json(%{})
     end)
+
+    :ok
+  end
+
+  def adept(_) do
+    RideAlong.Adept.set_trips([RideAlong.AdeptFixtures.trip_fixture()])
+    RideAlong.Adept.set_vehicles([RideAlong.AdeptFixtures.vehicle_fixture()])
 
     :ok
   end

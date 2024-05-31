@@ -54,8 +54,8 @@ defmodule RideAlong.Adept.Trip do
       trip_id: trip_id,
       route_id: route_id,
       date: DateTime.to_date(trip_date_time),
-      pick_time: DateTime.add(trip_date_time, time_as_seconds_since_midnight(pick_time)),
-      promise_time: DateTime.add(trip_date_time, time_as_seconds_since_midnight(promise_time)),
+      pick_time: relative_time(pick_time, trip_date_time),
+      promise_time: relative_time(promise_time, trip_date_time),
       lat: grid_to_decimal(grid_lat),
       lon: grid_to_decimal(grid_lon),
       house_number: house_number,
@@ -117,10 +117,18 @@ defmodule RideAlong.Adept.Trip do
     |> Decimal.div(@one_hundred_thousand)
   end
 
-  defp time_as_seconds_since_midnight(time) do
+  defp relative_time(time, date_time) do
     [hours, minutes] = String.split(time, ":", parts: 2)
     hours = String.to_integer(hours)
     minutes = String.to_integer(minutes)
-    hours * 3_600 + minutes * 60
+
+    # we start at noon to ensure the time is relative to the correct timezone during DST transitions
+    noon = DateTime.new!(
+      DateTime.to_date(date_time),
+      ~T[12:00:00],
+      date_time.time_zone
+    )
+
+    DateTime.add(noon, (hours - 12) * 60 + minutes, :minute)
   end
 end

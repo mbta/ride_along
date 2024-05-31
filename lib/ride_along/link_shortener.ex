@@ -29,7 +29,7 @@ defmodule RideAlong.LinkShortener do
     GenServer.start_link(__MODULE__, [], opts)
   end
 
-  def get_token(name \\ @default_name, trip_id) when is_binary(trip_id) do
+  def get_token(name \\ @default_name, trip_id) when is_integer(trip_id) do
     GenServer.call(name, {:get_token, trip_id})
   end
 
