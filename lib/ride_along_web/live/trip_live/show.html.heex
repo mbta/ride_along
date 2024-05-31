@@ -12,6 +12,7 @@
     <h1 class="sr-only"><%= @page_title %></h1>
     <div :if={@status in [:enqueued, :enroute]}>
       <.labeled_field title={gettext("Location")} value={RideAlong.Adept.Trip.address(@trip)} />
+      <.labeled_field title={gettext("Promise Time")} value={format_eta(@trip.promise_time)} />
       <.labeled_field title={gettext("ETA")} value={@eta_text} />
     </div>
     <div :if={@status == :enqueued}>
@@ -32,7 +33,6 @@
       <.labeled_field title={gettext("Trip ID")} value={@trip.trip_id} />
       <.labeled_field title={gettext("Route ID")} value={@trip.route_id} />
       <.labeled_field title={gettext("Current Time")} value={@now} />
-      <.labeled_field title={gettext("Promise Time")} value={@trip.promise_time} />
       <.labeled_field title={gettext("Pick Time")} value={@trip.pick_time} />
       <.labeled_field
         :if={@route}

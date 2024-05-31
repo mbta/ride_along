@@ -183,26 +183,34 @@ defmodule RideAlongWeb.TripLive.Show do
   end
 
   def calculate_eta(%{route: %Route{}} = assigns) do
-    now = assigns.now
     vehicle_timestamp = assigns.vehicle.timestamp
     duration_ms = trunc(assigns.route.duration * 1000)
     eta = DateTime.add(vehicle_timestamp, duration_ms, :millisecond)
-    time_remaining = DateTime.diff(eta, now, :minute)
 
-    cond do
-      time_remaining >= 59 ->
-        gettext("> 1 hour")
+    rounded_eta =
+      if eta.second > 0 or elem(eta.microsecond, 0) > 0 do
+        DateTime.add(eta, 1, :minute)
+      else
+        eta
+      end
 
-      time_remaining >= 0 ->
-        ngettext("1 minute", "%{count} minutes", time_remaining + 1)
+    earliest_arrival = DateTime.add(assigns.trip.promise_time, -5, :minute)
 
-      true ->
-        gettext("< 1 minute")
+    if DateTime.compare(earliest_arrival, rounded_eta) == :gt do
+      format_eta(earliest_arrival)
+    else
+      format_eta(rounded_eta)
     end
   end
 
   def calculate_eta(%{trip: trip}) do
-    Calendar.Strftime.strftime!(trip.pick_time, "%I:%M %p")
+    format_eta(trip.pick_time)
+  end
+
+  defp format_eta(dt) do
+    dt
+    |> Calendar.Strftime.strftime!("%l:%M %p")
+    |> String.trim_leading()
   end
 
   def destination(trip) do
