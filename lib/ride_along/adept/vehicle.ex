@@ -8,6 +8,7 @@ defmodule RideAlong.Adept.Vehicle do
   defstruct [
     :route_id,
     :vehicle_id,
+    :heading,
     :lat,
     :lon,
     :timestamp,
@@ -20,6 +21,7 @@ defmodule RideAlong.Adept.Vehicle do
     %{
       "RouteId" => route_id,
       "VehicleId" => vehicle_id,
+      "Heading" => heading,
       "Latitude" => lat,
       "Longitude" => lon,
       "LocationDate" => location_timestamp,
@@ -31,6 +33,7 @@ defmodule RideAlong.Adept.Vehicle do
     %__MODULE__{
       route_id: route_id,
       vehicle_id: vehicle_id,
+      heading: heading,
       lat: lat,
       lon: lon,
       timestamp: RideAlong.SqlParser.local_timestamp(location_timestamp),

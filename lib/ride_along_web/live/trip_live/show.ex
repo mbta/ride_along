@@ -83,7 +83,7 @@ defmodule RideAlongWeb.TripLive.Show do
      |> assign_eta()
      |> push_event("route", %{
        bbox: [[bbox1.lat, bbox1.lon], [bbox2.lat, bbox2.lon]],
-       bearing: route.bearing,
+       bearing: socket.assigns.vehicle.heading,
        polyline: route.polyline
      })}
   end
