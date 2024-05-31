@@ -47,6 +47,7 @@ defmodule RideAlongWeb.TripLive.Show do
   def handle_params(_, _, socket) do
     :timer.send_interval(1_000, :countdown)
     Phoenix.PubSub.subscribe(RideAlong.PubSub, "vehicle:#{socket.assigns.vehicle.vehicle_id}")
+    Phoenix.PubSub.subscribe(RideAlong.PubSub, "trips:updated")
 
     {:noreply, socket}
   end
@@ -64,6 +65,17 @@ defmodule RideAlongWeb.TripLive.Show do
     {:noreply,
      socket
      |> assign(:vehicle, v)
+     |> assign_status()
+     |> assign_eta()
+     |> request_route()}
+  end
+
+  def handle_info(:trips_updated, socket) do
+    trip = Adept.get_trip(socket.assigns.trip.trip_id)
+
+    {:noreply,
+     socket
+     |> assign(:trip, trip)
      |> assign_status()
      |> assign_eta()
      |> request_route()}
@@ -141,6 +153,11 @@ defmodule RideAlongWeb.TripLive.Show do
       Logger.info(
         "#{__MODULE__} status trip_id=#{socket.assigns.trip.trip_id} route=#{socket.assigns.trip.route_id} pick_time=#{DateTime.to_iso8601(socket.assigns.trip.pick_time)} status=#{new_status}"
       )
+    end
+
+    if new_status in [:picked_up, :closed] do
+      Phoenix.PubSub.unsubscribe(RideAlong.PubSub, "vehicle:#{socket.assigns.vehicle.vehicle_id}")
+      Phoenix.PubSub.unsubscribe(RideAlong.PubSub, "trips:updated")
     end
 
     assign(socket, :status, new_status)
