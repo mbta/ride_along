@@ -1,5 +1,6 @@
 defmodule RideAlongWeb.TripLive.Show do
   use RideAlongWeb, :live_view
+  require Logger
 
   alias RideAlong.Adept
   alias RideAlong.Adept.{Trip, Vehicle}
@@ -8,8 +9,18 @@ defmodule RideAlongWeb.TripLive.Show do
   alias RideAlong.OpenRouteService.Route
 
   @impl true
-  def mount(%{"token" => token}, _session, socket) do
-    with trip = %Trip{} <- LinkShortener.get_trip(token),
+  def mount(%{"token" => token}, session, socket) do
+    trip = LinkShortener.get_trip(token)
+    mount_trip(trip, session, socket)
+  end
+
+  def mount(%{"trip" => trip_id}, session, socket) do
+    trip = Adept.get_trip(String.to_integer(trip_id))
+    mount_trip(trip, session, socket)
+  end
+
+  defp mount_trip(trip, _session, socket) do
+    with trip = %Trip{} <- trip,
          vehicle = %Vehicle{} <- Adept.get_vehicle_by_route(trip.route_id) do
       socket =
         socket
@@ -60,7 +71,11 @@ defmodule RideAlongWeb.TripLive.Show do
 
   @impl true
   def handle_async(:route, {:ok, {:ok, %Route{} = route}}, socket) do
+    trip = socket.assigns.trip
+    eta = DateTime.add(socket.assigns.vehicle.timestamp, trunc(route.duration * 1000), :millisecond)
     {bbox1, bbox2} = route.bbox
+
+    Logger.debug("#{__MODULE__} route calculated trip_id=#{trip.trip_id} route=#{trip.route_id} pick_time=#{DateTime.to_iso8601(trip.pick_time)} eta=#{DateTime.to_iso8601(eta)}")
 
     {:noreply,
      socket
@@ -127,9 +142,6 @@ defmodule RideAlongWeb.TripLive.Show do
     hours_until_pick = DateTime.diff(trip.pick_time, now, :hour)
 
     cond do
-      trip.pick_order - max(vehicle.last_pick, vehicle.last_drop) == 1 ->
-        :enroute
-
       trip.dropoff_performed? ->
         :closed
 
@@ -147,6 +159,9 @@ defmodule RideAlongWeb.TripLive.Show do
 
       trip.trip_id == vehicle.last_arrived_trip ->
         :arrived
+
+      trip.pick_order - max(vehicle.last_pick, vehicle.last_drop) == 1 ->
+        :enroute
 
       true ->
         :enqueued

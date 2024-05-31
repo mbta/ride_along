@@ -46,6 +46,7 @@ defmodule RideAlongWeb.Router do
     scope "/dev" do
       pipe_through :browser
 
+      live "/trip/:trip", RideAlongWeb.TripLive.Show, :show
       live_dashboard "/dashboard", metrics: RideAlongWeb.Telemetry
     end
   end
