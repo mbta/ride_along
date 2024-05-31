@@ -18,6 +18,8 @@ import Config
 # script that automatically sets the env var above.
 if System.get_env("PHX_SERVER") do
   config :ride_along, RideAlongWeb.Endpoint, server: true
+
+  config :ride_along, RideAlong.MqttListener, start: true
 end
 
 if System.get_env("SQLCMDSERVER") != nil and config_env() != :test do
@@ -52,7 +54,7 @@ if config_env() == :prod do
 
   config :ride_along, RideAlong.OpenRouteService,
     req_config: [
-      base_url: System.fetch_env!("ORS_BASE_URL")
+      base_url: System.get_env("ORS_BASE_URL")
     ]
 
   config :ride_along, RideAlong.LinkShortener, secret: secret_key_base
@@ -69,35 +71,27 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
-  # ## SSL Support
-  #
-  # To get SSL working, you will need to add the `https` key
-  # to your endpoint configuration:
-  #
-  #     config :ride_along, RideAlongWeb.Endpoint,
-  #       https: [
-  #         ...,
-  #         port: 443,
-  #         cipher_suite: :strong,
-  #         keyfile: System.get_env("SOME_APP_SSL_KEY_PATH"),
-  #         certfile: System.get_env("SOME_APP_SSL_CERT_PATH")
-  #       ]
-  #
-  # The `cipher_suite` is set to `:strong` to support only the
-  # latest and more secure SSL ciphers. This means old browsers
-  # and clients may not be supported. You can set it to
-  # `:compatible` for wider support.
-  #
-  # `:keyfile` and `:certfile` expect an absolute path to the key
-  # and cert in disk or a relative path inside priv, for example
-  # "priv/ssl/server.key". For all supported SSL configuration
-  # options, see https://hexdocs.pm/plug/Plug.SSL.html#configure/1
-  #
-  # We also recommend setting `force_ssl` in your config/prod.exs,
-  # ensuring no data is ever sent via http, always redirecting to https:
-  #
-  #     config :ride_along, RideAlongWeb.Endpoint,
-  #       force_ssl: [hsts: true]
-  #
-  # Check `Plug.SSL` for all available options in `force_ssl`.
+  mqtt_url = System.get_env("MQTT_BROKER_URL")
+
+  if mqtt_url not in [nil, ""] do
+    topic_prefix = System.get_env("MQTT_TOPIC_PREFIX", "")
+    username = System.get_env("MQTT_BROKER_USERNAME")
+
+    passwords =
+      case System.get_env("MQTT_BROKER_PASSWORD") do
+        nil -> [nil]
+        "" -> [nil]
+        passwords -> String.split(passwords, " ")
+      end
+
+    configs =
+      for url <- String.split(mqtt_url, " "),
+          password <- passwords do
+        EmqttFailover.Config.from_url(url, username: username, password: password)
+      end
+
+    config :ride_along, RideAlong.MqttConnection,
+      broker_configs: configs,
+      broker_topic_prefix: topic_prefix
+  end
 end

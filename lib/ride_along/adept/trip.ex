@@ -140,11 +140,12 @@ defmodule RideAlong.Adept.Trip do
     minutes = String.to_integer(minutes)
 
     # we start at noon to ensure the time is relative to the correct timezone during DST transitions
-    noon = DateTime.new!(
-      DateTime.to_date(date_time),
-      ~T[12:00:00],
-      date_time.time_zone
-    )
+    noon =
+      DateTime.new!(
+        DateTime.to_date(date_time),
+        ~T[12:00:00],
+        date_time.time_zone
+      )
 
     DateTime.add(noon, (hours - 12) * 60 + minutes, :minute)
   end

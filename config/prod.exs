@@ -11,7 +11,7 @@ config :ride_along, RideAlongWeb.Endpoint,
 config :ride_along,
   gzip_static_assets: true
 
-config :logger, level: :debug
+config :logger, level: :info
 
 # Runtime production configuration, including reading
 # of environment variables, is done on config/runtime.exs.
