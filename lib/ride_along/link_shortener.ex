@@ -69,12 +69,13 @@ defmodule RideAlong.LinkShortener do
     now = DateTime.utc_now()
 
     for {token, trip} <- Enum.sort_by(token_map, &elem(&1, 1), RideAlong.Adept.Trip),
-      trip.pick_time != nil,
-      trip.route_id > 0,
-      not trip.pickup_performed? do
+        trip.pick_time != nil,
+        trip.route_id > 0,
+        not trip.pickup_performed?,
+        not is_nil(RideAlong.Adept.get_vehicle_by_route(trip.route_id)) do
       diff = DateTime.diff(trip.pick_time, now)
 
-      if diff > 0 and diff < 3_600 do
+      if diff > 0 and diff < 1_800 do
         IO.puts(
           "#{__MODULE__} generated short link route_id=#{trip.route_id} trip_id=#{trip.trip_id} token=#{token} pick_time=#{trip.pick_time}"
         )
