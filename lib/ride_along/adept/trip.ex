@@ -93,7 +93,20 @@ defmodule RideAlong.Adept.Trip do
   end
 
   def compare(%__MODULE__{} = a, %__MODULE__{} = b) do
-    date_compare = Date.compare(a.date, b.date)
+    date_compare =
+      case {a.pick_time, b.pick_time} do
+        {%DateTime{} = a_dt, %DateTime{} = b_dt} ->
+          DateTime.compare(a_dt, b_dt)
+
+        {%DateTime{}, _} ->
+          :lt
+
+        {_, %DateTime{}} ->
+          :gt
+
+        _ ->
+          :eq
+      end
 
     cond do
       date_compare != :eq ->
@@ -115,6 +128,10 @@ defmodule RideAlong.Adept.Trip do
     integer
     |> Decimal.new()
     |> Decimal.div(@one_hundred_thousand)
+  end
+
+  defp relative_time("", _date_time) do
+    nil
   end
 
   defp relative_time(time, date_time) do

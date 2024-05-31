@@ -120,15 +120,13 @@ defmodule RideAlong.SqlPublisher do
 
     %{
       trips: %{
-        sql:
-          ~s[SELECT t.Id, t.TripDate, t.RouteId,
+        sql: ~s[SELECT Id, TripDate, RouteId,
              Anchor, PickTime, PromiseTime,
              PickHouseNumber, PickAddress1, PickAddress2, PickCity, PickSt, PickZip,
              PickGridX, PickGridY,
              PickOrder, DropOrder, PerformPickup, PerformDropoff
              FROM dbo.TRIP t
-             LEFT JOIN dbo.ROUTE r ON t.RouteId = r.Id
-             WHERE t.TripDate = @service_date AND t.RouteId > 0 AND PickGridX != 0 AND PickGridY != 0],
+             WHERE t.TripDate = @service_date AND PickGridX != 0 AND PickGridY != 0],
         parameters: %{service_date: service_date},
         interval: 300_000
       },

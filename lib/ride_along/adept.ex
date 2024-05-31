@@ -26,7 +26,11 @@ defmodule RideAlong.Adept do
   end
 
   def get_vehicle_by_route(name \\ @default_name, route_id) when is_integer(route_id) do
-    GenServer.call(name, {:get_vehicle_by_route, route_id})
+    if route_id == 0 do
+      nil
+    else
+      GenServer.call(name, {:get_vehicle_by_route, route_id})
+    end
   end
 
   def set_vehicles(name \\ @default_name, vehicles) do
