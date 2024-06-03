@@ -2,6 +2,7 @@ defmodule RideAlongWeb.TripLive.Show do
   use RideAlongWeb, :live_view
   require Logger
 
+  alias Faker.Address, as: FakeAddress
   alias RideAlong.Adept
   alias RideAlong.Adept.{Trip, Vehicle}
   alias RideAlong.LinkShortener
@@ -9,19 +10,34 @@ defmodule RideAlongWeb.TripLive.Show do
   alias RideAlong.OpenRouteService.Route
 
   @impl true
-  def mount(%{"token" => token}, session, socket) do
+  def mount(%{"token" => token} = params, _session, socket) do
     trip = LinkShortener.get_trip(token)
-    mount_trip(trip, session, socket)
+    mount_trip(trip, params, socket)
   end
 
-  def mount(%{"trip" => trip_id}, session, socket) do
+  def mount(%{"trip" => trip_id} = params, _session, socket) do
     trip = Adept.get_trip(String.to_integer(trip_id))
-    mount_trip(trip, session, socket)
+    mount_trip(trip, params, socket)
   end
 
-  defp mount_trip(trip, _session, socket) do
+  defp mount_trip(trip, params, socket) do
     with trip = %Trip{} <- trip,
          vehicle = %Vehicle{} <- Adept.get_vehicle_by_route(trip.route_id) do
+      trip =
+        if is_nil(params["demo"]) do
+          trip
+        else
+          %{
+            trip
+            | house_number: FakeAddress.building_number(),
+              address1: FakeAddress.street_name(),
+              address2: FakeAddress.secondary_address(),
+              city: FakeAddress.city(),
+              state: FakeAddress.state_abbr(),
+              zip: FakeAddress.zip()
+          }
+        end
+
       socket =
         socket
         |> assign(:now, DateTime.utc_now())
@@ -71,7 +87,18 @@ defmodule RideAlongWeb.TripLive.Show do
   end
 
   def handle_info(:trips_updated, socket) do
-    trip = Adept.get_trip(socket.assigns.trip.trip_id)
+    old_trip = socket.assigns.trip
+    new_trip = Adept.get_trip(old_trip.trip_id)
+
+    trip = %{
+      new_trip
+      | house_number: old_trip.house_number,
+        address1: old_trip.address1,
+        address2: old_trip.address2,
+        city: old_trip.city,
+        state: old_trip.state,
+        zip: old_trip.zip
+    }
 
     {:noreply,
      socket
