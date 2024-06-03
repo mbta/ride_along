@@ -77,7 +77,7 @@ defmodule RideAlong.LinkShortener do
 
       if diff > 0 and diff < 1_800 do
         IO.puts(
-          "#{__MODULE__} generated short link route_id=#{trip.route_id} trip_id=#{trip.trip_id} token=#{token} pick_time=#{trip.pick_time}"
+          "#{__MODULE__} generated short link route_id=#{trip.route_id} trip_id=#{trip.trip_id} token=#{token} pick_time=#{DateTime.to_iso8601(trip.pick_time)}"
         )
       end
     end
