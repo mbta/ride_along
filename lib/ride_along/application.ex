@@ -15,6 +15,7 @@ defmodule RideAlong.Application do
       RideAlong.LinkShortener,
       {RideAlong.SqlPublisher, Application.get_env(:ride_along, RideAlong.SqlPublisher)},
       {RideAlong.MqttListener, Application.get_env(:ride_along, RideAlong.MqttListener)},
+      {RideAlong.EtaMonitor, Application.get_env(:ride_along, RideAlong.EtaMonitor)},
       RideAlongWeb.Endpoint
     ]
 

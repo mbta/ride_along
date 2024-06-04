@@ -72,6 +72,8 @@ defmodule RideAlong.Adept do
     vehicles =
       Enum.reduce(vehicles, state.vehicles, &update_vehicle/2)
 
+    Phoenix.PubSub.local_broadcast(RideAlong.PubSub, "vehicles:updated", :vehicles_updated)
+
     state = %{state | vehicles: vehicles}
     {:noreply, state}
   end

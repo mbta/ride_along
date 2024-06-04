@@ -60,7 +60,7 @@ WORKDIR /app
 RUN chown nobody /app
 
 EXPOSE 4000
-ENV MIX_ENV=prod TERM=xterm LANG="C.UTF-8" PORT=4000 PHX_SERVER=true
+ENV MIX_ENV=prod TERM=xterm LANG="C.UTF-8" PORT=4000
 
 COPY --from=app-builder --chown=nobody:root /app/_build/prod/rel/ride_along .
 

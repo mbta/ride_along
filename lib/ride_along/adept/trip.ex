@@ -4,6 +4,9 @@ defmodule RideAlong.Adept.Trip do
 
   A Trip is a single pickup for a person.
   """
+
+  alias RideAlong.Adept.Vehicle
+
   @derive Jason.Encoder
   defstruct [
     :trip_id,
@@ -26,6 +29,11 @@ defmodule RideAlong.Adept.Trip do
     dropoff_performed?: false
   ]
 
+  @type t :: %__MODULE__{}
+
+  @type status :: :closed | :enqueued | :enroute | :arrived | :picked_up
+
+  @spec from_sql_map(%{binary() => term()}) :: t()
   def from_sql_map(map) do
     %{
       "Id" => trip_id,
@@ -72,10 +80,13 @@ defmodule RideAlong.Adept.Trip do
     }
   end
 
+  @spec status(t(), Vehicle.t() | nil, DateTime.t()) :: status()
+  def status(trip, vehicle, now \\ DateTime.utc_now())
+
   def status(
         %__MODULE__{} = trip,
-        %RideAlong.Adept.Vehicle{} = vehicle,
-        now \\ DateTime.utc_now()
+        %Vehicle{} = vehicle,
+        %DateTime{} = now
       ) do
     hours_until_pick = DateTime.diff(trip.pick_time, now, :hour)
 
@@ -100,6 +111,24 @@ defmodule RideAlong.Adept.Trip do
 
       trip.pick_order - max(vehicle.last_pick, vehicle.last_drop) == 1 ->
         :enroute
+
+      true ->
+        :enqueued
+    end
+  end
+
+  def status(%__MODULE__{} = trip, nil, %DateTime{} = now) do
+    hours_until_pick = DateTime.diff(trip.pick_time, now, :hour)
+
+    cond do
+      trip.dropoff_performed? ->
+        :closed
+
+      hours_until_pick > 0 ->
+        :closed
+
+      trip.pickup_performed? ->
+        :picked_up
 
       true ->
         :enqueued

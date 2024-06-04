@@ -34,6 +34,8 @@ config :ride_along, RideAlong.MqttListener, start: false
 
 config :ride_along, RideAlong.SqlPublisher, start: false
 
+config :ride_along, RideAlong.EtaMonitor, start: false
+
 config :ride_along, RideAlong.OpenRouteService,
   duration_scale: 1.6,
   req_config: [

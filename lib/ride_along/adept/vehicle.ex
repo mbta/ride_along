@@ -17,6 +17,9 @@ defmodule RideAlong.Adept.Vehicle do
     :last_arrived_trip
   ]
 
+  @type t :: %__MODULE__{}
+
+  @spec from_sql_map(%{binary() => term()}) :: t()
   def from_sql_map(map) do
     %{
       "RouteId" => route_id,

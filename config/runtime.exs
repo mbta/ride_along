@@ -20,6 +20,8 @@ if System.get_env("PHX_SERVER") do
   config :ride_along, RideAlongWeb.Endpoint, server: true
 
   config :ride_along, RideAlong.MqttListener, start: true
+
+  config :ride_along, RideAlong.EtaMonitor, start: true
 end
 
 if System.get_env("SQLCMDSERVER") != nil and config_env() != :test do
