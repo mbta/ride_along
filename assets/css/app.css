@@ -5,19 +5,24 @@
 
 /* This file is for your main application CSS */
 @font-face {
-    font-family: "InterNormal";
-    font-weight: 400;
-    src: url("../fonts/Inter-Normal.ttf");
+  font-family: "InterNormal";
+  font-weight: 400;
+  src: url("../fonts/Inter-Normal.ttf");
 }
 
 @font-face {
-    font-family: "InterBold";
-    font-weight: 700;
-    src: url("../fonts/Inter-Bold.ttf");
+  font-family: "InterBold";
+  font-weight: 700;
+  src: url("../fonts/Inter-Bold.ttf");
 }
 
 body {
   font-family: "InterNormal", system-ui, sans-serif;
   font-size: 16px;
   font-weight: 400;
+}
+
+/* hide Ukranian flag */
+.leaflet-attribution-flag {
+  display: none !important;
 }
