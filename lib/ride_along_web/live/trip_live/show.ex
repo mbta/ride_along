@@ -197,33 +197,7 @@ defmodule RideAlongWeb.TripLive.Show do
       now: now
     } = assigns
 
-    hours_until_pick = DateTime.diff(trip.pick_time, now, :hour)
-
-    cond do
-      trip.dropoff_performed? ->
-        :closed
-
-      max(vehicle.last_pick, vehicle.last_drop) >= trip.drop_order ->
-        :closed
-
-      hours_until_pick > 0 ->
-        :closed
-
-      trip.pickup_performed? ->
-        :picked_up
-
-      max(vehicle.last_pick, vehicle.last_drop) >= trip.pick_order ->
-        :picked_up
-
-      trip.trip_id == vehicle.last_arrived_trip ->
-        :arrived
-
-      trip.pick_order - max(vehicle.last_pick, vehicle.last_drop) == 1 ->
-        :enroute
-
-      true ->
-        :enqueued
-    end
+    Trip.status(trip, vehicle, now)
   end
 
   def calculate_eta(%{route: %Route{}} = assigns) do

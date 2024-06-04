@@ -72,6 +72,40 @@ defmodule RideAlong.Adept.Trip do
     }
   end
 
+  def status(
+        %__MODULE__{} = trip,
+        %RideAlong.Adept.Vehicle{} = vehicle,
+        now \\ DateTime.utc_now()
+      ) do
+    hours_until_pick = DateTime.diff(trip.pick_time, now, :hour)
+
+    cond do
+      trip.dropoff_performed? ->
+        :closed
+
+      max(vehicle.last_pick, vehicle.last_drop) >= trip.drop_order ->
+        :closed
+
+      hours_until_pick > 0 ->
+        :closed
+
+      trip.pickup_performed? ->
+        :picked_up
+
+      max(vehicle.last_pick, vehicle.last_drop) >= trip.pick_order ->
+        :picked_up
+
+      trip.trip_id == vehicle.last_arrived_trip ->
+        :arrived
+
+      trip.pick_order - max(vehicle.last_pick, vehicle.last_drop) == 1 ->
+        :enroute
+
+      true ->
+        :enqueued
+    end
+  end
+
   def address(%__MODULE__{} = trip) do
     street =
       [

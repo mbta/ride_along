@@ -4,6 +4,7 @@ defmodule RideAlong.Adept.TripTest do
   use ExUnitProperties
 
   alias RideAlong.Adept.Trip
+  alias RideAlong.AdeptFixtures, as: Fixtures
 
   describe "from_sql_map/1" do
     test "parses a sample map" do
@@ -54,6 +55,102 @@ defmodule RideAlong.Adept.TripTest do
       }
 
       assert actual == expected
+    end
+  end
+
+  describe "status/3" do
+    setup do
+      now = DateTime.utc_now()
+      trip = Fixtures.trip_fixture()
+      vehicle = Fixtures.vehicle_fixture()
+      {:ok, %{now: now, trip: trip, vehicle: vehicle}}
+    end
+
+    test "is :enroute for the default fixture", %{trip: trip, vehicle: vehicle, now: now} do
+      assert Trip.status(trip, vehicle, now) == :enroute
+    end
+
+    test "is :closed if the trip was dropped off", %{vehicle: vehicle, now: now} do
+      trip = Fixtures.trip_fixture(%{dropoff_performed?: true})
+
+      assert Trip.status(trip, vehicle, now) == :closed
+    end
+
+    test "is :closed if the vehicle has performed something after the dropoff", %{
+      trip: trip,
+      now: now
+    } do
+      vehicle = Fixtures.vehicle_fixture(%{last_pick: trip.drop_order + 2})
+
+      assert Trip.status(trip, vehicle, now) == :closed
+
+      vehicle = Fixtures.vehicle_fixture(%{last_drop: trip.drop_order + 1})
+
+      assert Trip.status(trip, vehicle, now) == :closed
+    end
+
+    test "is :closed if the trip is more than an hour in the future", %{
+      trip: trip,
+      vehicle: vehicle,
+      now: now
+    } do
+      now = DateTime.add(now, -61, :minute)
+
+      assert Trip.status(trip, vehicle, now) == :closed
+    end
+
+    test "is :picked_up if the trip was picked up", %{vehicle: vehicle, now: now} do
+      trip = Fixtures.trip_fixture(%{pickup_performed?: true})
+
+      assert Trip.status(trip, vehicle, now) == :picked_up
+    end
+
+    test "is :picked_up if the vehicle has performed something after the pickup", %{
+      trip: trip,
+      now: now
+    } do
+      vehicle = Fixtures.vehicle_fixture(%{last_pick: trip.pick_order})
+
+      assert Trip.status(trip, vehicle, now) == :picked_up
+
+      vehicle = Fixtures.vehicle_fixture(%{last_drop: trip.pick_order + 1})
+
+      assert Trip.status(trip, vehicle, now) == :picked_up
+    end
+
+    test "is :arrived if the current trip is the last arrived trip", %{
+      trip: trip,
+      now: now
+    } do
+      vehicle = Fixtures.vehicle_fixture(%{last_arrived_trip: trip.trip_id})
+
+      assert Trip.status(trip, vehicle, now) == :arrived
+    end
+
+    test "is :enqueued if there is more than one pickup/dropoff before our pickup", %{
+      trip: trip,
+      now: now
+    } do
+      vehicle =
+        Fixtures.vehicle_fixture(%{
+          last_pick: trip.pick_order - 3,
+          last_drop: trip.pick_order - 2
+        })
+
+      assert Trip.status(trip, vehicle, now) == :enqueued
+    end
+
+    test "is :enroute if there is exactly one pickup/dropoff before our pickup", %{
+      trip: trip,
+      now: now
+    } do
+      vehicle =
+        Fixtures.vehicle_fixture(%{
+          last_pick: trip.pick_order - 1,
+          last_drop: trip.pick_order - 2
+        })
+
+      assert Trip.status(trip, vehicle, now) == :enroute
     end
   end
 
