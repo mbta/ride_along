@@ -42,6 +42,16 @@ config :ride_along, RideAlong.OpenRouteService,
     base_url: "http://localhost:8082/"
   ]
 
+config :ueberauth, Ueberauth,
+  providers: [
+    keycloak:
+      {Ueberauth.Strategy.Oidcc,
+       issuer: :keycloak_issuer,
+       uid_field: "email",
+       scopes: ~w(openid email roles),
+       userinfo: true}
+  ]
+
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.17.11",

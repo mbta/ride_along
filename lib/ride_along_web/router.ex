@@ -14,8 +14,12 @@ defmodule RideAlongWeb.Router do
     }
   end
 
-  pipeline :api do
-    plug :accepts, ["json"]
+  pipeline :admin do
+    plug RideAlongWeb.AuthManager, roles: ["admin"]
+  end
+
+  scope "/", RideAlongWeb do
+    get "/_health", HealthController, :index
   end
 
   scope "/", RideAlongWeb do
@@ -25,14 +29,18 @@ defmodule RideAlongWeb.Router do
     live "/t/:token", TripLive.Show
   end
 
-  scope "/", RideAlongWeb do
-    get "/_health", HealthController, :index
+  scope "/auth", RideAlongWeb do
+    pipe_through :browser
+
+    get "/:unused", AuthController, :request
+    get "/:unused/callback", AuthController, :callback
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", RideAlongWeb do
-  #   pipe_through :api
-  # end
+  scope "/admin", RideAlongWeb do
+    pipe_through [:browser, :admin]
+
+    live "/", AdminLive.Index
+  end
 
   # Enable LiveDashboard in development
   if Application.compile_env(:ride_along, :dev_routes) do

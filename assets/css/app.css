@@ -26,3 +26,23 @@ body {
 .leaflet-attribution-flag {
   display: none !important;
 }
+
+.admin-h-full {
+  position: absolute;
+  top: 0;
+}
+
+.resizable {
+  resize: both;
+  overflow: auto;
+  display: flex;
+}
+
+.resizable > * {
+  flex: 1;
+}
+
+.size-iphone-12 {
+  width: 390px;
+  height: 844px;
+}
