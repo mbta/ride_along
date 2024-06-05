@@ -13,19 +13,16 @@ on:
     branches: main
 
 jobs:
-  deploy:
-    name: Deploy
+  build:
+    name: Build/push Docker Image
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
     environment: ${{ github.event.inputs.environment || 'staging' }}
     concurrency: ${{ github.event.inputs.environment || 'staging' }}
-    env:
-      ECS_CLUSTER: ride-along
-      ECS_SERVICE: ride-along-${{ github.event.inputs.environment || 'staging' }}
-      ONPREM_SERVICE: ride-along-onprem-${{ github.event.inputs.environment || 'staging' }}
-
+    outputs:
+      docker-tag-suffix: ${{ steps.build-push.outputs.docker-tag-suffix }}
     steps:
       - uses: actions/checkout@v4
       - uses: mbta/actions/build-push-ecr@v2
@@ -33,6 +30,38 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           docker-repo: ${{ secrets.DOCKER_REPO }}
+
+  deploy_ecs:
+    name: Deploy (ECS)
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      id-token: write
+      contents: read
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+    env:
+      ECS_CLUSTER: ride-along
+      ECS_SERVICE: ride-along-${{ github.event.inputs.environment || 'staging' }}
+    steps:
+      - uses: mbta/actions/deploy-ecs@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          ecs-cluster: ${{ env.ECS_CLUSTER }}
+          ecs-service: ${{ env.ECS_SERVICE }}
+          docker-tag: ${{ secrets.DOCKER_REPO }}:${{ needs.build.outputs.docker-tag-suffix }}
+
+
+  deploy_onprem:
+    name: Deploy (on-prem)
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      id-token: write
+      contents: read
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+    env:
+      ONPREM_SERVICE: ride-along-onprem-${{ github.event.inputs.environment || 'staging' }}
+    steps:
       - name: Use linux-staging for non-prod environments
         if: env.ECS_SERVICE != 'ride-along-prod'
         run: echo "ONPREM_CLUSTER=linux-staging" >> "$GITHUB_ENV"
@@ -44,14 +73,15 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           ecs-cluster: ${{ env.ONPREM_CLUSTER }}
           ecs-service: ${{ env.ONPREM_SERVICE }}
-          docker-tag: ${{ steps.build-push.outputs.docker-tag }}
+          docker-tag: ${{ secrets.DOCKER_REPO }}:${{ needs.build.outputs.docker-tag-suffix }}
           launch-type: EXTERNAL
-      - uses: mbta/actions/deploy-ecs@v2
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          ecs-cluster: ${{ env.ECS_CLUSTER }}
-          ecs-service: ${{ env.ECS_SERVICE }}
-          docker-tag: ${{ steps.build-push.outputs.docker-tag }}
+
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    needs: [deploy_ecs, deploy_onprem]
+    if: always()
+    steps:
       - uses: mbta/actions/notify-slack-deploy@v2
         if: ${{ !cancelled() }}
         with:
