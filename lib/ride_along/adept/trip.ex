@@ -156,25 +156,7 @@ defmodule RideAlong.Adept.Trip do
   end
 
   def compare(%__MODULE__{} = a, %__MODULE__{} = b) do
-    date_compare =
-      case {a.pick_time, b.pick_time} do
-        {%DateTime{} = a_dt, %DateTime{} = b_dt} ->
-          DateTime.compare(a_dt, b_dt)
-
-        {%DateTime{}, _} ->
-          :lt
-
-        {_, %DateTime{}} ->
-          :gt
-
-        _ ->
-          :eq
-      end
-
     cond do
-      date_compare != :eq ->
-        date_compare
-
       a.trip_id < b.trip_id ->
         :lt
 
