@@ -53,6 +53,12 @@ defmodule RideAlongWeb.TripLive.Show do
         raise RideAlongWeb.NotFoundException
       end
 
+      if connected?(socket) do
+        :timer.send_interval(1_000, :countdown)
+        Phoenix.PubSub.subscribe(RideAlong.PubSub, "vehicle:#{socket.assigns.vehicle.vehicle_id}")
+        Phoenix.PubSub.subscribe(RideAlong.PubSub, "trips:updated")
+      end
+
       {:ok, socket}
     else
       _ -> raise RideAlongWeb.NotFoundException
@@ -61,10 +67,6 @@ defmodule RideAlongWeb.TripLive.Show do
 
   @impl true
   def handle_params(_, _, socket) do
-    :timer.send_interval(1_000, :countdown)
-    Phoenix.PubSub.subscribe(RideAlong.PubSub, "vehicle:#{socket.assigns.vehicle.vehicle_id}")
-    Phoenix.PubSub.subscribe(RideAlong.PubSub, "trips:updated")
-
     {:noreply, socket}
   end
 
