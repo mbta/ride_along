@@ -100,3 +100,16 @@ if config_env() == :prod do
       broker_topic_prefix: topic_prefix
   end
 end
+
+if issuer = System.get_env("KEYCLOAK_ISSUER") do
+  config :ueberauth_oidcc,
+    issuers: [
+      %{name: :keycloak_issuer, issuer: issuer}
+    ],
+    providers: [
+      keycloak: [
+        client_id: System.get_env("KEYCLOAK_CLIENT_ID"),
+        client_secret: System.get_env("KEYCLOAK_CLIENT_SECRET")
+      ]
+    ]
+end

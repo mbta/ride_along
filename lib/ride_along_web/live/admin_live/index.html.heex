@@ -1,0 +1,22 @@
+<.header>
+  Admin
+</.header>
+
+<div class="flex">
+  <div class="mr-8">
+    <.simple_form for={@form} phx-submit="update">
+      <.input field={@form["trip_id"]} label="Trip ID" />
+      <:actions>
+        <.button>View</.button>
+      </:actions>
+    </.simple_form>
+  </div>
+  <div>
+    <div :if={@iframe_url} class="h-full resizable size-iphone-12">
+      <iframe src={@iframe_url}></iframe>
+    </div>
+    <div :if={is_nil(@iframe_url)}>
+      Enter a trip ID and click "View" to see what the rider would see.
+    </div>
+  </div>
+</div>

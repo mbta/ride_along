@@ -63,6 +63,7 @@ defmodule RideAlong.MixProject do
       {:tds, "~> 2.3"},
       {:calendar, "~> 1.0.0"},
       {:faker, "~> 0.18"},
+      {:ueberauth_oidcc, "~> 0.4"},
       {:stream_data, "~> 1.0", only: :test},
       {:credo, "~> 1.7.7-rc", only: :dev, runtime: false},
       {:dialyxir, "~> 1.4", only: :dev, runtime: false},
