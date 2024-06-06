@@ -83,9 +83,10 @@ defmodule RideAlong.EtaMonitorTest do
 
   def log_level!(level) do
     old_level = Logger.level()
-    Logger.configure level: level
-    on_exit fn ->
-      Logger.configure level: old_level
-    end
+    Logger.configure(level: level)
+
+    on_exit(fn ->
+      Logger.configure(level: old_level)
+    end)
   end
 end
