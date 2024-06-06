@@ -29,7 +29,10 @@ defmodule RideAlong.Adept.Trip do
     dropoff_performed?: false
   ]
 
-  @type t :: %__MODULE__{}
+  @type id :: integer()
+  @type t :: %__MODULE__{
+          trip_id: id()
+        }
 
   @type status :: :closed | :enqueued | :enroute | :arrived | :picked_up
 
@@ -88,8 +91,6 @@ defmodule RideAlong.Adept.Trip do
         %Vehicle{} = vehicle,
         %DateTime{} = now
       ) do
-    hours_until_pick = DateTime.diff(trip.pick_time, now, :hour)
-
     cond do
       trip.dropoff_performed? ->
         :closed
@@ -97,7 +98,7 @@ defmodule RideAlong.Adept.Trip do
       max(vehicle.last_pick, vehicle.last_drop) >= trip.drop_order ->
         :closed
 
-      hours_until_pick > 0 ->
+      hours_until_pick(trip, now) > {:ok, 0} ->
         :closed
 
       trip.pickup_performed? ->
@@ -118,13 +119,11 @@ defmodule RideAlong.Adept.Trip do
   end
 
   def status(%__MODULE__{} = trip, nil, %DateTime{} = now) do
-    hours_until_pick = DateTime.diff(trip.pick_time, now, :hour)
-
     cond do
       trip.dropoff_performed? ->
         :closed
 
-      hours_until_pick > 0 ->
+      hours_until_pick(trip, now) > {:ok, 0} ->
         :closed
 
       trip.pickup_performed? ->
@@ -194,4 +193,10 @@ defmodule RideAlong.Adept.Trip do
 
     DateTime.add(noon, (hours - 12) * 60 + minutes, :minute)
   end
+
+  @spec hours_until_pick(t(), DateTime.t()) :: {:ok, integer()} | :unknown
+  def hours_until_pick(%__MODULE__{pick_time: nil}, _now), do: :unknown
+
+  def hours_until_pick(%__MODULE__{pick_time: pick_time}, now),
+    do: {:ok, DateTime.diff(pick_time, now, :hour)}
 end
