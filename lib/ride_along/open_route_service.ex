@@ -73,10 +73,7 @@ defmodule RideAlong.OpenRouteService do
       },
       "routes" => [
         %{
-          "summary" => %{
-            "distance" => distance,
-            "duration" => duration
-          },
+          "summary" => summary,
           "segments" => [
             %{
               "steps" => [
@@ -96,6 +93,9 @@ defmodule RideAlong.OpenRouteService do
         | _
       ]
     } = body
+
+    distance = Map.get(summary, "distance", 0.0)
+    duration = Map.get(summary, "duration", 0.0)
 
     %__MODULE__.Route{
       timestamp: DateTime.from_unix!(timestamp_ms, :millisecond),

@@ -6,18 +6,29 @@ defmodule RideAlong.OpenRouteServiceTest do
   alias RideAlong.OpenRouteService.{Location, Route}
 
   describe "directions/2" do
-    setup [:fixture]
-
     test "basic route response" do
+      stub(fixture())
       destination = %Location{lat: 42.3516728, lon: -71.0718109}
       source = %Location{lat: 42.3516768, lon: -71.0695149}
       assert {:ok, %Route{} = route} = OpenRouteService.directions(source, destination)
       assert route.bearing == 255
     end
+
+    test "handles a summary without a distance" do
+      body = fixture()
+      [route | _] = body["routes"]
+      route = %{route | "summary" => Map.delete(route["summary"], "distance")}
+      body = Map.put(body, "routes", [route])
+      stub(body)
+
+      destination = %Location{lat: 42.3516728, lon: -71.0718109}
+      source = %Location{lat: 42.3516768, lon: -71.0695149}
+      assert {:ok, %Route{}} = OpenRouteService.directions(source, destination)
+    end
   end
 
-  def fixture(_) do
-    body = %{
+  def fixture do
+    %{
       "bbox" => [-71.073062, 42.350431, -71.069449, 42.351597],
       "metadata" => %{
         "attribution" => "openrouteservice.org, OpenStreetMap contributors, tmc - BASt",
@@ -67,7 +78,9 @@ defmodule RideAlong.OpenRouteServiceTest do
         }
       ]
     }
+  end
 
+  def stub(body) do
     Req.Test.stub(RideAlong.OpenRouteService, fn conn ->
       Req.Test.json(conn, body)
     end)
