@@ -18,7 +18,7 @@ defmodule RideAlong.EtaMonitor do
     end
   end
 
-  defstruct trip_date_to_key: %{}
+  defstruct trip_date_to_key: %{}, latest_ors_eta: %{}
 
   @type trip_date :: {Adept.Trip.id(), Date.t()}
   @type key :: {pick_time :: DateTime.t(), status :: Adept.Trip.status()}
@@ -56,7 +56,15 @@ defmodule RideAlong.EtaMonitor do
         {{trip_id, date}, value}
       end
 
-    %{state | trip_date_to_key: trip_date_to_key}
+    trip_ids =
+      trip_date_to_key
+      |> Map.keys()
+      |> MapSet.new(&elem(&1, 0))
+
+    latest_ors_eta =
+      Map.filter(state.latest_ors_eta, fn {trip_id, _} -> MapSet.member?(trip_ids, trip_id) end)
+
+    %{state | trip_date_to_key: trip_date_to_key, latest_ors_eta: latest_ors_eta}
   end
 
   def update_trips(state, trips \\ Adept.all_trips(), now \\ DateTime.utc_now()) do
@@ -76,13 +84,13 @@ defmodule RideAlong.EtaMonitor do
     state = put_in(state.trip_date_to_key[trip_date], new_key)
 
     if new_key != old_key do
-      log_trip_status_change(trip, vehicle, status)
+      log_trip_status_change(state, trip, vehicle, status)
+    else
+      state
     end
-
-    state
   end
 
-  def log_trip_status_change(trip, vehicle, status) do
+  def log_trip_status_change(state, trip, vehicle, status) do
     route =
       if status not in [:arrived, :picked_up, :closed] and is_map(vehicle) do
         case RideAlong.OpenRouteService.directions(trip, vehicle) do
@@ -99,11 +107,13 @@ defmodule RideAlong.EtaMonitor do
           DateTime.add(vehicle.timestamp, trunc(route.duration * 1000), :millisecond)
         )
       else
-        nil
+        state.latest_ors_eta[trip.trip_id]
       end
 
     Logger.info(
       "#{__MODULE__} trip_id=#{trip.trip_id} route=#{trip.route_id} status=#{status} promise=#{DateTime.to_iso8601(trip.promise_time)} pick=#{DateTime.to_iso8601(trip.pick_time)} ors_eta=#{ors_eta}"
     )
+
+    put_in(state.latest_ors_eta[trip.trip_id], ors_eta)
   end
 end
