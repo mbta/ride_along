@@ -3,13 +3,34 @@
 </.header>
 
 <div class="flex">
-  <div class="mr-8">
-    <.simple_form for={@form} phx-submit="update">
-      <.input field={@form["trip_id"]} label="Trip ID" />
-      <:actions>
-        <.button>View</.button>
-      </:actions>
-    </.simple_form>
+  <div class="mr-8 overflow-y-scroll max-h-dvh">
+    <div>
+      <.simple_form for={@form} phx-submit="update">
+        <.input field={@form["trip_id"]} label="Trip ID" />
+        <:actions>
+          <.button>View</.button>
+        </:actions>
+      </.simple_form>
+    </div>
+    <table>
+      <thead>
+        <th class="p-1">Trip ID</th>
+        <th class="p-1">Promise Time</th>
+      </thead>
+      <tbody id="trips" phx-update="stream" class="pt-2">
+        <tr :for={{dom_id, trip} <- @streams.trips} id={dom_id}>
+          <td class="p-1">
+            <.link
+              patch={~p[/admin/?#{[trip_id: trip.trip_id]}]}
+              class="text-sky-500 hover:underline"
+            >
+              <%= trip.trip_id %>
+            </.link>
+          </td>
+          <td class="p-1"><%= Calendar.strftime(trip.promise_time, "%I:%M %p") %></td>
+        </tr>
+      </tbody>
+    </table>
   </div>
   <div>
     <div :if={@iframe_url} class="admin-h-full resizable size-iphone-12">
