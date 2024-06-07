@@ -1,5 +1,6 @@
 defmodule RideAlongWeb.AuthController do
   use RideAlongWeb, :controller
+  require Logger
   alias RideAlongWeb.AuthManager
 
   plug Ueberauth
@@ -20,6 +21,10 @@ defmodule RideAlongWeb.AuthController do
   end
 
   def callback(conn, _) do
+    reason = Map.get(conn.assigns, :ueberauth_failure)
+
+    Logger.info("{__MODULE__} login failure reason=#{inspect(reason)}")
+
     conn
     |> send_resp(:unauthorized, "unauthorized")
     |> halt()

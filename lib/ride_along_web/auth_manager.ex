@@ -4,6 +4,7 @@ defmodule RideAlongWeb.AuthManager do
   """
   # this isn't really a controller, but it gives us some functions we want to use
   use RideAlongWeb, :controller
+  require Logger
 
   def init(opts), do: opts
 
@@ -23,6 +24,8 @@ defmodule RideAlongWeb.AuthManager do
     logout_url = UeberauthOidcc.initiate_logout_url(auth)
 
     roles = auth.extra.raw_info.userinfo["roles"] || []
+
+    Logger.info("#{__MODULE__} logging_in user=#{auth.uid} roles=#{inspect(roles)}")
 
     conn
     |> put_session(:logout_url, logout_url)
