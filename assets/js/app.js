@@ -96,6 +96,9 @@ Hooks.Leaflet = {
         this.map.removeLayer(this.polyline);
       }
       this.vehicle = this.polyline = null;
+
+      // recenter the map
+      this.map.fitBounds([destination, destination], { padding: [5, 5] });
     });
   },
 };
