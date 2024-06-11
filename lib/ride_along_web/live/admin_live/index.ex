@@ -44,7 +44,7 @@ defmodule RideAlongWeb.AdminLive.Index do
       with trip_id_bin when is_binary(trip_id_bin) <- socket.assigns.form.params["trip_id"],
            {trip_id, ""} <- Integer.parse(trip_id_bin),
            token when is_binary(token) <- RideAlong.LinkShortener.get_token(trip_id) do
-        ~p"/t/#{token}"
+        url(~p"/t/#{token}")
       else
         _ -> nil
       end

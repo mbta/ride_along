@@ -7,6 +7,12 @@
     <div>
       <.simple_form for={@form} phx-submit="update">
         <.input field={@form["trip_id"]} label="Trip ID" />
+        <div :if={@iframe_url} class="pb-1">
+          URL:
+          <.link navigate={@iframe_url} target="_blank" class="text-sky-500 hover:underline">
+            <%= @iframe_url %>
+          </.link>
+        </div>
         <:actions>
           <.button>View</.button>
         </:actions>
