@@ -5,7 +5,7 @@ defmodule RideAlong.MixProject do
     [
       app: :ride_along,
       version: "0.1.0",
-      elixir: "~> 1.16",
+      elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       test_coverage: [
