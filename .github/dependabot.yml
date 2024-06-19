@@ -10,6 +10,8 @@ updates:
     schedule:
       interval: "daily"
       time: "09:00"
+    reviewers:
+      - "paulswartz"
     open-pull-requests-limit: 5
   - package-ecosystem: "npm" # See documentation for possible values
     directory: "assets" # Location of package manifests
@@ -17,8 +19,12 @@ updates:
       interval: "daily"
       time: "09:00"
     open-pull-requests-limit: 5
+    reviewers:
+      - "paulswartz"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    reviewers:
+      - "paulswartz"
