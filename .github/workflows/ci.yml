@@ -19,12 +19,9 @@ jobs:
         with:
           path: ~/.asdf
           key: ${{ runner.os }}-asdf-v2-${{ hashFiles('.tool-versions') }}
-        id: asdf-cache
-      # only run `asdf install` if we didn't hit the cache
+          save-always: true
       - uses: asdf-vm/actions/install@v3
-        if: steps.asdf-cache.outputs.cache-hit != 'true'
-      # only install Hex/Rebar if we didn't hit the cache
-      - if: steps.asdf-cache.outputs.cache-hit != 'true'
+      - name: Install Hex/Rebar
         run: |
           mix local.rebar --force
           mix local.hex --force
