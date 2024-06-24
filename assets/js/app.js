@@ -61,6 +61,8 @@ Hooks.Leaflet = {
     this.destination = L.marker([destination.lat, destination.lon], {
       icon: locationIcon,
       alt: destination.alt,
+      interactive: false,
+      keyboard: false,
     }).addTo(this.map);
 
     this.map.fitBounds([destination, destination], { padding: [5, 5] });
@@ -77,13 +79,18 @@ Hooks.Leaflet = {
           alt: vehicle,
           rotationOrigin: "center center",
           rotationAngle: r.bearing,
+          interactive: false,
+          keyboard: false,
         }).addTo(this.map);
       }
 
       if (this.polyline) {
         this.polyline.setLatLngs(decoded);
       } else {
-        this.polyline = L.polyline(decoded, { color: "blue" }).addTo(this.map);
+        this.polyline = L.polyline(decoded, {
+          color: "blue",
+          interactive: false,
+        }).addTo(this.map);
       }
 
       this.map.fitBounds(r.bbox, { padding: [5, 5] });
