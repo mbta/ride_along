@@ -18,6 +18,15 @@ defmodule RideAlongWeb.TripLiveTest do
       assert Floki.get_by_id(document, "map") != nil
     end
 
+    test "ETA is given an `aria-live` attribute", %{conn: conn} do
+      trip = List.first(RideAlong.Adept.all_trips())
+      token = RideAlong.LinkShortener.get_token(trip.trip_id)
+      {:ok, _show_live, html} = live(conn, ~p"/t/#{token}")
+      {:ok, document} = Floki.parse_document(html)
+      elements = Floki.find(document, "[aria-live]")
+      assert Floki.text(elements) =~ "ETA"
+    end
+
     test "unknown trip raises 404", %{conn: conn} do
       assert_raise RideAlongWeb.NotFoundException, fn -> live(conn, ~p"/t/missing") end
     end

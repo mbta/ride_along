@@ -1,6 +1,6 @@
-<h1 class="sr-only"><%= @page_title %></h1>
 <div class="flex flex-col-reverse h-dvh">
   <div class="p-2 basis-24 bg-slate-600 text-white">
+    <h1 class="sr-only"><%= @page_title %></h1>
     <div>
       <.link
         class="float-right rounded-full border-solid border border-white p-1"
@@ -13,20 +13,28 @@
     <div :if={@status in [:enqueued, :enroute]}>
       <.labeled_field title={gettext("Location")} value={RideAlong.Adept.Trip.address(@trip)} />
       <.labeled_field title={gettext("Promise Time")} value={format_eta(@trip.promise_time)} />
-      <.labeled_field title={gettext("ETA")} value={@eta_text} />
+      <.labeled_field
+        title={gettext("ETA")}
+        value={@eta_text}
+        aria-role="timer"
+        aria-live="polite"
+        aria-atomic="true"
+      />
     </div>
-    <div :if={@status == :enqueued}>
-      <%= ngettext(
-        "There is one stop ahead of you.",
-        " There are %{count} stops ahead of you.",
-        @trip.pick_order - max(@vehicle.last_pick, @vehicle.last_drop) - 1
-      ) %>
-    </div>
-    <div :if={@status == :arrived}>
-      <%= gettext("Your vehicle has arrived!") %>
-    </div>
-    <div :if={@status in [:picked_up, :closed]}>
-      <%= gettext("You have been picked up!") %>
+    <div aria-live="polite" aria-atomic="true" aria-role="status">
+      <span :if={@status == :enqueued}>
+        <%= ngettext(
+          "There is one stop ahead of you.",
+          " There are %{count} stops ahead of you.",
+          @trip.pick_order - max(@vehicle.last_pick, @vehicle.last_drop) - 1
+        ) %>
+      </span>
+      <span :if={@status == :arrived}>
+        <%= gettext("Your vehicle has arrived!") %>
+      </span>
+      <span :if={@status in [:picked_up, :closed]}>
+        <%= gettext("You have been picked up!") %>
+      </span>
     </div>
     <div :if={Application.get_env(:ride_along, :dev_routes)}>
       <.labeled_field title={gettext("Status")} value={inspect(@status)} />

@@ -246,10 +246,11 @@ defmodule RideAlongWeb.TripLive.Show do
 
   attr :title, :string, required: true
   attr :value, :any, required: true
+  attr :rest, :global
 
   def labeled_field(assigns) do
     ~H"""
-    <div><span class="font-bold"><%= @title %>:</span> <%= @value %></div>
+    <div {@rest}><span class="font-bold"><%= @title %>:</span> <%= @value %></div>
     """
   end
 end
