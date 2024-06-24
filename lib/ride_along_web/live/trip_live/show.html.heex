@@ -1,3 +1,4 @@
+<h1 class="sr-only"><%= @page_title %></h1>
 <div class="flex flex-col-reverse h-dvh">
   <div class="p-2 basis-24 bg-slate-600 text-white">
     <div>
@@ -9,7 +10,6 @@
         <span role="none"><.icon name="hero-phone-solid" class="aspect-square w-3 h-3" /></span>
       </.link>
     </div>
-    <h1 class="sr-only"><%= @page_title %></h1>
     <div :if={@status in [:enqueued, :enroute]}>
       <.labeled_field title={gettext("Location")} value={RideAlong.Adept.Trip.address(@trip)} />
       <.labeled_field title={gettext("Promise Time")} value={format_eta(@trip.promise_time)} />
@@ -54,6 +54,12 @@
       phx-hook="Leaflet"
       data-vehicle={gettext("Vehicle number %{vehicle_id}", vehicle_id: @vehicle.vehicle_id)}
       data-destination={destination(@trip)}
+      aria-label={
+        gettext("Map of vehicle number %{vehicle_id} picking up at %{destination}",
+          vehicle_id: @vehicle.vehicle_id,
+          destination: RideAlong.Adept.Trip.address(@trip)
+        )
+      }
     >
     </div>
   </div>
