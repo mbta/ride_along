@@ -24,16 +24,22 @@ if System.get_env("PHX_SERVER") do
   config :ride_along, RideAlong.EtaMonitor, start: true
 end
 
-if System.get_env("SQLCMDSERVER") != nil and config_env() != :test do
-  config :ride_along, RideAlong.SqlPublisher,
-    database: [
-      hostname: System.fetch_env!("SQLCMDSERVER"),
-      port: 1433,
-      username: System.get_env("SQLCMDUSER") || "",
-      password: System.get_env("SQLCMDPASSWORD") || "",
-      database: "ADEPT6_GCS"
-    ],
-    start: true
+if System.get_env("SQLCMDSERVER") == nil do
+  if config_env() == :dev do
+    config :ride_along, RideAlong.FakePublisher, start: true
+  end
+else
+  if config_env() != :test do
+    config :ride_along, RideAlong.SqlPublisher,
+      database: [
+        hostname: System.fetch_env!("SQLCMDSERVER"),
+        port: 1433,
+        username: System.get_env("SQLCMDUSER") || "",
+        password: System.get_env("SQLCMDPASSWORD") || "",
+        database: "ADEPT6_GCS"
+      ],
+      start: true
+  end
 end
 
 if config_env() == :prod do

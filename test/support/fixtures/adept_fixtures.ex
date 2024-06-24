@@ -19,7 +19,7 @@ defmodule RideAlong.AdeptFixtures do
           date: DateTime.to_date(local_timestamp(0, :second)),
           pick_time: local_timestamp(30, :minute),
           promise_time: local_timestamp(35, :minute),
-          lat: Decimal.new("-42.3434"),
+          lat: Decimal.new("42.3434"),
           lon: Decimal.new("-71.06166"),
           house_number: "144",
           address1: "LUETTGEN VILLAGE",
@@ -44,7 +44,7 @@ defmodule RideAlong.AdeptFixtures do
         %{
           route_id: @route_id,
           vehicle_id: @vehicle_id,
-          lat: Decimal.new("-42.34340"),
+          lat: Decimal.new("42.34340"),
           lon: Decimal.new("-71.06166"),
           timestamp: local_timestamp(-1, :second),
           last_pick: 4,
