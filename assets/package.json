@@ -1,11 +1,13 @@
 {
+  "scripts": {
+    "standard": "standard"
+  },
   "dependencies": {
     "leaflet": "^1.9.4",
     "leaflet-rotatedmarker": "^0.2.0",
-    "lodash": "^4.17.21",
     "polyline-encoded": "^0.0.9"
   },
   "devDependencies": {
-    "prettier": "^3.3.2"
+    "standard": "^17.1.0"
   }
 }
