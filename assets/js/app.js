@@ -51,7 +51,7 @@ Hooks.Leaflet = {
       maxZoom: 18,
       minZoom: 9,
       attribution:
-        '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(this.map)
 
     const destination = JSON.parse(this.el.dataset.destination)
