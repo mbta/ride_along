@@ -171,7 +171,11 @@ defmodule RideAlongWeb.TripLive.Show do
   end
 
   defp assign_eta(socket) do
-    assign(socket, :eta_text, calculate_eta(socket.assigns))
+    eta = calculate_eta(socket.assigns)
+
+    socket
+    |> assign(:eta, DateTime.to_iso8601(eta))
+    |> assign(:eta_text, format_eta(eta))
   end
 
   defp assign_status(socket) do
@@ -217,17 +221,17 @@ defmodule RideAlongWeb.TripLive.Show do
     earliest_arrival = DateTime.add(assigns.trip.promise_time, -5, :minute)
 
     if DateTime.compare(earliest_arrival, rounded_eta) == :gt do
-      format_eta(earliest_arrival)
+      earliest_arrival
     else
-      format_eta(rounded_eta)
+      rounded_eta
     end
   end
 
   def calculate_eta(%{trip: trip}) do
-    format_eta(trip.pick_time)
+    trip.pick_time
   end
 
-  defp format_eta(dt) do
+  def format_eta(dt) do
     dt
     |> Calendar.Strftime.strftime!("%l:%M %p")
     |> String.trim_leading()
@@ -245,12 +249,15 @@ defmodule RideAlongWeb.TripLive.Show do
   end
 
   attr :title, :string, required: true
-  attr :value, :any, required: true
+  attr :value, :any, default: []
   attr :rest, :global
+  slot :inner_block, default: []
 
   def labeled_field(assigns) do
     ~H"""
-    <div {@rest}><span class="font-bold"><%= @title %>:</span> <%= @value %></div>
+    <div {@rest}>
+      <span class="font-bold"><%= @title %>:</span> <%= @value %><%= render_slot(@inner_block) %>
+    </div>
     """
   end
 end

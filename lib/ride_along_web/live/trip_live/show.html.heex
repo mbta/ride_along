@@ -1,6 +1,7 @@
+<h1 class="sr-only"><%= @page_title %></h1>
 <div class="flex flex-col-reverse h-dvh">
-  <div class="p-2 basis-24 bg-slate-600 text-white">
-    <h1 class="sr-only"><%= @page_title %></h1>
+  <section class="p-2 basis-24 bg-slate-600 text-white" aria-labelledby="trip-information-label">
+    <h2 id="trip-information-label" class="sr-only"><%= gettext("Trip Information") %></h2>
     <div>
       <.link
         class="float-right rounded-full border-solid border border-white p-1"
@@ -11,15 +12,18 @@
       </.link>
     </div>
     <div :if={@status in [:enqueued, :enroute]}>
-      <.labeled_field title={gettext("Location")} value={RideAlong.Adept.Trip.address(@trip)} />
+      <.labeled_field title={gettext("Location")}>
+        <address class="not-italic inline"><%= RideAlong.Adept.Trip.address(@trip) %></address>
+      </.labeled_field>
       <.labeled_field title={gettext("Promise Time")} value={format_eta(@trip.promise_time)} />
       <.labeled_field
         title={gettext("ETA")}
-        value={@eta_text}
         aria-role="timer"
         aria-live="polite"
         aria-atomic="true"
-      />
+      >
+        <time datetime={@eta}><%= @eta_text %></time>
+      </.labeled_field>
     </div>
     <div aria-live="polite" aria-atomic="true" aria-role="status">
       <span :if={@status == :enqueued}>
@@ -53,8 +57,9 @@
       <.labeled_field title={gettext("Last Pick")} value={@vehicle.last_pick} />
       <.labeled_field title={gettext("Last Drop")} value={@vehicle.last_drop} />
     </div>
-  </div>
-  <div class="flex-1">
+  </section>
+  <section class="flex-1" aria-labelledby="map-label">
+    <h2 label="map-label" class="sr-only">Map</h2>
     <div
       id="map"
       class="h-full"
@@ -70,5 +75,5 @@
       }
     >
     </div>
-  </div>
+  </section>
 </div>

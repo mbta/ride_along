@@ -44,7 +44,7 @@ defmodule RideAlongWeb.TripLiveTest do
         trip: Fixtures.trip_fixture(%{pick_time: pick_time})
       }
 
-      assert Show.calculate_eta(assigns) == "3:43 PM"
+      assert Show.format_eta(Show.calculate_eta(assigns)) == "3:43 PM"
     end
 
     test "with route, uses the duration plus the vehicle timestamp, rounding up", %{now: now} do
@@ -54,7 +54,7 @@ defmodule RideAlongWeb.TripLiveTest do
         route: %Route{duration: 60.5}
       }
 
-      assert Show.calculate_eta(assigns) == "3:45 PM"
+      assert Show.format_eta(Show.calculate_eta(assigns)) == "3:45 PM"
     end
 
     test "does not use an ETA more than 5 minutes before the promise time", %{now: now} do
@@ -65,7 +65,7 @@ defmodule RideAlongWeb.TripLiveTest do
         route: %Route{duration: 0}
       }
 
-      assert Show.calculate_eta(assigns) == "4:25 PM"
+      assert Show.format_eta(Show.calculate_eta(assigns)) == "4:25 PM"
     end
   end
 
