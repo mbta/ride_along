@@ -12,6 +12,7 @@
       </.link>
     </div>
     <div :if={@status in [:enqueued, :enroute]}>
+      <.labeled_field title={gettext("Vehicle")} value={@vehicle.vehicle_id} />
       <.labeled_field title={gettext("Location")}>
         <address class="not-italic inline"><%= RideAlong.Adept.Trip.address(@trip) %></address>
       </.labeled_field>
@@ -34,6 +35,7 @@
         ) %>
       </span>
       <span :if={@status == :arrived}>
+        <.labeled_field title={gettext("Vehicle")} value={@vehicle.vehicle_id} />
         <%= gettext("Your vehicle has arrived!") %>
       </span>
       <span :if={@status in [:picked_up, :closed]}>
