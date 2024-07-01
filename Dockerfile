@@ -52,8 +52,9 @@ RUN mix release
 FROM debian:${DEBIAN_VERSION}-slim
 
 RUN apt-get update --allow-releaseinfo-change && \
+  apt-get upgrade -y --no-install-recommends && \
   apt-get install -y --no-install-recommends \
-    libssl3 libsctp1 curl ca-certificates && \
+    ca-certificates && \
   rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
