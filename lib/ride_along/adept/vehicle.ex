@@ -14,7 +14,7 @@ defmodule RideAlong.Adept.Vehicle do
     :timestamp,
     :last_pick,
     :last_drop,
-    :last_arrived_trip
+    last_arrived_trips: []
   ]
 
   @type t :: %__MODULE__{}
@@ -30,7 +30,8 @@ defmodule RideAlong.Adept.Vehicle do
       "LocationDate" => location_timestamp,
       "LastPick" => last_pick,
       "LastDrop" => last_drop,
-      "LastArrivedTrip" => last_arrived_trip
+      "LastArrivedTrip" => last_arrived_trip,
+      "LastDispatchArrivedTrip" => last_dispatch_arrived_trip
     } = map
 
     %__MODULE__{
@@ -42,7 +43,13 @@ defmodule RideAlong.Adept.Vehicle do
       timestamp: RideAlong.SqlParser.local_timestamp(location_timestamp),
       last_pick: last_pick,
       last_drop: last_drop,
-      last_arrived_trip: last_arrived_trip
+      last_arrived_trips: last_arrived_trips(last_arrived_trip, last_dispatch_arrived_trip)
     }
   end
+
+  defp last_arrived_trips(nil, nil), do: []
+  defp last_arrived_trips(trip_id, nil), do: [trip_id]
+  defp last_arrived_trips(nil, trip_id), do: [trip_id]
+  defp last_arrived_trips(trip_id, trip_id), do: [trip_id]
+  defp last_arrived_trips(trip_id, trip_id_2), do: [trip_id, trip_id_2]
 end

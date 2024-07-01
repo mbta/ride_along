@@ -104,7 +104,8 @@ defmodule RideAlong.FakePublisher do
             {{now.year, now.month, now.day}, {now.hour, now.minute, now.second, 0}},
           "LastPick" => 0,
           "LastDrop" => 0,
-          "LastArrivedTrip" => 0
+          "LastArrivedTrip" => nil,
+          "LastDispatchArrivedTrip" => nil
         }
       ]
     }

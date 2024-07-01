@@ -49,7 +49,7 @@ defmodule RideAlong.AdeptFixtures do
           timestamp: local_timestamp(-1, :second),
           last_pick: 4,
           last_drop: 2,
-          last_arrived_trip: @trip_id + 1
+          last_arrived_trips: []
         },
         attrs
       )
