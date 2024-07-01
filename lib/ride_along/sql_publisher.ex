@@ -62,6 +62,7 @@ defmodule RideAlong.SqlPublisher do
     case tds_query(state.tds, sql, parameters) do
       {:ok, results} ->
         Logger.info("#{__MODULE__} query success name=#{name} results=#{length(results)}")
+        Logger.debug("#{__MODULE__} query result name=#{name} results=#{inspect(results)}")
         state = put_in(state.results[name], results)
         publish(state, name)
         {:noreply, state}
@@ -121,7 +122,7 @@ defmodule RideAlong.SqlPublisher do
     %{
       trips: %{
         sql: ~s[SELECT Id, TripDate, RouteId,
-             Anchor, PickTime, PromiseTime,
+             Status, Anchor, PickTime, PromiseTime,
              PickHouseNumber, PickAddress1, PickAddress2, PickCity, PickSt, PickZip,
              PickGridX, PickGridY,
              PickOrder, DropOrder, PerformPickup, PerformDropoff
@@ -138,7 +139,10 @@ defmodule RideAlong.SqlPublisher do
                  WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.PerformDropoff != 0) AS LastDrop,
                (SELECT TOP 1 TripId FROM dbo.MDCVEHICLELOCATION
                  WHERE RouteId = l.RouteId AND LocationDate >= @service_date AND EventType='StopArrive'
-                 ORDER BY LocationDate DESC) AS LastArrivedTrip
+                 ORDER BY LocationDate DESC) AS LastArrivedTrip,
+               (SELECT TOP 1 t.Id FROM dbo.TRIP t
+                 WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.Status = 'S'
+                 ORDER BY t.APtime1 DESC) AS LastDispatchArrivedTrip
                   FROM dbo.MDCVEHICLELOCATION l 
                   WHERE LocationDate >= @service_date AND 
                   LocationDate = (SELECT max(l1.LocationDate) from dbo.MDCVEHICLELOCATION l1 where l1.RouteId = l.RouteId)

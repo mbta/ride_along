@@ -107,7 +107,7 @@ defmodule RideAlong.Adept.Trip do
       max(vehicle.last_pick, vehicle.last_drop) >= trip.pick_order ->
         :picked_up
 
-      trip.trip_id == vehicle.last_arrived_trip ->
+      trip.trip_id in vehicle.last_arrived_trips ->
         :arrived
 
       trip.pick_order - max(vehicle.last_pick, vehicle.last_drop) == 1 ->

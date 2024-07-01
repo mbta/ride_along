@@ -122,7 +122,7 @@ defmodule RideAlong.Adept.TripTest do
       trip: trip,
       now: now
     } do
-      vehicle = Fixtures.vehicle_fixture(%{last_arrived_trip: trip.trip_id})
+      vehicle = Fixtures.vehicle_fixture(%{last_arrived_trips: [trip.trip_id + 1, trip.trip_id]})
 
       assert Trip.status(trip, vehicle, now) == :arrived
     end
