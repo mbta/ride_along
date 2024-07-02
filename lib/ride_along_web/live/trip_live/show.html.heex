@@ -42,23 +42,6 @@
         <%= gettext("You have been picked up!") %>
       </span>
     </div>
-    <div :if={Application.get_env(:ride_along, :dev_routes)}>
-      <.labeled_field title={gettext("Status")} value={inspect(@status)} />
-      <.labeled_field title={gettext("Trip ID")} value={@trip.trip_id} />
-      <.labeled_field title={gettext("Route ID")} value={@trip.route_id} />
-      <.labeled_field title={gettext("Current Time")} value={@now} />
-      <.labeled_field title={gettext("Pick Time")} value={@trip.pick_time} />
-      <.labeled_field
-        :if={@route}
-        title={gettext("ETA")}
-        value={DateTime.add(@vehicle.timestamp, trunc(@route.duration * 1000), :millisecond)}
-      />
-      <.labeled_field :if={@route} title={gettext("Duration (s)")} value={@route.duration} />
-      <.labeled_field title={gettext("Last Updated")} value={@vehicle.timestamp} />
-      <.labeled_field title={gettext("Pick Order")} value={@trip.pick_order} />
-      <.labeled_field title={gettext("Last Pick")} value={@vehicle.last_pick} />
-      <.labeled_field title={gettext("Last Drop")} value={@vehicle.last_drop} />
-    </div>
   </section>
   <section class="flex-1" aria-labelledby="map-label">
     <h2 label="map-label" class="sr-only">Map</h2>
@@ -78,4 +61,21 @@
     >
     </div>
   </section>
+</div>
+<div :if={Application.get_env(:ride_along, :dev_routes)} class="w-96 h-96 absolute top-0 right-0" role="none">
+  <.labeled_field title={gettext("Status")} value={inspect(@status)} />
+  <.labeled_field title={gettext("Trip ID")} value={@trip.trip_id} />
+  <.labeled_field title={gettext("Route ID")} value={@trip.route_id} />
+  <.labeled_field title={gettext("Current Time")} value={@now} />
+  <.labeled_field title={gettext("Pick Time")} value={@trip.pick_time} />
+  <.labeled_field
+    :if={@route}
+    title={gettext("ETA")}
+    value={DateTime.add(@vehicle.timestamp, trunc(@route.duration * 1000), :millisecond)}
+  />
+  <.labeled_field :if={@route} title={gettext("Duration (s)")} value={@route.duration} />
+  <.labeled_field title={gettext("Last Updated")} value={@vehicle.timestamp} />
+  <.labeled_field title={gettext("Pick Order")} value={@trip.pick_order} />
+  <.labeled_field title={gettext("Last Pick")} value={@vehicle.last_pick} />
+  <.labeled_field title={gettext("Last Drop")} value={@vehicle.last_drop} />
 </div>
