@@ -18,12 +18,12 @@ defmodule RideAlongWeb.TripLiveTest do
       assert Floki.get_by_id(document, "map") != nil
     end
 
-    test "ETA is given an `aria-live` attribute", %{conn: conn} do
+    test "ETA is given an `aria-role` of `status`", %{conn: conn} do
       trip = List.first(RideAlong.Adept.all_trips())
       token = RideAlong.LinkShortener.get_token(trip.trip_id)
       {:ok, _show_live, html} = live(conn, ~p"/t/#{token}")
       {:ok, document} = Floki.parse_document(html)
-      elements = Floki.find(document, "[aria-live]")
+      elements = Floki.find(document, "[aria-role=status]")
       assert Floki.text(elements) =~ "ETA"
     end
 
