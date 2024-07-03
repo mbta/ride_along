@@ -11,7 +11,8 @@ defmodule RideAlongWeb.AdminLive.Index do
 
     {:ok,
      socket
-     |> stream_configure(:trips, dom_id: &"trips-#{&1.trip_id}")
+     |> assign(:now, DateTime.utc_now())
+     |> stream_configure(:trips, dom_id: &"trips-#{elem(&1, 0).trip_id}")
      |> stream(:trips, open_trips())}
   end
 
@@ -36,6 +37,7 @@ defmodule RideAlongWeb.AdminLive.Index do
   def handle_info(:trips_updated, socket) do
     {:noreply,
      socket
+     |> assign(:now, DateTime.utc_now())
      |> stream(:trips, open_trips(), reset: true)}
   end
 
@@ -63,9 +65,9 @@ defmodule RideAlongWeb.AdminLive.Index do
           vehicle = Adept.get_vehicle_by_route(trip.route_id),
           status = Adept.Trip.status(trip, vehicle, now),
           status != :closed do
-        trip
+        {trip, vehicle}
       end
 
-    Enum.sort_by(trips, & &1.promise_time, DateTime)
+    Enum.sort_by(trips, &elem(&1, 0).promise_time, DateTime)
   end
 end
