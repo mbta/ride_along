@@ -24,6 +24,11 @@
             ) %>
           </span>
           <span :if={@status == :arrived}>
+            <span
+              role="none"
+              class="align-middle inline-block -mt-0.5 w-4 h-4 bg-green-400 rounded-full"
+            >
+            </span>
             <%= gettext("Your RIDE is here!") %>
           </span>
           <span :if={@status in [:picked_up, :closed]}>
@@ -37,11 +42,14 @@
         >
           <%= gettext("Promise time is %{time}", %{time: format_eta(@trip.promise_time)}) %>
         </time>
+        <span :if={@status == :arrived} class="block text-sm px-4">
+          <%= gettext("The driver will go to your door and wait for up to five minutes.") %>
+        </span>
       </div>
       <div class="grow-0">
         <.link
           class="block rounded-xl border-solid border border-white p-2"
-          navigate="tel:844-427-7433"
+          href="tel:844-427-7433"
           title={gettext("Call The RIDE Access Center")}
         >
           <span role="none"><.icon name="hero-phone-solid" class="aspect-square w-4 h-4" /></span>
@@ -63,6 +71,13 @@
           <address class="grow-1 not-italic"><%= RideAlong.Adept.Trip.address(@trip) %></address>
         </div>
       </div>
+    </div>
+    <div :if={@status == :arrived} class="pb-4 px-4">
+      <.linkify_phone text={
+        gettext(
+          "If you are delayed, call TRAC as soon as possible at 844-427-7433 to request a new pick-up time."
+        )
+      } />
     </div>
   </section>
   <section class="flex-1" aria-labelledby="map-label">

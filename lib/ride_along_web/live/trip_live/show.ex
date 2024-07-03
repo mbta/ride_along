@@ -248,6 +248,19 @@ defmodule RideAlongWeb.TripLive.Show do
     )
   end
 
+  attr :text, :string, required: true
+
+  def linkify_phone(assigns) do
+    ~H"""
+    <% [first | rest] = Regex.split(~r|\d{3}-\d{3}-\d{4}|, assigns[:text], include_captures: true) %>
+    <%= first %>
+    <span :for={[phone, after_phone] <- Enum.chunk_every(rest, 2)}>
+      <.link class="underline" href={"tel:" <> phone}><%= phone %></.link>
+      <%= after_phone %>
+    </span>
+    """
+  end
+
   attr :title, :string, required: true
   attr :value, :any, default: []
   attr :rest, :global
