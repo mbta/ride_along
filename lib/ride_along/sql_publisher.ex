@@ -121,22 +121,23 @@ defmodule RideAlong.SqlPublisher do
 
     %{
       trips: %{
-        sql: ~s[SELECT Id, TripDate, RouteId,
+        sql:
+          ~s[SELECT Id, TripDate, RouteId,
              Status, Anchor, PickTime, PromiseTime,
              PickHouseNumber, PickAddress1, PickAddress2, PickCity, PickSt, PickZip,
              PickGridX, PickGridY,
              PickOrder, DropOrder, PerformPickup, PerformDropoff
              FROM dbo.TRIP t
-             WHERE t.TripDate = @service_date AND PickGridX != 0 AND PickGridY != 0],
+             WHERE t.TripDate = @service_date AND PickGridX != 0 AND PickGridY != 0 AND ClientId > 0],
         parameters: %{service_date: service_date},
         interval: 300_000
       },
       locations: %{
         sql: ~s[SELECT RouteId, VehicleId, Latitude, Longitude, Heading, LocationDate,
-               (SELECT MAX(PickOrder) FROM dbo.TRIP t
-                 WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.PerformPickup != 0) AS LastPick,
-               (SELECT MAX(DropOrder) FROM dbo.TRIP t
-                 WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.PerformDropoff != 0) AS LastDrop,
+               COALESCE((SELECT MAX(PickOrder) FROM dbo.TRIP t
+                 WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.PerformPickup != 0), 1) AS LastPick,
+               COALESCE((SELECT MAX(DropOrder) FROM dbo.TRIP t
+                 WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.PerformDropoff != 0), 1) AS LastDrop,
                (SELECT TOP 1 TripId FROM dbo.MDCVEHICLELOCATION
                  WHERE RouteId = l.RouteId AND LocationDate >= @service_date AND EventType='StopArrive'
                  ORDER BY LocationDate DESC) AS LastArrivedTrip,
