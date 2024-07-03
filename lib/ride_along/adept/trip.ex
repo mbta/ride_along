@@ -91,6 +91,8 @@ defmodule RideAlong.Adept.Trip do
         %Vehicle{} = vehicle,
         %DateTime{} = now
       ) do
+    minutes_remaining = minutes_until_pick(trip, now)
+
     cond do
       trip.dropoff_performed? ->
         :closed
@@ -98,7 +100,7 @@ defmodule RideAlong.Adept.Trip do
       max(vehicle.last_pick, vehicle.last_drop) >= trip.drop_order ->
         :closed
 
-      hours_until_pick(trip, now) > {:ok, 0} ->
+      minutes_remaining > {:ok, 59} ->
         :closed
 
       trip.pickup_performed? ->
@@ -111,7 +113,7 @@ defmodule RideAlong.Adept.Trip do
         :arrived
 
       trip.pick_order - max(vehicle.last_pick, vehicle.last_drop) == 1 ->
-        :enroute
+        enroute_or_waiting_status(trip, vehicle, minutes_remaining)
 
       true ->
         :enqueued
@@ -123,7 +125,7 @@ defmodule RideAlong.Adept.Trip do
       trip.dropoff_performed? ->
         :closed
 
-      hours_until_pick(trip, now) > {:ok, 0} ->
+      minutes_until_pick(trip, now) > {:ok, 59} ->
         :closed
 
       trip.pickup_performed? ->
@@ -131,6 +133,20 @@ defmodule RideAlong.Adept.Trip do
 
       true ->
         :enqueued
+    end
+  end
+
+  defp enroute_or_waiting_status(trip, vehicle, minutes_remaining) do
+    distance =
+      :vincenty.distance(
+        {Decimal.to_float(vehicle.lat), Decimal.to_float(vehicle.lon)},
+        {Decimal.to_float(trip.lat), Decimal.to_float(trip.lon)}
+      )
+
+    if distance < 0.5 and minutes_remaining > {:ok, -10} do
+      :waiting
+    else
+      :enroute
     end
   end
 
@@ -194,9 +210,9 @@ defmodule RideAlong.Adept.Trip do
     DateTime.add(noon, (hours - 12) * 60 + minutes, :minute)
   end
 
-  @spec hours_until_pick(t(), DateTime.t()) :: {:ok, integer()} | :unknown
-  def hours_until_pick(%__MODULE__{pick_time: nil}, _now), do: :unknown
+  @spec minutes_until_pick(t(), DateTime.t()) :: {:ok, integer()} | :unknown
+  def minutes_until_pick(%__MODULE__{pick_time: nil}, _now), do: :unknown
 
-  def hours_until_pick(%__MODULE__{pick_time: pick_time}, now),
-    do: {:ok, DateTime.diff(pick_time, now, :hour)}
+  def minutes_until_pick(%__MODULE__{pick_time: pick_time}, now),
+    do: {:ok, DateTime.diff(pick_time, now, :minute)}
 end

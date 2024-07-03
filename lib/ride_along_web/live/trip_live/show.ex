@@ -117,8 +117,6 @@ defmodule RideAlongWeb.TripLive.Show do
     eta =
       DateTime.add(socket.assigns.vehicle.timestamp, trunc(route.duration * 1000), :millisecond)
 
-    {bbox1, bbox2} = route.bbox
-
     Logger.info(
       "#{__MODULE__} route calculated trip_id=#{trip.trip_id} route=#{trip.route_id} pick_time=#{DateTime.to_iso8601(trip.pick_time)} eta=#{DateTime.to_iso8601(eta)}"
     )
@@ -127,11 +125,7 @@ defmodule RideAlongWeb.TripLive.Show do
      socket
      |> assign(:route, route)
      |> assign_eta()
-     |> push_event("route", %{
-       bbox: [[bbox1.lat, bbox1.lon], [bbox2.lat, bbox2.lon]],
-       bearing: socket.assigns.vehicle.heading,
-       polyline: route.polyline
-     })}
+     |> push_route()}
   end
 
   def handle_async(:route, {:ok, nil}, socket) do
@@ -139,7 +133,7 @@ defmodule RideAlongWeb.TripLive.Show do
      socket
      |> assign(:route, nil)
      |> assign_eta()
-     |> push_event("clearRoute", %{})}
+     |> push_route()}
   end
 
   def handle_async(:route, _, socket) do
@@ -159,7 +153,7 @@ defmodule RideAlongWeb.TripLive.Show do
       end
 
     cond do
-      socket.assigns.status != :enroute ->
+      socket.assigns.status not in [:enroute, :waiting] ->
         start_async(socket, :route, fn -> nil end)
 
       Map.take(source, [:lat, :lon]) != Map.take(old_source, [:lat, :lon]) ->
@@ -194,6 +188,36 @@ defmodule RideAlongWeb.TripLive.Show do
     end
 
     assign(socket, :status, new_status)
+  end
+
+  defp push_route(%{assigns: %{status: :enroute}} = socket) do
+    %{route: route, vehicle: vehicle} = socket.assigns
+
+    {bbox1, bbox2} = route.bbox
+
+    push_event(socket, "route", %{
+      bbox: [[bbox1.lat, bbox1.lon], [bbox2.lat, bbox2.lon]],
+      bearing: vehicle.heading,
+      polyline: route.polyline
+    })
+  end
+
+  defp push_route(socket) do
+    popup =
+      case socket.assigns.status do
+        :waiting ->
+          gettext("Your RIDE is nearby and will pick you up shortly.")
+
+        :arrived ->
+          gettext("Your RIDE is here!")
+
+        _ ->
+          nil
+      end
+
+    push_event(socket, "clearRoute", %{
+      popup: popup
+    })
   end
 
   def status(assigns) do

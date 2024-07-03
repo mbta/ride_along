@@ -152,6 +152,31 @@ defmodule RideAlong.Adept.TripTest do
 
       assert Trip.status(trip, vehicle, now) == :enroute
     end
+
+    test "is :waiting if the pickup is next, but the vehicle is nearby and early", %{
+      trip: trip,
+      now: now
+    } do
+      vehicle =
+        Fixtures.vehicle_fixture(%{lat: trip.lat, lon: trip.lon})
+
+      assert Trip.status(trip, vehicle, now) == :waiting
+    end
+
+    test "is :enroute if the pickup is next, but the vehicle is nearby and late", %{
+      trip: trip
+    } do
+      now = DateTime.add(trip.promise_time, 15, :minute)
+
+      vehicle =
+        Fixtures.vehicle_fixture(%{
+          timestamp: now,
+          lat: trip.lat,
+          lon: trip.lon
+        })
+
+      assert Trip.status(trip, vehicle, now) == :enroute
+    end
   end
 
   describe "address/1" do

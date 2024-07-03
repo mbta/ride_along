@@ -94,7 +94,7 @@ Hooks.Leaflet = {
 
       this.map.fitBounds(r.bbox, { padding: [5, 5] })
     })
-    this.handleEvent('clearRoute', () => {
+    this.handleEvent('clearRoute', (d) => {
       if (this.vehicle) {
         this.map.removeLayer(this.vehicle)
       }
@@ -105,6 +105,19 @@ Hooks.Leaflet = {
 
       // recenter the map
       this.map.fitBounds([destination, destination], { padding: [5, 5] })
+      this.destination.closePopup()
+      if (d.popup) {
+        this.destination.bindPopup(d.popup, {
+          offset: [0, -10],
+          maxWidth: 250,
+          closeButton: false,
+          autoClose: false,
+          closeOnEscapeKey: false,
+          closeOnClick: false,
+          interactive: false,
+          className: 'destination-popup'
+        }).openPopup()
+      }
     })
   }
 }

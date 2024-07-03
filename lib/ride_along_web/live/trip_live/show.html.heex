@@ -8,7 +8,7 @@
     <div class="flex flex-row pb-4">
       <div class="grow text-center w-full">
         <time
-          :if={@status == :enroute}
+          :if={@status in [:enroute, :waiting]}
           class="block text-xl font-bold"
           datetime={@eta}
           aria-role="status"
@@ -19,7 +19,7 @@
           <span :if={@status == :enqueued}>
             <%= ngettext(
               "There is one stop ahead of you.",
-              " There are %{count} stops ahead of you.",
+              "There are %{count} stops ahead of you.",
               @trip.pick_order - max(@vehicle.last_pick, @vehicle.last_drop) - 1
             ) %>
           </span>
@@ -36,7 +36,7 @@
           </span>
         </div>
         <time
-          :if={@status in [:enqueued, :enroute]}
+          :if={@status in [:enqueued, :enroute, :waiting]}
           class="block text-sm"
           datetime={@trip.promise_time}
         >
@@ -110,6 +110,15 @@
   <.labeled_field title={gettext("Current Time")} value={@now} />
   <.labeled_field title={gettext("Pick Time")} value={@trip.pick_time} />
   <.labeled_field
+    title={gettext("Distance (km)")}
+    value={
+      :vincenty.distance(
+        {Decimal.to_float(@vehicle.lat), Decimal.to_float(@vehicle.lon)},
+        {Decimal.to_float(@trip.lat), Decimal.to_float(@trip.lon)}
+      )
+    }
+  />
+  <.labeled_field
     :if={@route}
     title={gettext("ETA")}
     value={DateTime.add(@vehicle.timestamp, trunc(@route.duration * 1000), :millisecond)}
@@ -119,4 +128,10 @@
   <.labeled_field title={gettext("Pick Order")} value={@trip.pick_order} />
   <.labeled_field title={gettext("Last Pick")} value={@vehicle.last_pick} />
   <.labeled_field title={gettext("Last Drop")} value={@vehicle.last_drop} />
+  <pre>
+<%= inspect(@trip) %>
+  </pre>
+  <pre>
+<%= inspect(@vehicle) %>
+    </pre>
 </div>
