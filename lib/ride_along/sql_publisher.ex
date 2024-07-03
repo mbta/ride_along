@@ -94,11 +94,11 @@ defmodule RideAlong.SqlPublisher do
         }
       end
 
-    with {:ok, result} <- Tds.query(tds, sql, parameters) do
+    try do
       %{
         columns: columns,
         rows: rows
-      } = result
+      } = Tds.query!(tds, sql, parameters)
 
       mapped =
         for row <- rows do
@@ -108,6 +108,9 @@ defmodule RideAlong.SqlPublisher do
         end
 
       {:ok, mapped}
+    rescue
+      e ->
+        {:error, e}
     end
   end
 
