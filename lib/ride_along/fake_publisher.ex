@@ -75,7 +75,7 @@ defmodule RideAlong.FakePublisher do
         %{
           "Id" => trip_id,
           "TripDate" => {{now.year, now.month, now.day}, {0, 0, 0, 0}},
-          "RouteId" => route_id,
+          "RouteId" => List.first(Enum.shuffle([route_id, route_id + 1])),
           "PickTime" => Calendar.strftime(DateTime.add(now, 30, :minute), "%H:%M"),
           "PromiseTime" => "0:00",
           "PickHouseNumber" => FakeAddress.building_number(),
@@ -87,8 +87,8 @@ defmodule RideAlong.FakePublisher do
           "PickGridX" => "-7106166",
           "PickGridY" => "4234340",
           "Anchor" => "P",
-          "PickOrder" => 1,
-          "DropOrder" => 2,
+          "PickOrder" => 2,
+          "DropOrder" => 3,
           "PerformPickup" => 0,
           "PerformDropoff" => 0
         }
@@ -98,12 +98,25 @@ defmodule RideAlong.FakePublisher do
           "RouteId" => route_id,
           "VehicleId" => vehicle_id,
           "Heading" => 90,
-          "Latitude" => 42.346,
-          "Longitude" => -71.071,
+          "Latitude" => Decimal.new("42.346"),
+          "Longitude" => Decimal.new("-71.071"),
           "LocationDate" =>
             {{now.year, now.month, now.day}, {now.hour, now.minute, now.second, 0}},
-          "LastPick" => 0,
-          "LastDrop" => 0,
+          "LastPick" => 1,
+          "LastDrop" => 1,
+          "LastArrivedTrip" => nil,
+          "LastDispatchArrivedTrip" => nil
+        },
+        %{
+          "RouteId" => route_id + 1,
+          "VehicleId" => vehicle_id <> "_alt",
+          "Heading" => 90,
+          "Latitude" => Decimal.new("42.346"),
+          "Longitude" => Decimal.new("-71.071"),
+          "LocationDate" =>
+            {{now.year, now.month, now.day}, {now.hour, now.minute, now.second, 0}},
+          "LastPick" => 1,
+          "LastDrop" => 1,
           "LastArrivedTrip" => nil,
           "LastDispatchArrivedTrip" => nil
         }

@@ -8,6 +8,7 @@ defmodule RideAlongWeb.TripLive.Show do
   alias RideAlong.LinkShortener
   alias RideAlong.OpenRouteService
   alias RideAlong.OpenRouteService.Route
+  import RideAlongWeb.TripComponents
 
   @impl true
   def mount(%{"token" => token} = params, _session, socket) do
@@ -59,7 +60,7 @@ defmodule RideAlongWeb.TripLive.Show do
         Phoenix.PubSub.subscribe(RideAlong.PubSub, "trips:updated")
       end
 
-      {:ok, socket}
+      {:ok, socket, layout: false}
     else
       _ -> raise RideAlongWeb.NotFoundException
     end
@@ -92,6 +93,7 @@ defmodule RideAlongWeb.TripLive.Show do
     old_trip = socket.assigns.trip
     new_trip = Adept.get_trip(old_trip.trip_id)
 
+    # keep the old address if we're in demo mode
     trip = %{
       new_trip
       | house_number: old_trip.house_number,
@@ -105,6 +107,8 @@ defmodule RideAlongWeb.TripLive.Show do
     {:noreply,
      socket
      |> assign(:trip, trip)
+     |> assign_vehicle(old_trip)
+     |> put_schedule_change_flash(old_trip)
      |> assign_status()
      |> assign_eta()
      |> request_route()}
@@ -164,6 +168,23 @@ defmodule RideAlongWeb.TripLive.Show do
     end
   end
 
+  defp assign_vehicle(socket, old_trip) do
+    if socket.assigns.trip.route_id == old_trip.route_id do
+      socket
+    else
+      Phoenix.PubSub.unsubscribe(RideAlong.PubSub, "vehicle:#{socket.assigns.vehicle.vehicle_id}")
+
+      case Adept.get_vehicle_by_route(socket.assigns.trip.route_id) do
+        %Vehicle{} = vehicle ->
+          Phoenix.PubSub.subscribe(RideAlong.PubSub, "vehicle:#{vehicle.vehicle_id}")
+          assign(socket, :vehicle, vehicle)
+
+        _ ->
+          raise RideAlongWeb.NotFoundException
+      end
+    end
+  end
+
   defp assign_eta(socket) do
     eta = calculate_eta(socket.assigns)
 
@@ -188,6 +209,19 @@ defmodule RideAlongWeb.TripLive.Show do
     end
 
     assign(socket, :status, new_status)
+  end
+
+  def put_schedule_change_flash(socket, old_trip) do
+    cond do
+      socket.assigns.trip.route_id != old_trip.route_id ->
+        put_flash(socket, :warning, gettext("Your ETA and vehicle have changed."))
+
+      socket.assigns.trip.pick_order != old_trip.pick_order ->
+        put_flash(socket, :warning, gettext("Your ETA has changed."))
+
+      true ->
+        socket
+    end
   end
 
   defp push_route(%{assigns: %{status: :enroute}} = socket) do
@@ -270,31 +304,5 @@ defmodule RideAlongWeb.TripLive.Show do
       },
       escape: :html_safe
     )
-  end
-
-  attr :text, :string, required: true
-
-  def linkify_phone(assigns) do
-    ~H"""
-    <% [first | rest] = Regex.split(~r|\d{3}-\d{3}-\d{4}|, assigns[:text], include_captures: true) %>
-    <%= first %>
-    <span :for={[phone, after_phone] <- Enum.chunk_every(rest, 2)}>
-      <.link class="underline" href={"tel:" <> phone}><%= phone %></.link>
-      <%= after_phone %>
-    </span>
-    """
-  end
-
-  attr :title, :string, required: true
-  attr :value, :any, default: []
-  attr :rest, :global
-  slot :inner_block, default: []
-
-  def labeled_field(assigns) do
-    ~H"""
-    <div {@rest}>
-      <span class="font-bold"><%= @title %>:</span> <%= @value %><%= render_slot(@inner_block) %>
-    </div>
-    """
   end
 end

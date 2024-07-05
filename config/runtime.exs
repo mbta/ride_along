@@ -24,7 +24,7 @@ if System.get_env("PHX_SERVER") do
   config :ride_along, RideAlong.EtaMonitor, start: true
 end
 
-if System.get_env("SQLCMDSERVER") == nil do
+if System.get_env("SQLCMDSERVER") in [nil, ""] do
   if config_env() == :dev do
     config :ride_along, RideAlong.FakePublisher, start: true
   end
