@@ -28,13 +28,14 @@ defmodule RideAlongWeb.TripComponents do
         |> JS.remove_class("flash-visible", to: "main")
       }
       phx-mounted={JS.add_class("flash-visible", to: "main")}
-      role="alert"
+      role="alertdialog"
+      aria-labeledby={@id <> "-label"}
       class="rounded-t-xl p-4 bg-yellow-300 text-slate-600 text-xl"
       {@rest}
     >
-      <div class="flex flex-row">
-        <div class="text-center flex-auto"><%= msg %></div>
-        <button type="button" class="group flex-none" aria-label={gettext("close")}>
+      <div class="flex flex-row group">
+        <div role="document" id={@id <> "-label"} class="text-center flex-auto"><%= msg %></div>
+        <button type="button" class="flex-none" aria-label={gettext("close")} phx-mounted={JS.focus()}>
           <.icon
             name="hero-x-mark-solid"
             class="h-5 w-5 opacity-40 sm:opacity-70 group-hover:opacity-70"
@@ -54,7 +55,11 @@ defmodule RideAlongWeb.TripComponents do
     <.trip_flash
       id="network-error"
       kind={:error}
-      phx-disconnected={show("#network-error") |> JS.add_class("flash-visible", to: "main")}
+      phx-disconnected={
+        show("#network-error")
+        |> JS.add_class("flash-visible", to: "main")
+        |> JS.focus(to: "#network-error button")
+      }
       phx-connected={hide("#network-error") |> JS.remove_class("flash-visible", to: "main")}
       hidden
     >
