@@ -5,6 +5,11 @@ defmodule RideAlongWeb.AuthController do
 
   plug Ueberauth
 
+  def call(conn, params) do
+    IO.inspect(conn)
+    super(conn, params)
+  end
+
   def callback(%{assigns: %{ueberauth_auth: auth}} = conn, _) do
     redirect =
       if redirect_to = get_session(conn, :redirect_to) do
