@@ -108,8 +108,6 @@ if config_env() == :prod do
 end
 
 if issuer = System.get_env("KEYCLOAK_ISSUER") do
-  redirect_host = System.get_env("PHX_HOST") || "localhost:4001"
-
   config :ueberauth_oidcc,
     issuers: [
       %{name: :keycloak_issuer, issuer: issuer}
@@ -117,8 +115,7 @@ if issuer = System.get_env("KEYCLOAK_ISSUER") do
     providers: [
       keycloak: [
         client_id: System.get_env("KEYCLOAK_CLIENT_ID"),
-        client_secret: System.get_env("KEYCLOAK_CLIENT_SECRET"),
-        redirect_uri: "https://#{redirect_host}/auth/keycloak/callback"
+        client_secret: System.get_env("KEYCLOAK_CLIENT_SECRET")
       ]
     ]
 end
