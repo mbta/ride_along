@@ -9,7 +9,7 @@
       aria-labelledby="trip-information-label"
     >
       <h2 id="trip-information-label" class="sr-only"><%= gettext("Trip Information") %></h2>
-      <div class="flex flex-row pb-4">
+      <div class="flex flex-row pb-4 gap-x-4">
         <div class="grow text-center w-full">
           <time
             :if={@status in [:enroute, :waiting]}
@@ -17,7 +17,10 @@
             datetime={@eta}
             aria-role="status"
           >
-            <%= gettext("Your driver's ETA is %{time}", %{time: @eta_text}) %>
+            <%= gettext("Vehicle #%{vehicle}'s ETA is %{time}", %{
+              vehicle: @vehicle.vehicle_id,
+              time: @eta_text
+            }) %>
           </time>
           <div class="text-xl font-bold" aria-role="status">
             <span :if={@status == :enqueued}>
@@ -63,9 +66,6 @@
         </div>
       </div>
       <div class="flex flex-row gap-x-3 pb-4">
-        <div class="shrink rounded-xl bg-white text-slate-600 p-4">
-          <%= gettext("Vehicle # %{vehicle_id}", vehicle_id: @vehicle.vehicle_id) %>
-        </div>
         <div
           class="grow rounded-xl bg-white text-slate-600 p-4 pl-2"
           aria-label={gettext("Address")}
