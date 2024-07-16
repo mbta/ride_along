@@ -8,12 +8,14 @@
   font-family: "InterNormal";
   font-weight: 400;
   src: url("../fonts/Inter-Normal.ttf");
+  font-display: swap;
 }
 
 @font-face {
   font-family: "InterBold";
   font-weight: 700;
   src: url("../fonts/Inter-Bold.ttf");
+  font-display: swap;
 }
 
 body {
