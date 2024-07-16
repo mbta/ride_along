@@ -98,6 +98,8 @@
         class="h-full"
         phx-update="ignore"
         phx-hook="Leaflet"
+        data-location-icon={~p"/images/icon-circle-locations-default.svg"}
+        data-vehicle-icon={~p"/images/icon-vehicle-bordered.svg"}
         data-vehicle={gettext("Vehicle number %{vehicle_id}", vehicle_id: @vehicle.vehicle_id)}
         data-destination={destination(@trip)}
         aria-label={

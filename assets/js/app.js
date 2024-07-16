@@ -16,7 +16,7 @@
 //
 
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
-import 'phoenix_html'
+// import 'phoenix_html'
 // Establish Phoenix Socket and LiveView configuration.
 import { Socket } from 'phoenix'
 import { LiveSocket } from 'phoenix_live_view'
@@ -27,18 +27,6 @@ import * as L from 'leaflet'
 import 'leaflet-rotatedmarker'
 import polyline from 'polyline-encoded'
 
-const locationIcon = L.icon({
-  iconUrl: '/images/icon-circle-locations-default.svg',
-  iconAnchor: [15, 15],
-  iconSize: [30, 30]
-})
-
-const vehicleIcon = L.icon({
-  iconUrl: '/images/icon-vehicle-bordered.svg',
-  iconAnchor: [20, 20],
-  iconSize: [40, 40]
-})
-
 const csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute('content')
@@ -46,6 +34,18 @@ const Hooks = {}
 Hooks.Leaflet = {
   mounted () {
     const centerOfBoston = [42.3516728, -71.0718109]
+    const locationIcon = L.icon({
+      iconUrl: this.el.dataset.locationIcon,
+      iconAnchor: [15, 15],
+      iconSize: [30, 30]
+    })
+
+    const vehicleIcon = L.icon({
+      iconUrl: this.el.dataset.vehicleIcon,
+      iconAnchor: [20, 20],
+      iconSize: [40, 40]
+    })
+
     this.map = L.map(this.el).setView(centerOfBoston, 15)
     L.tileLayer('https://cdn.mbta.com/osm_tiles/{z}/{x}/{y}.png', {
       maxZoom: 18,
