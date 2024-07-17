@@ -24,6 +24,7 @@ defmodule RideAlongWeb.TripComponents do
       id={@id}
       phx-click={
         JS.push("lv:clear-flash", value: %{key: @kind})
+        |> JS.focus(to: "#trip-information")
         |> hide("##{@id}")
         |> JS.remove_class("flash-visible", to: "main")
       }
