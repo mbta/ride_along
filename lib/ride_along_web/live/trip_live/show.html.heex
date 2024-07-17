@@ -11,19 +11,15 @@
       aria-labelledby="trip-information-label"
     >
       <h2 id="trip-information-label" class="sr-only"><%= gettext("Trip Information") %></h2>
-      <div class="flex flex-row pb-4 gap-x-4">
-        <div class="grow text-center w-full">
-          <time
-            :if={@status in [:enroute, :waiting]}
-            class="block text-xl font-bold"
-            datetime={@eta}
-            aria-role="status"
-          >
-            <%= gettext("Vehicle #%{vehicle}'s ETA is %{time}", %{
-              vehicle: @vehicle.vehicle_id,
-              time: @eta_text
-            }) %>
-          </time>
+      <div class="pb-4">
+        <div class="text-center w-full">
+          <div class="text-xl pb-2 font-bold">
+            <%= gettext("Vehicle #%{vehicle}", %{vehicle: @vehicle.vehicle_id}) %>
+          </div>
+          <div :if={@status in [:enroute, :waiting]} aria-role="status">
+            <%= gettext("Estimated Time of Arrival (ETA):") %>
+            <time class="block text-2xl font-bold" datetime={@eta}><%= @eta_text %></time>
+          </div>
           <div class="text-xl font-bold" aria-role="status">
             <span :if={@status == :enqueued}>
               <%= ngettext(
@@ -49,29 +45,18 @@
             class="block text-sm"
             datetime={@trip.promise_time}
           >
-            <%= gettext("Promise time is %{time}", %{time: format_eta(@trip.promise_time)}) %>
+            <%= gettext("Original Promise Time: %{time}", %{time: format_eta(@trip.promise_time)}) %>
           </time>
           <span :if={@status == :arrived} class="block text-sm px-4">
             <%= gettext("The driver will go to your door and wait for up to five minutes.") %>
           </span>
         </div>
-        <div class="grow-0">
-          <.link
-            class="block rounded-xl border-solid border border-white p-2"
-            href="tel:844-427-7433"
-            title={gettext("Call The RIDE Access Center")}
-          >
-            <span role="none">
-              <.icon name="hero-phone-solid" class="aspect-square w-4 h-4" />
-            </span>
-          </.link>
-        </div>
       </div>
       <div class="flex flex-row gap-x-3 pb-4">
-        <div
-          class="grow rounded-xl bg-white text-slate-600 p-4 pl-2"
-          aria-label={gettext("Address")}
-        >
+        <div class="grow">
+          <div class="font-bold">
+            <%= gettext("Pick-up address:") %>
+          </div>
           <div class="flex flex-row gap-x-1">
             <div class="grow-0" role="none">
               <.icon name="hero-map-pin-solid" class="aspect-square w-5 h-5" />
@@ -88,6 +73,17 @@
             "If you are delayed, call TRAC as soon as possible at 844-427-7433 to request a new pick-up time."
           )
         } />
+      </div>
+      <div class="text-center">
+        <.link
+          class="m-a inline-block rounded-xl bg-teal-700 p-2 font-bold"
+          href="tel:844-427-7433"
+        >
+          <span role="none">
+            <.icon name="hero-phone-solid" class="aspect-square w-4 h-4" />
+          </span>
+          <%= gettext("Call The RIDE Access Center (TRAC)") %>
+        </.link>
       </div>
     </section>
     <section class="bg-gray-100">
