@@ -18,10 +18,11 @@
   font-display: swap;
 }
 
-body {
-  font-family: "InterNormal", system-ui, sans-serif;
+html {
+  @apply bg-white antialiased font-sans;
   font-size: 16px;
   font-weight: 400;
+  scrollbar-gutter: stable both-edges;
 }
 
 /* hide Ukranian flag */
