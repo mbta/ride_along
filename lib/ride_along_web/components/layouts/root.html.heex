@@ -7,8 +7,19 @@
     <.live_title suffix=" · RideAlong">
       <%= assigns[:page_title] || "Home" %>
     </.live_title>
-    <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
-    <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
+    <link
+      phx-track-static
+      rel="stylesheet"
+      href={~p"/assets/app.css"}
+      integrity={static_integrity(@conn, "/assets/app.css")}
+    />
+    <script
+      defer
+      phx-track-static
+      type="text/javascript"
+      src={~p"/assets/app.js"}
+      integrity={static_integrity(@conn, "/assets/app.js")}
+    >
     </script>
   </head>
   <body class="bg-white antialiased font-inter-normal">
