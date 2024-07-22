@@ -17,7 +17,7 @@
             <%= gettext("Vehicle #%{vehicle}", %{vehicle: @vehicle.vehicle_id}) %>
           </div>
           <div :if={@status in [:enroute, :waiting]} aria-role="status">
-            <%= gettext("Estimated Time of Arrival (ETA):") %>
+            <%= gettext("Estimated time of arrival (ETA):") %>
             <time class="block text-2xl font-bold" datetime={@eta}><%= @eta_text %></time>
           </div>
           <div class="text-xl font-bold" aria-role="status">
@@ -45,7 +45,7 @@
             class="block text-sm"
             datetime={@trip.promise_time}
           >
-            <%= gettext("Original Promise Time: %{time}", %{time: format_eta(@trip.promise_time)}) %>
+            <%= gettext("Original promise time: %{time}", %{time: format_eta(@trip.promise_time)}) %>
           </time>
           <span :if={@status == :arrived} class="block text-sm px-4">
             <%= gettext("The driver will go to your door and wait for up to five minutes.") %>
@@ -118,8 +118,8 @@
     <.labeled_field title={gettext("Status")} value={inspect(@status)} />
     <.labeled_field title={gettext("Trip ID")} value={@trip.trip_id} />
     <.labeled_field title={gettext("Route ID")} value={@trip.route_id} />
-    <.labeled_field title={gettext("Current Time")} value={@now} />
-    <.labeled_field title={gettext("Pick Time")} value={@trip.pick_time} />
+    <.labeled_field title={gettext("Current time")} value={@now} />
+    <.labeled_field title={gettext("Pick time")} value={@trip.pick_time} />
     <.labeled_field
       title={gettext("Distance (km)")}
       value={
@@ -135,10 +135,10 @@
       value={DateTime.add(@vehicle.timestamp, trunc(@route.duration * 1000), :millisecond)}
     />
     <.labeled_field :if={@route} title={gettext("Duration (s)")} value={@route.duration} />
-    <.labeled_field title={gettext("Last Updated")} value={@vehicle.timestamp} />
-    <.labeled_field title={gettext("Pick Order")} value={@trip.pick_order} />
-    <.labeled_field title={gettext("Last Pick")} value={@vehicle.last_pick} />
-    <.labeled_field title={gettext("Last Drop")} value={@vehicle.last_drop} />
+    <.labeled_field title={gettext("Last updated")} value={@vehicle.timestamp} />
+    <.labeled_field title={gettext("Pick order")} value={@trip.pick_order} />
+    <.labeled_field title={gettext("Last pick")} value={@vehicle.last_pick} />
+    <.labeled_field title={gettext("Last drop")} value={@vehicle.last_drop} />
     <pre>
         <%= inspect(@trip) %>
   </pre>
