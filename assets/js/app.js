@@ -93,6 +93,7 @@ const Hooks = {
         }
 
         this.map.fitBounds(r.bbox, { padding: [48, 48] })
+        this.destination.closePopup()
       })
       this.handleEvent('clearRoute', (d) => {
         if (this.vehicle) {
