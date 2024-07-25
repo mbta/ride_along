@@ -107,7 +107,9 @@ const Hooks = {
         this.map.fitBounds([destination, destination], { padding: [5, 5] })
         this.destination.closePopup()
         if (d.popup) {
-          this.destination.bindPopup(d.popup, {
+          const element = document.createElement('span')
+          element.innerText = d.popup
+          this.destination.bindPopup(element, {
             offset: [0, -10],
             maxWidth: 250,
             closeButton: false,
