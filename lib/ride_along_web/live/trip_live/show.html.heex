@@ -35,6 +35,9 @@
               >
               </span>
               <%= gettext("Your RIDE is here!") %>
+              <span class="block text-sm px-4 font-normal">
+                <%= gettext("The driver will go to your door and wait for up to five minutes.") %>
+              </span>
             </span>
             <span :if={@status in [:picked_up, :closed]}>
               <%= gettext("You have been picked up!") %>
@@ -47,9 +50,6 @@
           >
             <%= gettext("Original promise time: %{time}", %{time: format_eta(@trip.promise_time)}) %>
           </time>
-          <span :if={@status == :arrived} class="block text-sm px-4">
-            <%= gettext("The driver will go to your door and wait for up to five minutes.") %>
-          </span>
         </div>
       </div>
       <div class="flex flex-row gap-x-3 pb-4">
