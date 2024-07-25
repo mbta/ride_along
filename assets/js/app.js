@@ -92,7 +92,7 @@ const Hooks = {
           }).addTo(this.map)
         }
 
-        this.map.fitBounds(r.bbox, { padding: [5, 5] })
+        this.map.fitBounds(r.bbox, { padding: [48, 48] })
       })
       this.handleEvent('clearRoute', (d) => {
         if (this.vehicle) {
