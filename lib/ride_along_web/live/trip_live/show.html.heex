@@ -16,11 +16,11 @@
           <div class="text-xl pb-2 font-bold">
             <%= gettext("Vehicle #%{vehicle}", %{vehicle: @vehicle.vehicle_id}) %>
           </div>
-          <div :if={@status in [:enroute, :waiting]} aria-role="status">
+          <div :if={@status in [:enroute, :waiting]} role="status">
             <%= gettext("Estimated time of arrival (ETA):") %>
             <time class="block text-2xl font-bold" datetime={@eta}><%= @eta_text %></time>
           </div>
-          <div class="text-xl font-bold" aria-role="status">
+          <div class="text-xl font-bold" role="status">
             <span :if={@status == :enqueued}>
               <%= ngettext(
                 "There is one stop ahead of you.",
