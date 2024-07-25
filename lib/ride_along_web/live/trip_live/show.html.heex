@@ -30,7 +30,7 @@
             </span>
             <span :if={@status == :arrived}>
               <span
-                role="none"
+                aria-hidden="true"
                 class="align-middle inline-block -mt-0.5 w-4 h-4 bg-green-400 rounded-full"
               >
               </span>
@@ -58,7 +58,7 @@
             <%= gettext("Pick-up address:") %>
           </div>
           <div class="flex flex-row gap-x-1">
-            <div class="grow-0" role="none">
+            <div class="grow-0" aria-hidden="true">
               <.icon name="hero-map-pin-solid" class="aspect-square w-5 h-5" />
             </div>
             <address class="grow-1 not-italic">
@@ -79,7 +79,7 @@
           class="m-a inline-block rounded-xl bg-teal-700 p-2 font-bold"
           href="tel:844-427-7433"
         >
-          <span role="none">
+          <span aria-hidden="true">
             <.icon name="hero-phone-solid" class="aspect-square w-4 h-4" />
           </span>
           <%= gettext("Call The RIDE Access Center (TRAC)") %>
@@ -113,7 +113,7 @@
   <div
     :if={Application.get_env(:ride_along, :dev_routes)}
     class="w-96 h-96 absolute top-0 right-0"
-    role="none"
+    aria-hidden="true"
   >
     <.labeled_field title={gettext("Status")} value={inspect(@status)} />
     <.labeled_field title={gettext("Trip ID")} value={@trip.trip_id} />
