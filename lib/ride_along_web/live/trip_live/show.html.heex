@@ -10,6 +10,9 @@
           <div class="text-xl pb-2 font-bold">
             <%= gettext("Vehicle #%{vehicle}", %{vehicle: @vehicle.vehicle_id}) %>
           </div>
+          <span :if={@status == :waiting} class="sr-only" role="status">
+            <%= gettext("Your RIDE is nearby and will pick you up shortly.") %>
+          </span>
           <div :if={@status in [:enroute, :waiting]} role="status">
             <%= gettext("Estimated time of arrival (ETA):") %>
             <time class="block text-2xl font-bold" datetime={@eta}><%= @eta_text %></time>
