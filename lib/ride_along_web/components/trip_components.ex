@@ -29,17 +29,18 @@ defmodule RideAlongWeb.TripComponents do
       }
       phx-mounted={JS.add_class("flash-visible", to: "main")}
       role="alert"
-      aria-labeledby={@id <> "-label"}
       class="rounded-t-xl p-4 bg-yellow-300 text-slate-600 text-xl"
       {@rest}
     >
       <div class="flex flex-row group">
-        <div role="document" id={@id <> "-label"} class="text-center flex-auto"><%= msg %></div>
+        <div class="text-center flex-auto"><%= msg %></div>
         <button type="button" class="flex-none" aria-label={gettext("close")}>
-          <.icon
-            name="hero-x-mark-solid"
-            class="h-5 w-5 opacity-40 sm:opacity-70 group-hover:opacity-70"
-          />
+          <span aria-hidden="true">
+            <.icon
+              name="hero-x-mark-solid"
+              class="h-5 w-5 opacity-40 sm:opacity-70 group-hover:opacity-70"
+            />
+          </span>
         </button>
       </div>
     </div>
