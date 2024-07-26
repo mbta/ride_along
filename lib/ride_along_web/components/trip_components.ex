@@ -29,6 +29,7 @@ defmodule RideAlongWeb.TripComponents do
       }
       phx-mounted={JS.add_class("flash-visible", to: "main")}
       role="alert"
+      aria-atomic="true"
       class="rounded-t-xl p-4 bg-yellow-300 text-slate-600 text-xl"
       {@rest}
     >
