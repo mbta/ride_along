@@ -34,7 +34,7 @@ defmodule RideAlong.Adept.Trip do
           trip_id: id()
         }
 
-  @type status :: :closed | :enqueued | :enroute | :arrived | :picked_up
+  @type status :: :closed | :enqueued | :enroute | :waiting | :arrived | :picked_up
 
   @spec from_sql_map(%{binary() => term()}) :: t()
   def from_sql_map(map) do
