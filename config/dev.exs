@@ -46,8 +46,6 @@ config :ride_along, RideAlong.MqttListener, start: true
 
 config :ride_along, RideAlong.EtaMonitor, start: true
 
-config :ride_along, RideAlong.RiderNotifier, start: true
-
 # Enable dev routes for dashboard and mailbox
 config :ride_along, dev_routes: true
 

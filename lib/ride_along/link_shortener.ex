@@ -66,6 +66,22 @@ defmodule RideAlong.LinkShortener do
     token_map = generate_token_map(RideAlong.Adept.all_trips())
     trip_id_map = Map.new(token_map, fn {token, trip} -> {trip.trip_id, token} end)
 
+    now = DateTime.utc_now()
+
+    for {token, trip} <- Enum.sort_by(token_map, &elem(&1, 1), RideAlong.Adept.Trip),
+        trip.pick_time != nil,
+        trip.route_id > 0,
+        not trip.pickup_performed?,
+        not is_nil(RideAlong.Adept.get_vehicle_by_route(trip.route_id)) do
+      diff = DateTime.diff(trip.pick_time, now)
+
+      if diff > 0 and diff < 1_800 do
+        IO.puts(
+          "#{__MODULE__} generated short link route_id=#{trip.route_id} trip_id=#{trip.trip_id} token=#{token} pick_time=#{DateTime.to_iso8601(trip.pick_time)}"
+        )
+      end
+    end
+
     %__MODULE__{
       token_map: token_map,
       trip_id_map: trip_id_map
