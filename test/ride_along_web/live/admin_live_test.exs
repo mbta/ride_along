@@ -1,5 +1,6 @@
 defmodule RideAlongWeb.AdminLiveTest do
-  use RideAlongWeb.ConnCase
+  @moduledoc false
+  use RideAlongWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
 
@@ -37,6 +38,11 @@ defmodule RideAlongWeb.AdminLiveTest do
     trip = Fixtures.trip_fixture()
     Adept.set_trips([trip])
     Adept.set_vehicles([Fixtures.vehicle_fixture()])
+
+    on_exit(fn ->
+      Adept.set_trips([])
+      Adept.set_vehicles([])
+    end)
 
     {:ok, trip: trip}
   end

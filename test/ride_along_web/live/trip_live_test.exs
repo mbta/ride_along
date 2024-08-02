@@ -1,5 +1,5 @@
 defmodule RideAlongWeb.TripLiveTest do
-  use RideAlongWeb.ConnCase
+  use RideAlongWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
 
@@ -82,6 +82,11 @@ defmodule RideAlongWeb.TripLiveTest do
   def adept(_) do
     RideAlong.Adept.set_trips([Fixtures.trip_fixture()])
     RideAlong.Adept.set_vehicles([Fixtures.vehicle_fixture()])
+
+    on_exit(fn ->
+      RideAlong.Adept.set_trips([])
+      RideAlong.Adept.set_vehicles([])
+    end)
 
     :ok
   end

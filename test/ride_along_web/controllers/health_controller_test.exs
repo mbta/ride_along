@@ -1,5 +1,11 @@
 defmodule RideAlongWeb.HealthControllerTest do
-  use RideAlongWeb.ConnCase
+  use RideAlongWeb.ConnCase, async: false
+
+  setup do
+    on_exit(fn ->
+      RideAlong.Adept.set_trips([])
+    end)
+  end
 
   test "GET /_health", %{conn: conn} do
     RideAlong.Adept.set_trips([])

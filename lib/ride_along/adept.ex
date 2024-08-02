@@ -69,12 +69,19 @@ defmodule RideAlong.Adept do
   end
 
   def handle_cast({:set_vehicles, vehicles}, state) do
-    vehicles =
-      Enum.reduce(vehicles, state.vehicles, &update_vehicle/2)
+    vehicle_map =
+      case vehicles do
+        [_ | _] ->
+          Enum.reduce(vehicles, state.vehicles, &update_vehicle/2)
+
+        [] ->
+          # special case the empty list to unset all vehicles
+          %{}
+      end
 
     Phoenix.PubSub.local_broadcast(RideAlong.PubSub, "vehicles:updated", :vehicles_updated)
 
-    state = %{state | vehicles: vehicles}
+    state = %{state | vehicles: vehicle_map}
     {:noreply, state}
   end
 

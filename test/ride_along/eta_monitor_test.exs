@@ -1,6 +1,6 @@
 defmodule RideAlong.EtaMonitorTest do
   @moduledoc false
-  use ExUnit.Case
+  use ExUnit.Case, async: false
   import ExUnit.CaptureLog
 
   alias RideAlong.Adept
@@ -23,6 +23,10 @@ defmodule RideAlong.EtaMonitorTest do
           timestamp: now
         })
       ])
+
+      on_exit(fn ->
+        Adept.set_vehicles([])
+      end)
 
       state = %EtaMonitor{}
 
