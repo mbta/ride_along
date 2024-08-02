@@ -1,8 +1,11 @@
 defmodule RideAlongWeb.Router do
   use RideAlongWeb, :router
 
-  pipeline :browser do
+  pipeline :shared do
     plug Plug.SSL, host: nil, rewrite_on: [:x_forwarded_proto]
+  end
+
+  pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
@@ -14,6 +17,12 @@ defmodule RideAlongWeb.Router do
     }
   end
 
+  pipeline :api do
+    plug RideAlongWeb.Api
+    plug JSONAPI.EnsureSpec
+    plug JSONAPI.UnderscoreParameters
+  end
+
   pipeline :admin do
     plug RideAlongWeb.AuthManager, roles: ["admin"]
   end
@@ -23,21 +32,27 @@ defmodule RideAlongWeb.Router do
   end
 
   scope "/", RideAlongWeb do
-    pipe_through :browser
+    pipe_through [:shared, :browser]
 
     get "/", PageController, :home
     live "/t/:token", TripLive.Show
   end
 
+  scope "/api", RideAlongWeb.Api do
+    pipe_through [:shared, :api]
+
+    get("/tokens/:trip_id", TokenController, :show)
+  end
+
   scope "/auth", RideAlongWeb do
-    pipe_through :browser
+    pipe_through [:shared, :browser]
 
     get "/:unused", AuthController, :request
     get "/:unused/callback", AuthController, :callback
   end
 
   scope "/admin", RideAlongWeb do
-    pipe_through [:browser, :admin]
+    pipe_through [:shared, :browser, :admin]
 
     live "/", AdminLive.Index
   end
@@ -52,7 +67,7 @@ defmodule RideAlongWeb.Router do
     import Phoenix.LiveDashboard.Router
 
     scope "/dev" do
-      pipe_through :browser
+      pipe_through [:shared, :browser]
 
       live "/trip/:trip", RideAlongWeb.TripLive.Show, :show
       live_dashboard "/dashboard", metrics: RideAlongWeb.Telemetry

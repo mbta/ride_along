@@ -153,7 +153,7 @@ defmodule RideAlong.FakePublisher do
         "TripDate" => {{now.year, now.month, now.day}, {0, 0, 0, 0}},
         "RouteId" => @route_id,
         "PickTime" => Calendar.strftime(DateTime.add(now, 30, :minute), "%H:%M"),
-        "PromiseTime" => "0:00",
+        "PromiseTime" => "#{now.hour}:#{now.minute}",
         "PickHouseNumber" => FakeAddress.building_number(),
         "PickAddress1" => FakeAddress.street_name(),
         "PickAddress2" => FakeAddress.secondary_address(),

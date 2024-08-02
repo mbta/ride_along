@@ -58,8 +58,6 @@ if config_env() == :prod do
   host = System.get_env("PHX_HOST") || "example.com"
   port = String.to_integer(System.get_env("PORT") || "4000")
 
-  config :ride_along, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
-
   config :ride_along, RideAlong.OpenRouteService,
     req_config: [
       base_url: System.get_env("ORS_BASE_URL")
@@ -118,4 +116,14 @@ if issuer = System.get_env("KEYCLOAK_ISSUER") do
         client_secret: System.get_env("KEYCLOAK_CLIENT_SECRET")
       ]
     ]
+end
+
+if api_keys_json = System.get_env("API_KEYS") do
+  case Jason.decode(api_keys_json) do
+    %{} = api_keys ->
+      config :ride_along, RideAlongWeb.Api, api_keys: api_keys
+
+    _ ->
+      true
+  end
 end

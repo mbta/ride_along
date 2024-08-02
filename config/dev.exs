@@ -35,6 +35,11 @@ config :ride_along, RideAlongWeb.Endpoint,
 
 config :ride_along, RideAlongWeb.PageController, redirect_to: nil
 
+config :ride_along, RideAlongWeb.Api,
+  api_keys: %{
+    "api_key" => "Local Development"
+  }
+
 config :ride_along, RideAlong.LinkShortener,
   secret: "UHZ0Lf/EGdIYNHWwTKoowoRJt+HFsrP8iwKPp/2XthQYE2BhRhjtfGJDLU0b70HI"
 

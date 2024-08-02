@@ -9,7 +9,6 @@ defmodule RideAlong.Application do
   def start(_type, _args) do
     children = [
       RideAlongWeb.Telemetry,
-      {DNSCluster, query: Application.get_env(:ride_along, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: RideAlong.PubSub},
       RideAlong.Adept,
       RideAlong.LinkShortener,
