@@ -101,19 +101,19 @@ defmodule RideAlong.EtaMonitor do
         nil
       end
 
-    ors_eta =
+    {ors_eta, ors_eta_at} =
       if route do
-        DateTime.to_iso8601(
-          DateTime.add(vehicle.timestamp, trunc(route.duration * 1000), :millisecond)
-        )
+        {DateTime.to_iso8601(
+           DateTime.add(vehicle.timestamp, trunc(route.duration * 1000), :millisecond)
+         ), DateTime.utc_now()}
       else
-        state.latest_ors_eta[trip.trip_id]
+        Map.get(state.latest_ors_eta, trip.trip_id, {nil, nil})
       end
 
     Logger.info(
-      "#{__MODULE__} trip_id=#{trip.trip_id} route=#{trip.route_id} status=#{status} promise=#{DateTime.to_iso8601(trip.promise_time)} pick=#{DateTime.to_iso8601(trip.pick_time)} ors_eta=#{ors_eta}"
+      "#{__MODULE__} trip_id=#{trip.trip_id} route=#{trip.route_id} status=#{status} promise=#{DateTime.to_iso8601(trip.promise_time)} pick=#{DateTime.to_iso8601(trip.pick_time)} ors_eta=#{ors_eta} ors_eta_at=#{ors_eta_at}"
     )
 
-    put_in(state.latest_ors_eta[trip.trip_id], ors_eta)
+    put_in(state.latest_ors_eta[trip.trip_id], {ors_eta, ors_eta_at})
   end
 end
