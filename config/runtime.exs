@@ -119,13 +119,3 @@ if issuer = System.get_env("KEYCLOAK_ISSUER") do
       ]
     ]
 end
-
-if api_keys_json = System.get_env("API_KEYS") do
-  case Jason.decode(api_keys_json) do
-    %{} = api_keys ->
-      config :ride_along, RideAlongWeb.Api, api_keys: api_keys
-
-    _ ->
-      true
-  end
-end

@@ -12,8 +12,6 @@ config :ride_along, RideAlong.OpenRouteService,
     plug: {Req.Test, RideAlong.OpenRouteService}
   ]
 
-config :ride_along, RideAlongWeb.Api, api_keys: %{"test_api_key" => "Test API Key"}
-
 # Print only warnings and errors during test
 config :logger, level: :warning
 

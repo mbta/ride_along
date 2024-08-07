@@ -17,12 +17,6 @@ defmodule RideAlongWeb.Router do
     }
   end
 
-  pipeline :api do
-    plug RideAlongWeb.Api
-    plug JSONAPI.EnsureSpec
-    plug JSONAPI.UnderscoreParameters
-  end
-
   pipeline :admin do
     plug RideAlongWeb.AuthManager, roles: ["admin"]
   end
@@ -36,12 +30,6 @@ defmodule RideAlongWeb.Router do
 
     get "/", PageController, :home
     live "/t/:token", TripLive.Show
-  end
-
-  scope "/api", RideAlongWeb.Api do
-    pipe_through [:shared, :api]
-
-    get("/tokens/:trip_id", TokenController, :show)
   end
 
   scope "/auth", RideAlongWeb do
