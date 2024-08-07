@@ -16,6 +16,7 @@ defmodule RideAlong.Application do
       {RideAlong.FakePublisher, Application.get_env(:ride_along, RideAlong.FakePublisher)},
       {RideAlong.MqttListener, Application.get_env(:ride_along, RideAlong.MqttListener)},
       {RideAlong.EtaMonitor, Application.get_env(:ride_along, RideAlong.EtaMonitor)},
+      {RideAlong.RiderNotifier, Application.get_env(:ride_along, RideAlong.RiderNotifier)},
       RideAlongWeb.Endpoint
     ]
 
