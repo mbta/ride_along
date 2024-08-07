@@ -24,6 +24,8 @@ defmodule RideAlong.Adept.TripTest do
         "PickZip" => "50896",
         "PromiseTime" => "24:50",
         "RouteId" => 14_404,
+        "ClientId" => 70_000,
+        "ClientTripIndex" => 2,
         "TripDate" => {{2024, 05, 30}, {0, 0, 0, 0}},
         "PickOrder" => 14,
         "DropOrder" => 16,
@@ -36,7 +38,9 @@ defmodule RideAlong.Adept.TripTest do
       expected = %Trip{
         trip_id: 94_820_952,
         route_id: 14_404,
+        client_id: 70_000,
         date: ~D[2024-05-30],
+        client_trip_index: 1,
         pick_time: DateTime.new!(~D[2024-05-30], ~T[03:33:00], time_zone),
         promise_time: DateTime.new!(~D[2024-05-31], ~T[00:50:00], time_zone),
         lat: Decimal.new("42.3434"),

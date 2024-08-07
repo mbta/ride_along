@@ -125,12 +125,18 @@ defmodule RideAlong.SqlPublisher do
     %{
       trips: %{
         sql:
-          ~s[SELECT Id, TripDate, RouteId,
+          ~s[WITH Trips AS (
+              SELECT *,
+              ROW_NUMBER() OVER (PARTITION BY ClientId ORDER BY ClientId, TripDate) AS ClientTripIndex
+              FROM dbo.TRIP
+             )
+             SELECT Id, TripDate, RouteId,
+             ClientId, ClientTripIndex,
              Status, Anchor, PickTime, PromiseTime,
              PickHouseNumber, PickAddress1, PickAddress2, PickCity, PickSt, PickZip,
              PickGridX, PickGridY,
              PickOrder, DropOrder, PerformPickup, PerformDropoff
-             FROM dbo.TRIP t
+             FROM Trips t
              WHERE t.TripDate = @service_date AND PickGridX != 0 AND PickGridY != 0 AND ClientId > 0],
         parameters: %{service_date: service_date},
         interval: 300_000

@@ -152,6 +152,8 @@ defmodule RideAlong.FakePublisher do
         "Id" => @trip_id,
         "TripDate" => {{now.year, now.month, now.day}, {0, 0, 0, 0}},
         "RouteId" => @route_id,
+        "ClientId" => 70_000,
+        "ClientTripIndex" => 1,
         "PickTime" => Calendar.strftime(DateTime.add(now, 30, :minute), "%H:%M"),
         "PromiseTime" => "#{now.hour}:#{now.minute}",
         "PickHouseNumber" => FakeAddress.building_number(),

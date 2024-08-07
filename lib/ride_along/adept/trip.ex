@@ -11,6 +11,7 @@ defmodule RideAlong.Adept.Trip do
   defstruct [
     :trip_id,
     :route_id,
+    :client_id,
     :date,
     :pick_time,
     :promise_time,
@@ -25,6 +26,7 @@ defmodule RideAlong.Adept.Trip do
     :anchor,
     :pick_order,
     :drop_order,
+    client_trip_index: 0,
     pickup_performed?: false,
     dropoff_performed?: false
   ]
@@ -42,6 +44,8 @@ defmodule RideAlong.Adept.Trip do
       "Id" => trip_id,
       "TripDate" => trip_date_time,
       "RouteId" => route_id,
+      "ClientId" => client_id,
+      "ClientTripIndex" => client_trip_index,
       "PickTime" => pick_time,
       "PromiseTime" => promise_time,
       "PickHouseNumber" => house_number,
@@ -64,6 +68,8 @@ defmodule RideAlong.Adept.Trip do
     %__MODULE__{
       trip_id: trip_id,
       route_id: route_id,
+      client_id: client_id,
+      client_trip_index: client_trip_index - 1,
       date: DateTime.to_date(trip_date_time),
       pick_time: relative_time(pick_time, trip_date_time),
       promise_time: relative_time(promise_time, trip_date_time),
