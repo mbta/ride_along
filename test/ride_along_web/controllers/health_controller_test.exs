@@ -1,5 +1,5 @@
 defmodule RideAlongWeb.HealthControllerTest do
-  use RideAlongWeb.ConnCase, async: false
+  use RideAlongWeb.ConnCase
 
   setup do
     on_exit(fn ->

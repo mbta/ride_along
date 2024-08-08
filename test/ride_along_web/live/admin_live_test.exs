@@ -1,6 +1,6 @@
 defmodule RideAlongWeb.AdminLiveTest do
   @moduledoc false
-  use RideAlongWeb.ConnCase, async: false
+  use RideAlongWeb.ConnCase
 
   import Phoenix.LiveViewTest
 

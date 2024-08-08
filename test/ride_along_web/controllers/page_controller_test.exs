@@ -1,5 +1,5 @@
 defmodule RideAlongWeb.PageControllerTest do
-  use RideAlongWeb.ConnCase
+  use RideAlongWeb.ConnCase, async: true
 
   test "GET /", %{conn: conn} do
     conn = get(conn, ~p"/")

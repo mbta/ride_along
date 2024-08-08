@@ -1,5 +1,5 @@
 defmodule RideAlongWeb.TripLiveTest do
-  use RideAlongWeb.ConnCase, async: false
+  use RideAlongWeb.ConnCase
 
   import Phoenix.LiveViewTest
 
