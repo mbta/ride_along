@@ -39,6 +39,11 @@ config :ride_along, RideAlong.EtaMonitor, start: false
 
 config :ride_along, RideAlong.RiderNotifier, start: true
 
+config :ride_along, RideAlong.WebhookPublisher,
+  start: false,
+  url_generator_mfa: {RideAlongWeb.TokenUrlGenerator, :generate, []},
+  webhooks: %{}
+
 config :ride_along, RideAlong.OpenRouteService,
   duration_scale: 1.0,
   req_config: [

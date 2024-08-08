@@ -24,6 +24,8 @@ if System.get_env("PHX_SERVER") do
   config :ride_along, RideAlong.EtaMonitor, start: true
 
   config :ride_along, RideAlong.RiderNotifier, start: true
+
+  config :ride_along, RideAlong.WebhookPublisher, start: true
 end
 
 if System.get_env("SQLCMDSERVER") in [nil, ""] do
@@ -66,6 +68,8 @@ if config_env() == :prod do
     ]
 
   config :ride_along, RideAlong.LinkShortener, secret: secret_key_base
+
+  config :ride_along, RideAlong.WebhookPublisher, secret: secret_key_base
 
   config :ride_along, RideAlongWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
@@ -118,4 +122,9 @@ if issuer = System.get_env("KEYCLOAK_ISSUER") do
         client_secret: System.get_env("KEYCLOAK_CLIENT_SECRET")
       ]
     ]
+end
+
+with <<webhooks_json::binary>> <- System.get_env("WEBHOOKS"),
+     {:ok, webhooks} <- Jason.decode(webhooks_json) do
+  config :ride_along, RideAlong.WebhookPublisher, webhooks: webhooks
 end

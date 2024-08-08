@@ -17,7 +17,8 @@ defmodule RideAlong.Application do
       {RideAlong.MqttListener, Application.get_env(:ride_along, RideAlong.MqttListener)},
       {RideAlong.EtaMonitor, Application.get_env(:ride_along, RideAlong.EtaMonitor)},
       {RideAlong.RiderNotifier, Application.get_env(:ride_along, RideAlong.RiderNotifier)},
-      RideAlongWeb.Endpoint
+      RideAlongWeb.Endpoint,
+      {RideAlong.WebhookPublisher, Application.get_env(:ride_along, RideAlong.WebhookPublisher)}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
