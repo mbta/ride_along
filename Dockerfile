@@ -71,4 +71,6 @@ RUN env SECRET_KEY_BASE=fake ORS_BASE_URL=fake \
      /app/bin/ride_along eval ":crypto.supports()" && \
      /app/bin/ride_along eval ":ok = :public_key.cacerts_load"'
 
+USER nobody
+
 CMD ["/app/bin/ride_along", "start"]
