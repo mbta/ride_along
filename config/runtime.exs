@@ -88,7 +88,10 @@ if config_env() == :prod do
 
   mqtt_url = System.get_env("MQTT_BROKER_URL")
 
-  if mqtt_url not in [nil, ""] do
+  if mqtt_url in [nil, ""] do
+    config :ride_along, RideAlong.MqttListener, start: false
+    config :ride_along, RideAlong.SqlPublisher, start: false
+  else
     topic_prefix = System.get_env("MQTT_TOPIC_PREFIX", "")
     username = System.get_env("MQTT_BROKER_USERNAME")
 
