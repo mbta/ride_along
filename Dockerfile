@@ -73,5 +73,6 @@ RUN env SECRET_KEY_BASE=fake ORS_BASE_URL=fake \
 
 USER nobody
 
+HEALTHCHECK CMD ["/app/bin/ride_along", "rpc", "[_ | _] = RideAlong.Adept.all_trips()"]
 ENTRYPOINT ["/usr/bin/dumb-init", "/app/bin/ride_along"]
 CMD ["start"]
