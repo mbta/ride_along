@@ -64,6 +64,7 @@ defmodule RideAlong.MixProject do
       {:ueberauth_oidcc, "~> 0.4"},
       {:vincenty, "~> 1.0"},
       {:ehmon, github: "paulswartz/ehmon"},
+      {:logster, "~> 2.0-rc"},
       {:stream_data, "~> 1.0", only: :test},
       {:credo, "~> 1.7.7-rc", only: :dev, runtime: false},
       {:dialyxir, "~> 1.4", only: :dev, runtime: false},

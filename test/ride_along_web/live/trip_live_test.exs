@@ -27,6 +27,7 @@ defmodule RideAlongWeb.TripLiveTest do
       assert Floki.text(elements) =~ "ETA"
     end
 
+    @tag :capture_log
     test "unknown trip raises 404", %{conn: conn} do
       assert_raise RideAlongWeb.NotFoundException, fn -> live(conn, ~p"/t/missing") end
     end

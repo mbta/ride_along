@@ -1,6 +1,8 @@
 defmodule RideAlongWeb.HealthControllerTest do
   use RideAlongWeb.ConnCase
 
+  @moduletag :capture_log
+
   setup do
     on_exit(fn ->
       RideAlong.Adept.set_trips([])
