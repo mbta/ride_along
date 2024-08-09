@@ -54,7 +54,7 @@ FROM debian:${DEBIAN_VERSION}-slim
 RUN apt-get update --allow-releaseinfo-change && \
   apt-get upgrade -y --no-install-recommends && \
   apt-get install -y --no-install-recommends \
-    ca-certificates && \
+    ca-certificates dumb-init && \
   rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -73,4 +73,5 @@ RUN env SECRET_KEY_BASE=fake ORS_BASE_URL=fake \
 
 USER nobody
 
-CMD ["/app/bin/ride_along", "start"]
+ENTRYPOINT ["/usr/bin/dumb-init", "/app/bin/ride_along"]
+CMD ["start"]
