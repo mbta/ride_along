@@ -122,10 +122,18 @@ defmodule RideAlong.SqlPublisher do
       |> DateTime.to_date()
       |> Date.to_iso8601()
 
+    # Route vehicle designations:
+    # https://trac.zendesk.com/hc/en-us/articles/4409591371284-Route-Vehicle-Designations
+    # 10_000s: DSP
+    # 200_000s: DSP replacement route
+    # 300_000s: DSP new routes for added drivers
+    # 400_000s: FLEX
+    # 500_000s: FLEX
+    # 600_000s: NDSP
+    # 700_000s: NDSP
     %{
       trips: %{
-        sql:
-          ~s[WITH Trips AS (
+        sql: ~s[WITH Trips AS (
               SELECT *,
               ROW_NUMBER() OVER (PARTITION BY ClientId ORDER BY ClientId, TripDate) AS ClientTripIndex
               FROM dbo.TRIP
@@ -137,7 +145,11 @@ defmodule RideAlong.SqlPublisher do
              PickGridX, PickGridY,
              PickOrder, DropOrder, PerformPickup, PerformDropoff
              FROM Trips t
-             WHERE t.TripDate = @service_date AND PickGridX != 0 AND PickGridY != 0 AND ClientId > 0],
+             WHERE
+               t.TripDate = @service_date AND
+               PickGridX != 0 AND PickGridY != 0 AND
+               ClientId > 0 AND
+               (RouteId < 400000 OR RouteId >= 800000)],
         parameters: %{service_date: service_date},
         interval: 300_000
       },
