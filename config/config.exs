@@ -87,8 +87,9 @@ config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
-# Use Jason for JSON parsing in Phoenix
-config :phoenix, :json_library, Jason
+config :phoenix,
+  json_library: Jason,
+  logger: false
 
 # Use Tzdata for Elixir timezone actions
 config :elixir, :time_zone_database, Tzdata.TimeZoneDatabase
