@@ -93,6 +93,8 @@ config :phoenix, :json_library, Jason
 # Use Tzdata for Elixir timezone actions
 config :elixir, :time_zone_database, Tzdata.TimeZoneDatabase
 
+config :ehmon, :report_mf, {:ehmon, :info_report}
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
