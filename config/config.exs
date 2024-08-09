@@ -37,7 +37,7 @@ config :ride_along, RideAlong.SqlPublisher, start: false
 
 config :ride_along, RideAlong.EtaMonitor, start: false
 
-config :ride_along, RideAlong.RiderNotifier, start: true
+config :ride_along, RideAlong.RiderNotifier, start: false
 
 config :ride_along, RideAlong.WebhookPublisher,
   start: false,

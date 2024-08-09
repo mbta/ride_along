@@ -43,6 +43,8 @@ else
         database: "ADEPT6_GCS"
       ],
       start: true
+
+    config :ride_along, RideAlong.MqttListener, start: true
   end
 end
 

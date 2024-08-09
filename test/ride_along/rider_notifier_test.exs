@@ -6,6 +6,7 @@ defmodule RideAlong.RiderNotifierTest do
   alias RideAlong.AdeptFixtures
 
   setup do
+    {:ok, _} = RideAlong.RiderNotifier.start_link(start: true, name: __MODULE__)
     Phoenix.PubSub.subscribe(RideAlong.PubSub, "notification:trip")
 
     on_exit(fn ->

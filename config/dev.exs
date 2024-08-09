@@ -46,6 +46,8 @@ config :ride_along, RideAlong.MqttListener, start: true
 
 config :ride_along, RideAlong.EtaMonitor, start: true
 
+config :ride_along, RideAlong.RiderNotifier, start: true
+
 config :ride_along, RideAlong.WebhookPublisher,
   start: true,
   secret: "BZaW7eynx3VJvqUD0k6jz7VD3PEAywZRPbpDds/UDsHZ5cDnvoUIwvLQkKcwhvnR",
