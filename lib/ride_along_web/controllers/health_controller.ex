@@ -2,9 +2,9 @@ defmodule RideAlongWeb.HealthController do
   use RideAlongWeb, :controller
 
   def index(conn, _params) do
-    trips = RideAlong.Adept.all_trips()
+    trip_count = RideAlong.Adept.all_trips_count()
 
-    healthy? = trips != []
+    healthy? = trip_count != 0
 
     status =
       if healthy? do
