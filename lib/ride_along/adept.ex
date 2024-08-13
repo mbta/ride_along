@@ -14,21 +14,25 @@ defmodule RideAlong.Adept do
   end
 
   def all_trips(name \\ @default_name) do
-    List.flatten(:ets.match(name, {{:trip, :_}, :"$1"}))
+    List.flatten(:ets.match(name, {{:trip, :_, :_}, :"$1"}))
   end
 
   def all_trips_count(name \\ @default_name) do
-    :ets.select_count(name, [{{{:trip, :_}, :_}, [], [true]}])
+    :ets.select_count(name, [{{{:trip, :_, :_}, :_}, [], [true]}])
   end
 
   def get_trip(name \\ @default_name, trip_id) when is_integer(trip_id) do
-    case :ets.lookup(name, {:trip, trip_id}) do
-      [{{:trip, ^trip_id}, trip}] ->
+    case :ets.match(name, {{:trip, trip_id, :_}, :"$1"}) do
+      [[trip]] ->
         trip
 
       [] ->
         nil
     end
+  end
+
+  def get_trips_by_route(name \\ @default_name, route_id) when is_integer(route_id) do
+    List.flatten(:ets.match(name, {{:trip, :_, route_id}, :"$1"}))
   end
 
   def set_trips(name \\ @default_name, trips) when is_list(trips) do
@@ -75,14 +79,15 @@ defmodule RideAlong.Adept do
   def handle_call({:set_trips, trips}, _from, state) do
     inserted_trips =
       for trip <- trips, into: %{} do
-        {{:trip, trip.trip_id}, trip}
+        {{:trip, trip.trip_id, trip.route_id}, trip}
       end
 
     :ets.insert(state.table, Map.to_list(inserted_trips))
 
     for trip <- all_trips(state.name),
-        not Map.has_key?(inserted_trips, {:trip, trip.trip_id}) do
-      :ets.delete(state.table, {:trip, trip.trip_id})
+        key = {:trip, trip.trip_id, trip.route_id},
+        not Map.has_key?(inserted_trips, key) do
+      :ets.delete(state.table, key)
     end
 
     Phoenix.PubSub.local_broadcast(RideAlong.PubSub, "trips:updated", :trips_updated)
@@ -124,6 +129,8 @@ defmodule RideAlong.Adept do
         "vehicle:#{v.vehicle_id}",
         {:vehicle_updated, v}
       )
+
+      Phoenix.PubSub.local_broadcast(RideAlong.PubSub, "vehicle:all", {:vehicle_updated, v})
 
       [{{:vehicle, v.route_id}, v}]
     end

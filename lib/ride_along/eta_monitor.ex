@@ -39,6 +39,13 @@ defmodule RideAlong.EtaMonitor do
     {:noreply, state}
   end
 
+  def handle_info({:vehicle_updated, v}, state) do
+    trips = Adept.get_trips_by_route(v.route_id)
+    state = update_trips(state, trips)
+
+    {:noreply, state}
+  end
+
   def handle_info(:clean_state, state) do
     state = clean_state(state)
 

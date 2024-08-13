@@ -31,28 +31,32 @@ defmodule RideAlong.RiderNotifier do
   def init(_opts) do
     state = %__MODULE__{}
     Phoenix.PubSub.subscribe(RideAlong.PubSub, "trips:updated")
-    Phoenix.PubSub.subscribe(RideAlong.PubSub, "vehicles:updated")
+    Phoenix.PubSub.subscribe(RideAlong.PubSub, "vehicle:all")
     {:ok, state}
   end
 
   @impl GenServer
   def handle_info(:trips_updated, state) do
-    state = update_trips(state)
+    trips = RideAlong.Adept.all_trips()
+
+    state =
+      state
+      |> update_trips(trips)
+      |> cleanup_old_notifications(trips)
+
     {:noreply, state}
   end
 
-  def handle_info(:vehicles_updated, state) do
-    state = update_trips(state)
+  def handle_info({:vehicle_updated, v}, state) do
+    trips = RideAlong.Adept.get_trips_by_route(v.route_id)
+    state = update_trips(state, trips)
     {:noreply, state}
   end
 
-  def update_trips(state) do
-    all_trips = RideAlong.Adept.all_trips()
-
-    all_trips
+  def update_trips(state, trips) do
+    trips
     |> relevant_trips(DateTime.utc_now())
     |> Enum.reduce(state, &maybe_notify/2)
-    |> cleanup_old_notifications(all_trips)
   end
 
   defp relevant_trips(all_trips, now) do
