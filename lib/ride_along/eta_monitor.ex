@@ -28,19 +28,12 @@ defmodule RideAlong.EtaMonitor do
     :timer.send_interval(86_400_000, :clean_state)
     state = update_trips(%__MODULE__{})
     Phoenix.PubSub.subscribe(RideAlong.PubSub, "trips:updated")
-    Phoenix.PubSub.subscribe(RideAlong.PubSub, "vehicles:updated")
 
     {:ok, state}
   end
 
   @impl GenServer
   def handle_info(:trips_updated, state) do
-    state = update_trips(state)
-
-    {:noreply, state}
-  end
-
-  def handle_info(:vehicles_updated, state) do
     state = update_trips(state)
 
     {:noreply, state}
@@ -85,14 +78,11 @@ defmodule RideAlong.EtaMonitor do
 
     state = put_in(state.trip_date_to_key[trip_date], new_key)
 
-    if new_key != old_key do
-      log_trip_status_change(state, trip, vehicle, status)
-    else
-      state
-    end
+    changed? = new_key != old_key
+    log_trip_status_change(state, trip, vehicle, status, changed?)
   end
 
-  def log_trip_status_change(state, trip, vehicle, status) do
+  def log_trip_status_change(state, trip, vehicle, status, changed?) do
     route =
       if status not in [:arrived, :picked_up, :closed] and is_map(vehicle) do
         case RideAlong.OpenRouteService.directions(trip, vehicle) do
@@ -116,6 +106,10 @@ defmodule RideAlong.EtaMonitor do
       "#{__MODULE__} trip_id=#{trip.trip_id} route=#{trip.route_id} status=#{status} promise=#{DateTime.to_iso8601(trip.promise_time)} pick=#{DateTime.to_iso8601(trip.pick_time)} ors_eta=#{ors_eta} ors_eta_at=#{ors_eta_at}"
     )
 
-    put_in(state.latest_ors_eta[trip.trip_id], {ors_eta, ors_eta_at})
+    if changed? do
+      put_in(state.latest_ors_eta[trip.trip_id], {ors_eta, ors_eta_at})
+    else
+      state
+    end
   end
 end

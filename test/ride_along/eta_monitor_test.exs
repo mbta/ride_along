@@ -59,13 +59,6 @@ defmodule RideAlong.EtaMonitorTest do
 
       log =
         capture_log(fn ->
-          EtaMonitor.update_trips(state, [trip], now)
-        end)
-
-      refute log =~ "EtaMonitor"
-
-      log =
-        capture_log(fn ->
           EtaMonitor.update_trips(state, [%{trip | drop_order: 6, dropoff_performed?: true}], now)
         end)
 
@@ -91,14 +84,14 @@ defmodule RideAlong.EtaMonitorTest do
           drop_order: 9
         })
 
-      # enqueued
+      stub_ors!()
 
+      # enqueued
       state = EtaMonitor.update_trips(state, [trip], now)
 
       # enroute
       trip = %{trip | pick_order: 7}
 
-      stub_ors!()
       state = EtaMonitor.update_trips(state, [trip], now)
 
       # picked_up
