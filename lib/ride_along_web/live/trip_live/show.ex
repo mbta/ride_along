@@ -55,6 +55,10 @@ defmodule RideAlongWeb.TripLive.Show do
       end
 
       if connected?(socket) do
+        Logger.info(
+          "mounted controller=#{__MODULE__} path={socket.path} params=#{inspect(params)}"
+        )
+
         :timer.send_interval(1_000, :countdown)
         Phoenix.PubSub.subscribe(RideAlong.PubSub, "vehicle:#{socket.assigns.vehicle.vehicle_id}")
         Phoenix.PubSub.subscribe(RideAlong.PubSub, "trips:updated")
