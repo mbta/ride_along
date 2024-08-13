@@ -177,7 +177,7 @@ defmodule RideAlongWeb.TripLive.Show do
     if socket.assigns.trip.route_id == old_trip.route_id do
       socket
     else
-      Phoenix.PubSub.unsubscribe(RideAlong.PubSub, "vehicle:#{socket.assigns.vehicle.vehicle_id}")
+      RideAlong.PubSub.unsubscribe("vehicle:#{socket.assigns.vehicle.vehicle_id}")
 
       case Adept.get_vehicle_by_route(socket.assigns.trip.route_id) do
         %Vehicle{} = vehicle ->
@@ -209,8 +209,8 @@ defmodule RideAlongWeb.TripLive.Show do
     end
 
     if new_status in [:picked_up, :closed] do
-      Phoenix.PubSub.unsubscribe(RideAlong.PubSub, "vehicle:#{socket.assigns.vehicle.vehicle_id}")
-      Phoenix.PubSub.unsubscribe(RideAlong.PubSub, "trips:updated")
+      RideAlong.PubSub.unsubscribe("vehicle:#{socket.assigns.vehicle.vehicle_id}")
+      RideAlong.PubSub.unsubscribe("trips:updated")
     end
 
     assign(socket, :status, new_status)

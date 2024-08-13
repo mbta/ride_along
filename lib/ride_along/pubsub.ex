@@ -4,10 +4,18 @@ defmodule RideAlong.PubSub do
   """
 
   def subscribe(topic) do
-    Phoenix.PubSub.subscribe(__MODULE__, topic)
+    Registry.register(RideAlong.Registry, topic, [])
+  end
+
+  def unsubscribe(topic) do
+    Registry.unregister(RideAlong.Registry, topic)
   end
 
   def publish(topic, body) do
-    Phoenix.PubSub.local_broadcast(__MODULE__, topic, body)
+    Registry.dispatch(RideAlong.Registry, topic, fn entries ->
+      for {pid, _} <- entries do
+        send(pid, body)
+      end
+    end)
   end
 end

@@ -10,6 +10,8 @@ defmodule RideAlong.Application do
     children = [
       RideAlongWeb.Telemetry,
       {Phoenix.PubSub, name: RideAlong.PubSub},
+      {Registry,
+       name: RideAlong.Registry, keys: :duplicate, partitions: System.schedulers_online()},
       RideAlong.Adept,
       RideAlong.LinkShortener,
       {RideAlong.SqlPublisher, Application.get_env(:ride_along, RideAlong.SqlPublisher)},
