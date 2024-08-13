@@ -25,6 +25,7 @@ defmodule RideAlong.EtaMonitor do
 
   @impl GenServer
   def init(_) do
+    :timer.send_interval(86_400_000, :clean_state)
     state = update_trips(%__MODULE__{})
     Phoenix.PubSub.subscribe(RideAlong.PubSub, "trips:updated")
     Phoenix.PubSub.subscribe(RideAlong.PubSub, "vehicles:updated")
@@ -34,10 +35,7 @@ defmodule RideAlong.EtaMonitor do
 
   @impl GenServer
   def handle_info(:trips_updated, state) do
-    state =
-      state
-      |> clean_state()
-      |> update_trips()
+    state = update_trips(state)
 
     {:noreply, state}
   end
@@ -48,18 +46,22 @@ defmodule RideAlong.EtaMonitor do
     {:noreply, state}
   end
 
+  def handle_info(:clean_state, state) do
+    state = clean_state(state)
+
+    {:noreply, state}
+  end
+
   def clean_state(state, today \\ Date.utc_today()) do
+    two_days_ago = Date.add(today, -2)
+
     trip_date_to_key =
-      for {{trip_id, date}, value} <- state.trip_date_to_key,
-          Date.diff(date, today) >= -1,
-          into: %{} do
-        {{trip_id, date}, value}
-      end
+      Map.filter(state.trip_date_to_key, fn {{_, date}, _} ->
+        Date.after?(date, two_days_ago)
+      end)
 
     trip_ids =
-      trip_date_to_key
-      |> Map.keys()
-      |> MapSet.new(&elem(&1, 0))
+      MapSet.new(trip_date_to_key, fn {{trip_id, _}, _} -> trip_id end)
 
     latest_ors_eta =
       Map.filter(state.latest_ors_eta, fn {trip_id, _} -> MapSet.member?(trip_ids, trip_id) end)
