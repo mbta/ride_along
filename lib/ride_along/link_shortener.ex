@@ -42,7 +42,7 @@ defmodule RideAlong.LinkShortener do
   @impl GenServer
   def init([]) do
     state = update_token_maps()
-    Phoenix.PubSub.subscribe(RideAlong.PubSub, "trips:updated")
+    RideAlong.PubSub.subscribe("trips:updated")
 
     {:ok, state}
   end

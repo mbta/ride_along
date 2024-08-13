@@ -90,7 +90,7 @@ defmodule RideAlong.Adept do
       :ets.delete(state.table, key)
     end
 
-    Phoenix.PubSub.local_broadcast(RideAlong.PubSub, "trips:updated", :trips_updated)
+    RideAlong.PubSub.publish("trips:updated", :trips_updated)
     {:reply, :ok, state}
   end
 
@@ -104,7 +104,7 @@ defmodule RideAlong.Adept do
         :ets.match_delete(state.table, {{:vehicle, :_}, :_})
     end
 
-    Phoenix.PubSub.local_broadcast(RideAlong.PubSub, "vehicles:updated", :vehicles_updated)
+    RideAlong.PubSub.publish("vehicles:updated", :vehicles_updated)
 
     {:reply, :ok, state}
   end
@@ -113,8 +113,7 @@ defmodule RideAlong.Adept do
     if old = get_vehicle_by_route(state.name, v.route_id) do
       if DateTime.compare(v.timestamp, old.timestamp) == :gt or
            max(v.last_pick, v.last_drop) > max(old.last_pick, old.last_drop) do
-        Phoenix.PubSub.local_broadcast(
-          RideAlong.PubSub,
+        RideAlong.PubSub.publish(
           "vehicle:#{v.vehicle_id}",
           {:vehicle_updated, v}
         )
@@ -124,13 +123,12 @@ defmodule RideAlong.Adept do
         []
       end
     else
-      Phoenix.PubSub.local_broadcast(
-        RideAlong.PubSub,
+      RideAlong.PubSub.publish(
         "vehicle:#{v.vehicle_id}",
         {:vehicle_updated, v}
       )
 
-      Phoenix.PubSub.local_broadcast(RideAlong.PubSub, "vehicle:all", {:vehicle_updated, v})
+      RideAlong.PubSub.publish("vehicle:all", {:vehicle_updated, v})
 
       [{{:vehicle, v.route_id}, v}]
     end

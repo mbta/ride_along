@@ -30,8 +30,8 @@ defmodule RideAlong.RiderNotifier do
   @impl GenServer
   def init(_opts) do
     state = %__MODULE__{}
-    Phoenix.PubSub.subscribe(RideAlong.PubSub, "trips:updated")
-    Phoenix.PubSub.subscribe(RideAlong.PubSub, "vehicle:all")
+    RideAlong.PubSub.subscribe("trips:updated")
+    RideAlong.PubSub.subscribe("vehicle:all")
     {:ok, state}
   end
 
@@ -84,8 +84,7 @@ defmodule RideAlong.RiderNotifier do
   end
 
   defp send_notification(state, trip) do
-    Phoenix.PubSub.local_broadcast(
-      RideAlong.PubSub,
+    RideAlong.PubSub.publish(
       "notification:trip",
       {:trip_notification, trip}
     )

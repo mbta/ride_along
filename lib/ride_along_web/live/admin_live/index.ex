@@ -6,7 +6,7 @@ defmodule RideAlongWeb.AdminLive.Index do
   @impl true
   def mount(_params, _session, socket) do
     if connected?(socket) do
-      Phoenix.PubSub.subscribe(RideAlong.PubSub, "trips:updated")
+      RideAlong.PubSub.subscribe("trips:updated")
     end
 
     {:ok,

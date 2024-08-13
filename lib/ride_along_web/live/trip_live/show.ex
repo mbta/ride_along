@@ -64,8 +64,8 @@ defmodule RideAlongWeb.TripLive.Show do
         Logger.info("mounted controller=#{__MODULE__} params=#{inspect(params)}")
 
         :timer.send_interval(1_000, :countdown)
-        Phoenix.PubSub.subscribe(RideAlong.PubSub, "vehicle:#{socket.assigns.vehicle.vehicle_id}")
-        Phoenix.PubSub.subscribe(RideAlong.PubSub, "trips:updated")
+        RideAlong.PubSub.subscribe("vehicle:#{socket.assigns.vehicle.vehicle_id}")
+        RideAlong.PubSub.subscribe("trips:updated")
       end
 
       {:ok, socket, layout: false}
@@ -181,7 +181,7 @@ defmodule RideAlongWeb.TripLive.Show do
 
       case Adept.get_vehicle_by_route(socket.assigns.trip.route_id) do
         %Vehicle{} = vehicle ->
-          Phoenix.PubSub.subscribe(RideAlong.PubSub, "vehicle:#{vehicle.vehicle_id}")
+          RideAlong.PubSub.subscribe("vehicle:#{vehicle.vehicle_id}")
           assign(socket, :vehicle, vehicle)
 
         _ ->

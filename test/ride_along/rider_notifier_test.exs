@@ -7,7 +7,7 @@ defmodule RideAlong.RiderNotifierTest do
 
   setup do
     {:ok, _} = RideAlong.RiderNotifier.start_link(start: true, name: __MODULE__)
-    Phoenix.PubSub.subscribe(RideAlong.PubSub, "notification:trip")
+    RideAlong.PubSub.subscribe("notification:trip")
 
     on_exit(fn ->
       Adept.set_vehicles([])

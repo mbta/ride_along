@@ -26,7 +26,7 @@ defmodule RideAlong.WebhookPublisher do
   @impl GenServer
   def init(opts) do
     state = struct(__MODULE__, opts)
-    Phoenix.PubSub.subscribe(RideAlong.PubSub, "notification:trip")
+    RideAlong.PubSub.subscribe("notification:trip")
     {:ok, state}
   end
 

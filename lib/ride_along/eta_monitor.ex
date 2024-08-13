@@ -27,7 +27,7 @@ defmodule RideAlong.EtaMonitor do
   def init(_) do
     :timer.send_interval(86_400_000, :clean_state)
     state = update_trips(%__MODULE__{})
-    Phoenix.PubSub.subscribe(RideAlong.PubSub, "trips:updated")
+    RideAlong.PubSub.subscribe("trips:updated")
 
     {:ok, state}
   end
