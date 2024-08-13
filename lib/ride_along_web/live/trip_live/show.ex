@@ -24,6 +24,12 @@ defmodule RideAlongWeb.TripLive.Show do
   defp mount_trip(trip, params, socket) do
     with trip = %Trip{} <- trip,
          vehicle = %Vehicle{} <- Adept.get_vehicle_by_route(trip.route_id) do
+      Logger.metadata(
+        token: params["token"],
+        trip_id: trip.trip_id,
+        route_id: trip.route_id
+      )
+
       trip =
         if is_nil(params["demo"]) do
           trip
@@ -55,9 +61,7 @@ defmodule RideAlongWeb.TripLive.Show do
       end
 
       if connected?(socket) do
-        Logger.info(
-          "mounted controller=#{__MODULE__} path={socket.path} params=#{inspect(params)}"
-        )
+        Logger.info("mounted controller=#{__MODULE__} params=#{inspect(params)}")
 
         :timer.send_interval(1_000, :countdown)
         Phoenix.PubSub.subscribe(RideAlong.PubSub, "vehicle:#{socket.assigns.vehicle.vehicle_id}")
@@ -121,14 +125,10 @@ defmodule RideAlongWeb.TripLive.Show do
 
   @impl true
   def handle_async(:route, {:ok, {:ok, %Route{} = route}}, socket) do
-    trip = socket.assigns.trip
-
     eta =
       DateTime.add(socket.assigns.vehicle.timestamp, trunc(route.duration * 1000), :millisecond)
 
-    Logger.info(
-      "#{__MODULE__} route calculated trip_id=#{trip.trip_id} route=#{trip.route_id} pick_time=#{DateTime.to_iso8601(trip.pick_time)} eta=#{DateTime.to_iso8601(eta)}"
-    )
+    Logger.info("#{__MODULE__} route calculated eta=#{DateTime.to_iso8601(eta)}")
 
     {:noreply,
      socket
@@ -204,7 +204,7 @@ defmodule RideAlongWeb.TripLive.Show do
 
     if new_status != old_status do
       Logger.info(
-        "#{__MODULE__} status trip_id=#{socket.assigns.trip.trip_id} route=#{socket.assigns.trip.route_id} pick_time=#{DateTime.to_iso8601(socket.assigns.trip.pick_time)} status=#{new_status}"
+        "#{__MODULE__} status pick_time=#{DateTime.to_iso8601(socket.assigns.trip.pick_time)} status=#{new_status}"
       )
     end
 
