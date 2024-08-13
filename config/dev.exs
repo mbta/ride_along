@@ -6,10 +6,17 @@ import Config
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we can use it
 # to bundle .js and .css sources.
+#
+port =
+  case System.get_env("PORT") do
+    nil -> 4001
+    p -> String.to_integer(p)
+  end
+
 config :ride_along, RideAlongWeb.Endpoint,
   https: [
     ip: {127, 0, 0, 1},
-    port: 4001,
+    port: port,
     cipher_suite: :strong,
     keyfile: "priv/cert/selfsigned_key.pem",
     certfile: "priv/cert/selfsigned.pem"
