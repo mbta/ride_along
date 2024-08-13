@@ -33,7 +33,6 @@ const csrfToken = document
 const Hooks = {
   Leaflet: {
     mounted () {
-      const centerOfBoston = [42.3516728, -71.0718109]
       const locationIcon = L.icon({
         iconUrl: this.el.dataset.locationIcon,
         iconAnchor: [15, 15],
@@ -46,7 +45,9 @@ const Hooks = {
         iconSize: [40, 40]
       })
 
-      this.map = L.map(this.el).setView(centerOfBoston, 15)
+      const destination = JSON.parse(this.el.dataset.destination)
+
+      this.map = L.map(this.el).setView(destination, 15)
       L.tileLayer('https://cdn.mbta.com/osm_tiles/{z}/{x}/{y}.png', {
         maxZoom: 18,
         minZoom: 9,
@@ -54,17 +55,12 @@ const Hooks = {
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
       }).addTo(this.map)
 
-      const destination = JSON.parse(this.el.dataset.destination)
-      const vehicle = this.el.dataset.vehicle
-
       this.destination = L.marker([destination.lat, destination.lon], {
         icon: locationIcon,
         alt: destination.alt,
         interactive: false,
         keyboard: false
       }).addTo(this.map)
-
-      this.map.fitBounds([destination, destination], { padding: [5, 5] })
 
       this.handleEvent('route', (r) => {
         const decoded = polyline.decode(r.polyline)
@@ -75,7 +71,7 @@ const Hooks = {
         } else {
           this.vehicle = L.marker(location, {
             icon: vehicleIcon,
-            alt: vehicle,
+            alt: this.el.dataset.vehicle,
             rotationOrigin: 'center center',
             rotationAngle: r.bearing,
             interactive: false,
@@ -105,7 +101,7 @@ const Hooks = {
         this.vehicle = this.polyline = null
 
         // recenter the map
-        this.map.fitBounds([destination, destination], { padding: [5, 5] })
+        this.map.setView(destination, 15)
         this.destination.closePopup()
         if (d.popup) {
           const element = document.createElement('span')

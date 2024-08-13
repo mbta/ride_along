@@ -115,6 +115,7 @@ defmodule RideAlongWeb.TripLive.Show do
      |> put_schedule_change_flash(old_trip)
      |> assign_status()
      |> assign_eta()
+     |> push_route()
      |> request_route()}
   end
 
@@ -228,8 +229,8 @@ defmodule RideAlongWeb.TripLive.Show do
     end
   end
 
-  defp push_route(%{assigns: %{status: :enroute}} = socket) do
-    %{route: route, vehicle: vehicle} = socket.assigns
+  defp push_route(%{assigns: %{status: :enroute, route: route}} = socket) when route != nil do
+    %{vehicle: vehicle} = socket.assigns
 
     {bbox1, bbox2} = route.bbox
 
