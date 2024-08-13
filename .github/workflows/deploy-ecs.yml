@@ -63,10 +63,10 @@ jobs:
       ONPREM_SERVICE: ride-along-onprem-${{ github.event.inputs.environment || 'staging' }}
     steps:
       - name: Use linux-staging for non-prod environments
-        if: env.ECS_SERVICE != 'ride-along-prod'
+        if: env.ONPREM_SERVICE != 'ride-along-onprem-prod'
         run: echo "ONPREM_CLUSTER=linux-staging" >> "$GITHUB_ENV"
       - name: Use linux-prod for prod environment
-        if: env.ECS_SERVICE == 'ride-along-prod'
+        if: env.ONPREM_SERVICE == 'ride-along-onprem-prod'
         run: echo "ONPREM_CLUSTER=linux-prod" >> "$GITHUB_ENV"
       - uses: mbta/actions/deploy-ecs@v2
         with:
