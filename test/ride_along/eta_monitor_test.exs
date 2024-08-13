@@ -48,10 +48,12 @@ defmodule RideAlong.EtaMonitorTest do
           date: today,
           pick_time: pick_time,
           promise_time: pick_time,
-          pick_order: 5,
+          pick_order: 7,
           drop_order: 9,
           pickup_performed?: false
         })
+
+      stub_ors!()
 
       state = EtaMonitor.update_trips(state, [trip], now)
 
