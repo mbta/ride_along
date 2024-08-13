@@ -54,9 +54,12 @@ defmodule RideAlong.MqttListener do
       %{parser: parser, update: update} = config
 
       try do
-        parsed = Enum.map(payload, parser)
-        update.(parsed)
-        Logger.info("#{__MODULE__} updated topic=#{topic} records=#{length(payload)}")
+        {parse_duration, parsed} = :timer.tc(Enum, :map, [payload, parser], :microsecond)
+        {duration, _} = :timer.tc(update, [parsed], :microsecond)
+
+        Logger.info(
+          "#{__MODULE__} updated topic=#{topic} records=#{length(payload)} parse_duration=#{parse_duration / 1_000} duration=#{duration / 1_000}"
+        )
       catch
         kind, e ->
           Logger.info(
