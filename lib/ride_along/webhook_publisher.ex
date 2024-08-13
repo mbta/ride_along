@@ -11,6 +11,8 @@ defmodule RideAlong.WebhookPublisher do
 
   alias RideAlong.Adept
 
+  @gregorian_date_epoch Date.to_gregorian_days(~D[2024-08-01])
+
   @default_name __MODULE__
 
   def start_link(opts) do
@@ -51,15 +53,24 @@ defmodule RideAlong.WebhookPublisher do
     vehicle = Adept.get_vehicle_by_route(trip.route_id)
     status = Adept.Trip.status(trip, vehicle, now)
 
-    notification_id =
-      :erlang.phash2({
-        # fields that if they changed, we'd want to re-send a notification
-        state.secret,
-        trip.date,
-        trip.trip_id,
-        trip.route_id,
-        status in [:arrived, :picked_up]
-      })
+    notification_hash =
+      :erlang.phash2(
+        {
+          # fields that if they changed, we'd want to re-send a notification
+          state.secret,
+          trip.date,
+          trip.trip_id,
+          trip.route_id,
+          status in [:arrived, :picked_up]
+        },
+        # 2 ** 24
+        16_777_216
+      )
+
+    <<notification_id::integer-40>> = <<
+      Date.to_gregorian_days(trip.date) - @gregorian_date_epoch::integer-16,
+      notification_hash::integer-24
+    >>
 
     data =
       Jason.encode_to_iodata!(%{
@@ -88,7 +99,9 @@ defmodule RideAlong.WebhookPublisher do
             {:error, inspect(response)}
         end
 
-      Logger.info("#{__MODULE__} post trip_id=#{trip.trip_id} result=#{result} error=#{error}")
+      Logger.info(
+        "#{__MODULE__} post trip_id=#{trip.trip_id} notification_id=#{notification_id} result=#{result} error=#{error}"
+      )
     end
   end
 
