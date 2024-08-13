@@ -42,7 +42,7 @@ defmodule RideAlong.Adept.Trip do
   def from_sql_map(map) do
     %{
       "Id" => trip_id,
-      "TripDate" => trip_date_time,
+      "TripDate" => {{year, month, day}, _},
       "RouteId" => route_id,
       "ClientId" => client_id,
       "ClientTripIndex" => client_trip_index,
@@ -63,16 +63,16 @@ defmodule RideAlong.Adept.Trip do
       "PerformDropoff" => perform_dropoff
     } = map
 
-    trip_date_time = RideAlong.SqlParser.local_timestamp(trip_date_time)
+    trip_date = Date.new!(year, month, day)
 
     %__MODULE__{
       trip_id: trip_id,
       route_id: route_id,
       client_id: client_id,
       client_trip_index: client_trip_index - 1,
-      date: DateTime.to_date(trip_date_time),
-      pick_time: relative_time(pick_time, trip_date_time),
-      promise_time: relative_time(promise_time, trip_date_time),
+      date: trip_date,
+      pick_time: relative_time(pick_time, trip_date),
+      promise_time: relative_time(promise_time, trip_date),
       lat: grid_to_decimal(grid_lat),
       lon: grid_to_decimal(grid_lon),
       house_number: house_number,
@@ -200,17 +200,16 @@ defmodule RideAlong.Adept.Trip do
     nil
   end
 
-  defp relative_time(time, date_time) do
+  defp relative_time(time, date, time_zone \\ Application.get_env(:ride_along, :time_zone)) do
     [hours, minutes] = String.split(time, ":", parts: 2)
     hours = String.to_integer(hours)
     minutes = String.to_integer(minutes)
 
-    # we start at noon to ensure the time is relative to the correct timezone during DST transitions
     noon =
       DateTime.new!(
-        DateTime.to_date(date_time),
+        date,
         ~T[12:00:00],
-        date_time.time_zone
+        time_zone
       )
 
     DateTime.add(noon, (hours - 12) * 60 + minutes, :minute)
