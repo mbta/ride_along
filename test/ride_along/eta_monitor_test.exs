@@ -50,7 +50,7 @@ defmodule RideAlong.EtaMonitorTest do
           promise_time: pick_time,
           pick_order: 5,
           drop_order: 9,
-          pickup_performed?: true
+          pickup_performed?: false
         })
 
       state = EtaMonitor.update_trips(state, [trip], now)
@@ -59,10 +59,17 @@ defmodule RideAlong.EtaMonitorTest do
 
       log =
         capture_log(fn ->
-          EtaMonitor.update_trips(state, [%{trip | drop_order: 6, dropoff_performed?: true}], now)
+          EtaMonitor.update_trips(state, [%{trip | pickup_performed?: true}], now)
         end)
 
       assert log =~ "EtaMonitor"
+
+      log =
+        capture_log(fn ->
+          EtaMonitor.update_trips(state, [%{trip | dropoff_performed?: true}], now)
+        end)
+
+      refute log =~ "EtaMonitor"
     end
 
     test "keeps track of the last ORS eta, uses it in the arrival/pickup log", %{

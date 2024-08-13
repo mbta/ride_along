@@ -86,7 +86,12 @@ defmodule RideAlong.EtaMonitor do
     state = put_in(state.trip_date_to_key[trip_date], new_key)
 
     changed? = new_key != old_key
-    log_trip_status_change(state, trip, vehicle, status, changed?)
+
+    if status != :closed do
+      log_trip_status_change(state, trip, vehicle, status, changed?)
+    else
+      state
+    end
   end
 
   def log_trip_status_change(state, trip, vehicle, status, changed?) do
