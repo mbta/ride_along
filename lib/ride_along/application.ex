@@ -12,6 +12,8 @@ defmodule RideAlong.Application do
       {Phoenix.PubSub, name: RideAlong.PubSub},
       {Registry,
        name: RideAlong.Registry, keys: :duplicate, partitions: System.schedulers_online()},
+      {DNSCluster, query: Application.get_env(:ride_along, :dns_cluster_query) || :ignore},
+      RideAlong.Singleton,
       RideAlong.Adept,
       RideAlong.LinkShortener,
       {RideAlong.SqlPublisher, Application.get_env(:ride_along, RideAlong.SqlPublisher)},

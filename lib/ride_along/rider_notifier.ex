@@ -76,7 +76,7 @@ defmodule RideAlong.RiderNotifier do
   end
 
   defp maybe_notify(trip, state) do
-    if MapSet.member?(state.notified_trips, trip.trip_id) do
+    if MapSet.member?(state.notified_trips, trip.trip_id) and RideAlong.Singleton.singleton?() do
       state
     else
       send_notification(state, trip)

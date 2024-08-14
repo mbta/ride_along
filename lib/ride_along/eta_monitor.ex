@@ -34,14 +34,24 @@ defmodule RideAlong.EtaMonitor do
 
   @impl GenServer
   def handle_info(:trips_updated, state) do
-    state = update_trips(state)
+    state =
+      if RideAlong.Singleton.singleton?() do
+        update_trips(state)
+      else
+        state
+      end
 
     {:noreply, state}
   end
 
   def handle_info({:vehicle_updated, v}, state) do
-    trips = Adept.get_trips_by_route(v.route_id)
-    state = update_trips(state, trips)
+    state =
+      if RideAlong.Singleton.singleton?() do
+        trips = Adept.get_trips_by_route(v.route_id)
+        update_trips(state, trips)
+      else
+        state
+      end
 
     {:noreply, state}
   end

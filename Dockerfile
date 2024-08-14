@@ -46,6 +46,7 @@ RUN mix phx.digest
 RUN mix compile
 
 COPY config/runtime.exs config
+COPY rel rel
 
 RUN mix release
 
@@ -54,7 +55,7 @@ FROM debian:${DEBIAN_VERSION}-slim
 RUN apt-get update --allow-releaseinfo-change && \
   apt-get upgrade -y --no-install-recommends && \
   apt-get install -y --no-install-recommends \
-    ca-certificates dumb-init && \
+    ca-certificates curl dumb-init jq && \
   rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
