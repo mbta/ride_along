@@ -17,6 +17,10 @@ defmodule RideAlongWeb.Router do
     }
   end
 
+  pipeline :preconnect_cdn do
+    plug :preconnect, "https://cdn.mbta.com"
+  end
+
   pipeline :admin do
     plug RideAlongWeb.AuthManager, roles: ["admin"]
   end
@@ -26,7 +30,7 @@ defmodule RideAlongWeb.Router do
   end
 
   scope "/", RideAlongWeb do
-    pipe_through [:shared, :browser]
+    pipe_through [:shared, :browser, :preconnect_cdn]
 
     get "/", PageController, :home
     live "/t/:token", TripLive.Show
@@ -60,5 +64,9 @@ defmodule RideAlongWeb.Router do
       live "/trip/:trip", RideAlongWeb.TripLive.Show, :show
       live_dashboard "/dashboard", metrics: RideAlongWeb.Telemetry
     end
+  end
+
+  def preconnect(conn, url) do
+    put_resp_header(conn, "link", "<#{URI.encode(url)}>; rel=\"preconnect\"")
   end
 end
