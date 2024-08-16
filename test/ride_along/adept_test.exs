@@ -7,6 +7,12 @@ defmodule RideAlong.AdeptTest do
   @name __MODULE__
 
   setup do
+    ref = Process.monitor(@name)
+
+    receive do
+      {:DOWN, ^ref, :process, _, _} -> :ok
+    end
+
     {:ok, _} = Adept.start_link(name: @name)
 
     :ok

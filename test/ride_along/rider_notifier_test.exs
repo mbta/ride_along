@@ -6,6 +6,12 @@ defmodule RideAlong.RiderNotifierTest do
   alias RideAlong.AdeptFixtures
 
   setup do
+    ref = Process.monitor(__MODULE__)
+
+    receive do
+      {:DOWN, ^ref, :process, _, _} -> :ok
+    end
+
     {:ok, _} = RideAlong.RiderNotifier.start_link(start: true, name: __MODULE__)
     RideAlong.PubSub.subscribe("notification:trip")
 
