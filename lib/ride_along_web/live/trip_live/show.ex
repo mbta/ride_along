@@ -54,7 +54,7 @@ defmodule RideAlongWeb.TripLive.Show do
         |> assign(:route, nil)
         |> assign_status()
         |> assign_eta()
-        |> request_route()
+        |> request_route(false)
         |> push_route()
 
       if socket.assigns.status == :closed do
@@ -120,8 +120,8 @@ defmodule RideAlongWeb.TripLive.Show do
      |> put_schedule_change_flash(old_trip)
      |> assign_status()
      |> assign_eta()
-     |> push_route()
-     |> request_route()}
+     |> request_route()
+     |> push_route()}
   end
 
   @impl true
@@ -151,7 +151,7 @@ defmodule RideAlongWeb.TripLive.Show do
     {:noreply, socket}
   end
 
-  defp request_route(socket) do
+  defp request_route(socket, async? \\ true) do
     source = socket.assigns.vehicle
     destination = socket.assigns.trip
 
@@ -162,14 +162,27 @@ defmodule RideAlongWeb.TripLive.Show do
         %{}
       end
 
-    cond do
-      socket.assigns.status not in [:enroute, :waiting] ->
-        start_async(socket, :route, fn -> nil end)
+    async_fn =
+      cond do
+        socket.assigns.status not in [:enroute, :waiting] ->
+          fn -> nil end
 
-      Map.take(source, [:lat, :lon]) != Map.take(old_source, [:lat, :lon]) ->
-        start_async(socket, :route, fn -> OpenRouteService.directions(source, destination) end)
+        Map.take(source, [:lat, :lon]) != Map.take(old_source, [:lat, :lon]) ->
+          fn -> OpenRouteService.directions(source, destination) end
+
+        true ->
+          nil
+      end
+
+    cond do
+      is_nil(async_fn) ->
+        socket
+
+      async? ->
+        start_async(socket, :route, async_fn)
 
       true ->
+        {:noreply, socket} = handle_async(:route, {:ok, async_fn.()}, socket)
         socket
     end
   end
