@@ -39,25 +39,30 @@ const Hooks = {
         iconSize: [30, 30]
       })
 
-      const destination = JSON.parse(this.el.dataset.destination)
+      const { lat, lon, alt } = JSON.parse(this.el.dataset.destination)
 
-      this.map = L.map(this.el)
-
-      this.destination = L.marker([destination.lat, destination.lon], {
+      this.destination = L.marker([lat, lon], {
         icon: locationIcon,
-        alt: destination.alt,
+        alt,
         interactive: false,
         keyboard: false
-      }).addTo(this.map)
+      })
 
-      this.updated()
-
-      L.tileLayer('https://cdn.mbta.com/osm_tiles/{z}/{x}/{y}.png', {
+      const tileLayer = L.tileLayer('https://cdn.mbta.com/osm_tiles/{z}/{x}/{y}.png', {
         maxZoom: 18,
         minZoom: 9,
         attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-      }).addTo(this.map)
+      })
+
+      this.map = L.map(this.el, {
+        layers: [
+          tileLayer,
+          this.destination
+        ]
+      })
+
+      window.setTimeout(this.updated.bind(this), 0)
     },
 
     updated () {
@@ -68,14 +73,15 @@ const Hooks = {
         if (this.vehicle) {
           this.vehicle.setLatLng(location).setRotationAngle(parseInt(this.el.dataset.vehicleHeading))
         } else {
-          const vehicleIcon = L.icon({
-            iconUrl: this.el.dataset.vehicleIcon,
-            iconAnchor: [20, 20],
-            iconSize: [40, 40]
-          })
-
+          if (!this.vehicleIcon) {
+            this.vehicleIcon = L.icon({
+              iconUrl: this.el.dataset.vehicleIcon,
+              iconAnchor: [20, 20],
+              iconSize: [40, 40]
+            })
+          }
           this.vehicle = L.marker(location, {
-            icon: vehicleIcon,
+            icon: this.vehicleIcon,
             alt: this.el.dataset.vehicle,
             rotationOrigin: 'center center',
             rotationAngle: parseInt(this.el.dataset.vehicleHeading),
@@ -102,6 +108,7 @@ const Hooks = {
         this.vehicle = this.polyline = null
       }
 
+      // fitBounds/setView needs to happen before we can show the popup. not sure why -ps
       if (this.el.dataset.bbox) {
         this.map.fitBounds(JSON.parse(this.el.dataset.bbox), { padding: [48, 48] })
       } else {
@@ -126,7 +133,9 @@ const Hooks = {
           }).openPopup()
         }
       } else {
-        this.destination.closePopup()
+        if (this.popup) {
+          this.destination.closePopup()
+        }
         this.popup = null
       }
     }
@@ -134,7 +143,7 @@ const Hooks = {
 }
 
 const liveSocket = new LiveSocket('/live', Socket, {
-  longPollFallbackMs: 2500,
+  longPollFallbackMs: 10000,
   params: { _csrf_token: csrfToken },
   hooks: Hooks
 })
