@@ -55,6 +55,7 @@ defmodule RideAlongWeb.TripLive.Show do
         |> assign_status()
         |> assign_eta()
         |> request_route()
+        |> push_route()
 
       if socket.assigns.status == :closed do
         raise RideAlongWeb.NotFoundException
@@ -230,15 +231,14 @@ defmodule RideAlongWeb.TripLive.Show do
   end
 
   defp push_route(%{assigns: %{status: :enroute, route: route}} = socket) when route != nil do
-    %{vehicle: vehicle} = socket.assigns
-
     {bbox1, bbox2} = route.bbox
 
-    push_event(socket, "route", %{
-      bbox: [[bbox1.lat, bbox1.lon], [bbox2.lat, bbox2.lon]],
-      bearing: vehicle.heading,
-      polyline: route.polyline
-    })
+    bbox = [[bbox1.lat, bbox1.lon], [bbox2.lat, bbox2.lon]]
+
+    socket
+    |> assign(:bbox, Jason.encode!(bbox))
+    |> assign(:polyline, route.polyline)
+    |> assign(:popup, nil)
   end
 
   defp push_route(socket) do
@@ -254,9 +254,10 @@ defmodule RideAlongWeb.TripLive.Show do
           nil
       end
 
-    push_event(socket, "clearRoute", %{
-      popup: popup
-    })
+    socket
+    |> assign(:bbox, nil)
+    |> assign(:polyline, nil)
+    |> assign(:popup, popup)
   end
 
   def status(assigns) do

@@ -4,9 +4,7 @@
 ]}>
   <h1 class="sr-only"><%= @page_title %></h1>
   <div id="status" class="sr-only" aria-live="assertive" aria-atomic="true">
-    <span :if={@status == :waiting}>
-      <%= gettext("Your RIDE is nearby and will pick you up shortly.") %>
-    </span>
+    <%= @popup %>
     <span :if={@status in [:enroute, :waiting]}>
       <%= gettext("Estimated time of arrival (ETA):") %> <%= @eta_text %>
     </span>
@@ -18,7 +16,6 @@
       ) %>
     </span>
     <span :if={@status == :arrived}>
-      <%= gettext("Your RIDE is here!") %>
       <%= gettext("The driver will go to your door and wait for up to five minutes.") %>
       <%= if @trip.client_trip_index != 0,
         do:
@@ -120,9 +117,12 @@
         data-location-icon={~p"/images/icon-circle-locations-default.svg"}
         data-vehicle-icon={~p"/images/icon-vehicle-bordered.svg"}
         data-vehicle={gettext("Vehicle number %{vehicle_id}", vehicle_id: @vehicle.vehicle_id)}
+        data-vehicle-heading={if @vehicle && @polyline, do: @vehicle.heading}
         data-destination={destination(@trip)}
-      >
-      </div>
+        data-bbox={@bbox}
+        data-polyline={@polyline}
+        data-popup={@popup}
+      />
     </section>
   </div>
   <div

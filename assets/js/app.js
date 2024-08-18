@@ -39,21 +39,9 @@ const Hooks = {
         iconSize: [30, 30]
       })
 
-      const vehicleIcon = L.icon({
-        iconUrl: this.el.dataset.vehicleIcon,
-        iconAnchor: [20, 20],
-        iconSize: [40, 40]
-      })
-
       const destination = JSON.parse(this.el.dataset.destination)
 
-      this.map = L.map(this.el).setView(destination, 15)
-      L.tileLayer('https://cdn.mbta.com/osm_tiles/{z}/{x}/{y}.png', {
-        maxZoom: 18,
-        minZoom: 9,
-        attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-      }).addTo(this.map)
+      this.map = L.map(this.el)
 
       this.destination = L.marker([destination.lat, destination.lon], {
         icon: locationIcon,
@@ -62,18 +50,35 @@ const Hooks = {
         keyboard: false
       }).addTo(this.map)
 
-      this.handleEvent('route', (r) => {
-        const decoded = polyline.decode(r.polyline)
+      this.updated()
+
+      L.tileLayer('https://cdn.mbta.com/osm_tiles/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        minZoom: 9,
+        attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      }).addTo(this.map)
+    },
+
+    updated () {
+      if (this.el.dataset.polyline) {
+        const decoded = polyline.decode(this.el.dataset.polyline)
         const location = decoded[0]
 
         if (this.vehicle) {
-          this.vehicle.setLatLng(location).setRotationAngle(r.bearing)
+          this.vehicle.setLatLng(location).setRotationAngle(parseInt(this.el.dataset.vehicleHeading))
         } else {
+          const vehicleIcon = L.icon({
+            iconUrl: this.el.dataset.vehicleIcon,
+            iconAnchor: [20, 20],
+            iconSize: [40, 40]
+          })
+
           this.vehicle = L.marker(location, {
             icon: vehicleIcon,
             alt: this.el.dataset.vehicle,
             rotationOrigin: 'center center',
-            rotationAngle: r.bearing,
+            rotationAngle: parseInt(this.el.dataset.vehicleHeading),
             interactive: false,
             keyboard: false
           }).addTo(this.map)
@@ -87,11 +92,7 @@ const Hooks = {
             interactive: false
           }).addTo(this.map)
         }
-
-        this.map.fitBounds(r.bbox, { padding: [48, 48] })
-        this.destination.closePopup()
-      })
-      this.handleEvent('clearRoute', (d) => {
+      } else {
         if (this.vehicle) {
           this.map.removeLayer(this.vehicle)
         }
@@ -99,14 +100,21 @@ const Hooks = {
           this.map.removeLayer(this.polyline)
         }
         this.vehicle = this.polyline = null
+      }
 
-        // recenter the map
-        this.map.setView(destination, 15)
-        this.destination.closePopup()
-        if (d.popup) {
-          const element = document.createElement('span')
-          element.innerText = d.popup
-          this.destination.bindPopup(element, {
+      if (this.el.dataset.bbox) {
+        this.map.fitBounds(JSON.parse(this.el.dataset.bbox), { padding: [48, 48] })
+      } else {
+        this.map.setView(this.destination.getLatLng(), 15)
+      }
+
+      if (this.el.dataset.popup) {
+        const element = document.createElement('span')
+        element.innerText = this.el.dataset.popup
+        if (this.popup) {
+          this.popup.setPopupContent(element)
+        } else {
+          this.popup = this.destination.bindPopup(element, {
             offset: [0, -10],
             maxWidth: 250,
             closeButton: false,
@@ -117,7 +125,10 @@ const Hooks = {
             className: 'destination-popup'
           }).openPopup()
         }
-      })
+      } else {
+        this.destination.closePopup()
+        this.popup = null
+      }
     }
   }
 }
