@@ -179,7 +179,7 @@ defmodule RideAlong.FakePublisher do
       %{
         "RouteId" => @route_id,
         "VehicleId" => @vehicle_id,
-        "Heading" => 90,
+        "Heading" => Decimal.new("90"),
         "Latitude" => Decimal.new("42.346"),
         "Longitude" => Decimal.new("-71.071"),
         "LocationDate" => erl_dt(now),
