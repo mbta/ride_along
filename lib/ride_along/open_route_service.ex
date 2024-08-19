@@ -99,9 +99,7 @@ defmodule RideAlong.OpenRouteService do
 
     %__MODULE__.Route{
       timestamp: DateTime.from_unix!(timestamp_ms, :millisecond),
-      bbox:
-        {%__MODULE__.Location{lat: bbox_lat1, lon: bbox_lon1},
-         %__MODULE__.Location{lat: bbox_lat2, lon: bbox_lon2}},
+      bbox: [[bbox_lat1, bbox_lon1], [bbox_lat2, bbox_lon2]],
       source: %__MODULE__.Location{lat: source_lat, lon: source_lon},
       destination: %__MODULE__.Location{lat: destination_lat, lon: destination_lon},
       bearing: bearing,
