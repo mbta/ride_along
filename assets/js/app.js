@@ -44,15 +44,21 @@ const csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute('content')
 
+const locationIcon = L.icon({
+  iconUrl: document.getElementById('location-icon').src,
+  iconAnchor: [15, 15],
+  iconSize: [30, 30]
+})
+
+const vehicleIcon = L.icon({
+  iconUrl: document.getElementById('vehicle-icon').src,
+  iconAnchor: [20, 20],
+  iconSize: [40, 40]
+})
+
 const Hooks = {
   Leaflet: {
     mounted () {
-      const locationIcon = L.icon({
-        iconUrl: this.el.dataset.locationIcon,
-        iconAnchor: [15, 15],
-        iconSize: [30, 30]
-      })
-
       const { lat, lon, alt } = JSON.parse(this.el.dataset.destination)
 
       this.destination = L.marker([lat, lon], {
@@ -87,15 +93,8 @@ const Hooks = {
         if (this.vehicle) {
           this.vehicle.setLatLng(location).setRotationAngle(parseInt(this.el.dataset.vehicleHeading))
         } else {
-          if (!this.vehicleIcon) {
-            this.vehicleIcon = L.icon({
-              iconUrl: this.el.dataset.vehicleIcon,
-              iconAnchor: [20, 20],
-              iconSize: [40, 40]
-            })
-          }
           this.vehicle = L.marker(location, {
-            icon: this.vehicleIcon,
+            icon: vehicleIcon,
             alt: this.el.dataset.vehicle,
             rotationOrigin: 'center center',
             rotationAngle: parseInt(this.el.dataset.vehicleHeading),

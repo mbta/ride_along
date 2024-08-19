@@ -114,8 +114,6 @@
         class="h-full"
         phx-update="ignore"
         phx-hook="Leaflet"
-        data-location-icon={~p"/images/icon-circle-locations-default.svg"}
-        data-vehicle-icon={~p"/images/icon-vehicle-bordered.svg"}
         data-vehicle={gettext("Vehicle number %{vehicle_id}", vehicle_id: @vehicle.vehicle_id)}
         data-vehicle-heading={if @vehicle && @polyline, do: Decimal.to_float(@vehicle.heading)}
         data-destination={destination(@trip)}
@@ -155,10 +153,13 @@
     <.labeled_field title={gettext("Last pick")} value={@vehicle.last_pick} />
     <.labeled_field title={gettext("Last drop")} value={@vehicle.last_drop} />
     <pre>
-        <%= inspect(@trip) %>
-  </pre>
+      <%= inspect(@trip) %>
+    </pre>
     <pre>
-<%= inspect(@vehicle) %>
+      <%= inspect(@vehicle) %>
     </pre>
   </div>
+
+  <.hidden_image id="location-icon" src={~p"/images/icon-circle-locations-default.svg"} />
+  <.hidden_image id="vehicle-icon" src={~p"/images/icon-vehicle-bordered.svg"} />
 </main>

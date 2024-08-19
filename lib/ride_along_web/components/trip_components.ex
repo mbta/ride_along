@@ -83,6 +83,22 @@ defmodule RideAlongWeb.TripComponents do
     """
   end
 
+  attr :id, :string, required: true
+  attr :src, :string, required: true
+
+  def hidden_image(assigns) do
+    ~H"""
+    <img
+      class="absolute -top-left -left-full"
+      aria-hidden="true"
+      phx-track-static
+      id={@id}
+      src={@src}
+      integrity={RideAlongWeb.Endpoint.static_integrity(@src)}
+    />
+    """
+  end
+
   attr :title, :string, required: true
   attr :value, :any, default: []
   attr :rest, :global
