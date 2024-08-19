@@ -4,6 +4,7 @@
 ]}>
   <h1 class="sr-only"><%= @page_title %></h1>
   <div id="status" class="sr-only" aria-live="assertive" aria-atomic="true">
+    <h2 class="sr-only"><%= gettext("Status") %></h2>
     <%= @popup %>
     <span :if={@status in [:enroute, :waiting]}>
       <%= gettext("Estimated time of arrival (ETA):") %> <%= @eta_text %>
@@ -29,6 +30,7 @@
   </div>
   <div class="flex flex-col-reverse h-dvh">
     <section class="p-4 rounded-t-xl basis-24 bg-slate-600 text-white">
+      <h2 class="sr-only"><%= gettext("Trip Information") %></h2>
       <div class="pb-4">
         <div class="text-center w-full">
           <div class="text-xl pb-2 font-bold">
@@ -109,6 +111,7 @@
       <.trip_flash_group flash={@flash} />
     </section>
     <section class="flex-1">
+      <h2 class="sr-only"><%= gettext("Map") %></h2>
       <div
         id="map"
         class="h-full"
