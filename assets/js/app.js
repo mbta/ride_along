@@ -56,109 +56,115 @@ const vehicleIcon = L.icon({
   iconSize: [40, 40]
 })
 
-const Hooks = {
-  Leaflet: {
-    mounted () {
-      const { lat, lon, alt } = JSON.parse(this.el.dataset.destination)
+function initializeMap (el) {
+  const { lat, lon, alt } = JSON.parse(el.dataset.destination)
 
-      this.destination = L.marker([lat, lon], {
-        icon: locationIcon,
-        alt,
-        interactive: false,
-        keyboard: false
-      })
+  const destination = L.marker([lat, lon], {
+    icon: locationIcon,
+    alt,
+    interactive: false,
+    keyboard: false
+  })
 
-      const tileLayer = L.tileLayer('https://cdn.mbta.com/osm_tiles/{z}/{x}/{y}.png', {
-        maxZoom: 18,
-        minZoom: 9,
-        attribution:
+  const tileLayer = L.tileLayer('https://cdn.mbta.com/osm_tiles/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    minZoom: 9,
+    attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-      })
+  })
 
-      this.map = L.map(this.el, {
-        layers: [
-          tileLayer,
-          this.destination
-        ]
-      })
+  const map = L.map(el, {
+    layers: [
+      tileLayer,
+      destination
+    ]
+  })
 
-      window.setTimeout(this.updated.bind(this), 0)
-    },
+  let vehicleLayer, polylineLayer, popupElement
 
-    updated () {
-      if (this.el.dataset.polyline) {
-        const decoded = polyline.decode(this.el.dataset.polyline)
-        const location = decoded[0]
+  function callback () {
+    if (el.dataset.polyline) {
+      const decoded = polyline.decode(el.dataset.polyline)
+      const location = decoded[0]
 
-        if (this.vehicle) {
-          this.vehicle.setLatLng(location).setRotationAngle(parseInt(this.el.dataset.vehicleHeading))
-        } else {
-          this.vehicle = L.marker(location, {
-            icon: vehicleIcon,
-            alt: this.el.dataset.vehicle,
-            rotationOrigin: 'center center',
-            rotationAngle: parseInt(this.el.dataset.vehicleHeading),
-            interactive: false,
-            keyboard: false
-          }).addTo(this.map)
-        }
-
-        if (this.polyline) {
-          this.polyline.setLatLngs(decoded)
-        } else {
-          this.polyline = L.polyline(decoded, {
-            color: 'blue',
-            interactive: false
-          }).addTo(this.map)
-        }
+      if (vehicleLayer) {
+        vehicleLayer.setLatLng(location).setRotationAngle(parseInt(el.dataset.vehicleHeading))
+        vehicleLayer.getIcon().alt = el.dataset.vehicle
       } else {
-        if (this.vehicle) {
-          this.map.removeLayer(this.vehicle)
-        }
-        if (this.polyline) {
-          this.map.removeLayer(this.polyline)
-        }
-        this.vehicle = this.polyline = null
+        vehicleLayer = L.marker(location, {
+          icon: vehicleIcon,
+          alt: el.dataset.vehicle,
+          rotationOrigin: 'center center',
+          rotationAngle: parseInt(el.dataset.vehicleHeading),
+          interactive: false,
+          keyboard: false
+        }).addTo(map)
       }
 
-      // fitBounds/setView needs to happen before we can show the popup. not sure why -ps
-      if (this.el.dataset.bbox) {
-        this.map.fitBounds(JSON.parse(this.el.dataset.bbox), { padding: [48, 48] })
+      if (polylineLayer) {
+        polylineLayer.setLatLngs(decoded)
       } else {
-        this.map.setView(this.destination.getLatLng(), 15)
+        polylineLayer = L.polyline(decoded, {
+          color: 'blue',
+          interactive: false
+        }).addTo(map)
       }
+    } else {
+      if (vehicleLayer) {
+        map.removeLayer(vehicleLayer)
+      }
+      if (polylineLayer) {
+        map.removeLayer(polylineLayer)
+      }
+      vehicleLayer = polylineLayer = null
+    }
 
-      if (this.el.dataset.popup) {
-        const element = document.createElement('span')
-        element.innerText = this.el.dataset.popup
-        if (this.popup) {
-          this.popup.setPopupContent(element)
-        } else {
-          this.popup = this.destination.bindPopup(element, {
-            offset: [0, -10],
-            maxWidth: 250,
-            closeButton: false,
-            autoClose: false,
-            closeOnEscapeKey: false,
-            closeOnClick: false,
-            interactive: false,
-            className: 'destination-popup'
-          }).openPopup()
-        }
+    // fitBounds/setView needs to happen before we can show the popup. not sure why -ps
+    if (el.dataset.bbox) {
+      map.fitBounds(JSON.parse(el.dataset.bbox), { padding: [48, 48] })
+    } else {
+      map.setView(destination.getLatLng(), 15)
+    }
+
+    if (el.dataset.popup) {
+      const element = document.createElement('span')
+      element.innerText = el.dataset.popup
+      if (popupElement) {
+        popupElement.setPopupContent(element)
       } else {
-        if (this.popup) {
-          this.destination.closePopup()
-        }
-        this.popup = null
+        popupElement = destination.bindPopup(element, {
+          offset: [0, -10],
+          maxWidth: 250,
+          closeButton: false,
+          autoClose: false,
+          closeOnEscapeKey: false,
+          closeOnClick: false,
+          interactive: false,
+          className: 'destination-popup'
+        }).openPopup()
       }
+    } else {
+      if (popupElement) {
+        destination.closePopup()
+      }
+      popupElement = null
     }
   }
+
+  /* global MutationObserver */
+  const observer = new MutationObserver(callback)
+  observer.observe(el, {
+    attributeFilter: ['data-vehicle', 'data-vehicle-heading', 'data-bbox', 'data-polyline', 'data-popup']
+  })
+
+  window.setTimeout(callback, 0)
 }
+
+initializeMap(document.getElementById('map'))
 
 const liveSocket = new LiveSocket('/live', Socket, {
   longPollFallbackMs: 10000,
-  params: { _csrf_token: csrfToken },
-  hooks: Hooks
+  params: { _csrf_token: csrfToken }
 })
 
 // connect if there are any LiveViews on the page

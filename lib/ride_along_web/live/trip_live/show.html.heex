@@ -116,7 +116,6 @@
         id="map"
         class="h-full"
         phx-update="ignore"
-        phx-hook="Leaflet"
         data-vehicle={gettext("Vehicle number %{vehicle_id}", vehicle_id: @vehicle.vehicle_id)}
         data-vehicle-heading={if @vehicle && @polyline, do: Decimal.to_float(@vehicle.heading)}
         data-destination={destination(@trip)}
