@@ -27,13 +27,19 @@ defmodule RideAlongWeb.Router do
 
   scope "/", RideAlongWeb do
     get "/_health", HealthController, :index
+    post "/analytics", AnalyticsController, :create
   end
 
   scope "/", RideAlongWeb do
-    pipe_through [:shared, :browser, :preconnect_cdn]
+    pipe_through [:shared, :browser]
 
     get "/", PageController, :home
-    live "/t/:token", TripLive.Show
+  end
+
+  scope "/t", RideAlongWeb.TripLive do
+    pipe_through [:shared, :browser, :preconnect_cdn]
+
+    live "/:token", Show
   end
 
   scope "/auth", RideAlongWeb do

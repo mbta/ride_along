@@ -5,7 +5,8 @@
   "dependencies": {
     "leaflet": "^1.9.4",
     "leaflet-rotatedmarker": "^0.2.0",
-    "polyline-encoded": "^0.0.9"
+    "polyline-encoded": "^0.0.9",
+    "web-vitals": "^4.2.3"
   },
   "devDependencies": {
     "standard": "^17.1.0"

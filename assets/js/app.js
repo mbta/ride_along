@@ -26,6 +26,20 @@ import * as L from 'leaflet'
 import 'leaflet-rotatedmarker'
 import polyline from 'polyline-encoded'
 
+// Core Web Vitals analytics
+import { onCLS, onINP, onLCP } from 'web-vitals'
+
+function sendToAnalytics ({ name, value, id }) {
+  const path = window.location.pathname
+  const body = JSON.stringify({ path, name, value, id });
+  (navigator.sendBeacon && navigator.sendBeacon('/analytics', body)) ||
+      fetch('/analytics', { body, method: 'POST', keepalive: true })
+}
+
+onCLS(sendToAnalytics)
+onINP(sendToAnalytics)
+onLCP(sendToAnalytics)
+
 const csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute('content')
@@ -155,4 +169,4 @@ liveSocket.connect()
 // >> liveSocket.enableDebug()
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
-window.liveSocket = liveSocket
+// window.liveSocket = liveSocket
