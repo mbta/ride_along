@@ -6,7 +6,7 @@ defmodule RideAlongWeb.TripComponents do
 
   alias Phoenix.LiveView.JS
   import RideAlongWeb.CoreComponents
-  import RideAlongWeb.Gettext
+  use Gettext, backend: RideAlongWeb.Gettext
 
   attr :id, :string
   attr :flash, :map, default: %{}
