@@ -151,27 +151,29 @@ function initializeMap (el) {
     }
   }
 
+  callback()
+
   /* global MutationObserver */
   const observer = new MutationObserver(callback)
   observer.observe(el, {
     attributeFilter: ['data-vehicle', 'data-vehicle-heading', 'data-bbox', 'data-polyline', 'data-popup']
   })
-
-  window.setTimeout(callback, 0)
 }
 
 initializeMap(document.getElementById('map'))
 
-const liveSocket = new LiveSocket('/live', Socket, {
-  longPollFallbackMs: 10000,
-  params: { _csrf_token: csrfToken }
-})
+window.setTimeout(() => {
+  const liveSocket = new LiveSocket('/live', Socket, {
+    longPollFallbackMs: 10000,
+    params: { _csrf_token: csrfToken }
+  })
 
-// connect if there are any LiveViews on the page
-liveSocket.connect()
+  // connect if there are any LiveViews on the page
+  liveSocket.connect()
 
 // expose liveSocket on window for web console debug logs and latency simulation:
 // >> liveSocket.enableDebug()
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
 // window.liveSocket = liveSocket
+}, 100)
