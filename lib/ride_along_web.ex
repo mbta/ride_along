@@ -43,7 +43,7 @@ defmodule RideAlongWeb do
         layouts: [html: RideAlongWeb.Layouts]
 
       import Plug.Conn
-      import RideAlongWeb.Gettext
+      use Gettext, backend: RideAlongWeb.Gettext
 
       unquote(verified_routes())
     end
@@ -85,7 +85,7 @@ defmodule RideAlongWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import RideAlongWeb.CoreComponents
-      import RideAlongWeb.Gettext
+      use Gettext, backend: RideAlongWeb.Gettext
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS

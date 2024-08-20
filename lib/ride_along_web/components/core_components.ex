@@ -18,7 +18,7 @@ defmodule RideAlongWeb.CoreComponents do
 
   alias Phoenix.HTML.Form
   alias Phoenix.LiveView.JS
-  import RideAlongWeb.Gettext
+  use Gettext, backend: RideAlongWeb.Gettext
 
   @doc """
   Renders a modal.
