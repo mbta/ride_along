@@ -160,7 +160,10 @@ function initializeMap (el) {
   })
 }
 
-initializeMap(document.getElementById('map'))
+const mapEl = document.getElementById('map')
+if (mapEl) {
+  initializeMap(mapEl)
+}
 
 window.setTimeout(() => {
   const liveSocket = new LiveSocket('/live', Socket, {
