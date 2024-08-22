@@ -98,13 +98,13 @@ defmodule RideAlong.EtaMonitor do
     changed? = new_key != old_key
 
     if status != :closed and (changed? or status in [:enroute, :waiting]) do
-      log_trip_status_change(state, trip, vehicle, status, changed?)
+      log_trip_status_change(state, trip, vehicle, status, changed?, now)
     else
       state
     end
   end
 
-  def log_trip_status_change(state, trip, vehicle, status, changed?) do
+  def log_trip_status_change(state, trip, vehicle, status, changed?, now) do
     route =
       if status in [:enroute, :waiting] and is_map(vehicle) do
         case RideAlong.OpenRouteService.directions(trip, vehicle) do
@@ -119,7 +119,7 @@ defmodule RideAlong.EtaMonitor do
       if route do
         {DateTime.to_iso8601(
            DateTime.add(vehicle.timestamp, trunc(route.duration * 1000), :millisecond)
-         ), DateTime.to_iso8601(DateTime.utc_now())}
+         ), DateTime.to_iso8601(now)}
       else
         Map.get(state.latest_ors_eta, trip.trip_id, {nil, nil})
       end
