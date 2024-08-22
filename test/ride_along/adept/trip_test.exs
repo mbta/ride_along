@@ -189,6 +189,12 @@ defmodule RideAlong.Adept.TripTest do
         assert is_binary(Trip.address(t))
       end
     end
+
+    test "includes the zip code if present" do
+      trip = Fixtures.trip_fixture()
+
+      assert Trip.address(trip) =~ trip.zip
+    end
   end
 
   defp trip do
@@ -197,7 +203,7 @@ defmodule RideAlong.Adept.TripTest do
           address1 <- string(:ascii),
           address2 <- nullable_string(:ascii),
           city <- string(:ascii),
-          state <- nullable_string(:ascii),
+          state <- string(:ascii),
           zip <- nullable_string(:ascii)
         ) do
       %Trip{

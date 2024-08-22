@@ -79,7 +79,7 @@ defmodule RideAlong.Adept.Trip do
       address1: address1,
       address2: address2,
       city: city,
-      state: state,
+      state: state || "MA",
       zip: zip,
       anchor: anchor,
       pick_order: pick_order,
@@ -166,11 +166,18 @@ defmodule RideAlong.Adept.Trip do
       |> Enum.reject(&(&1 in ["", nil]))
       |> Enum.intersperse(" ")
 
+    state_zip =
+      if trip.zip do
+        [trip.state, " ", trip.zip]
+      else
+        trip.state
+      end
+
     Enum.join(
       [
         street,
         trip.city,
-        trip.state || "MA"
+        state_zip
       ],
       ", "
     )
