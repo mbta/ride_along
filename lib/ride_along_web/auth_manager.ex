@@ -17,6 +17,7 @@ defmodule RideAlongWeb.AuthManager do
       conn
       |> put_session(:redirect_to, request_url(conn))
       |> redirect(to: ~p[/auth/keycloak])
+      |> halt()
     end
   end
 
