@@ -124,8 +124,13 @@ defmodule RideAlong.EtaMonitor do
         Map.get(state.latest_ors_eta, trip.trip_id, {nil, nil})
       end
 
+    calculated =
+      if route do
+        DateTime.to_iso8601(RideAlong.EtaCalculator.calculate(trip, vehicle, route))
+      end
+
     Logger.info(
-      "#{__MODULE__} trip_id=#{trip.trip_id} route=#{trip.route_id} status=#{status} promise=#{DateTime.to_iso8601(trip.promise_time)} pick=#{DateTime.to_iso8601(trip.pick_time)} ors_eta=#{ors_eta} ors_eta_at=#{ors_eta_at}"
+      "#{__MODULE__} trip_id=#{trip.trip_id} route=#{trip.route_id} status=#{status} promise=#{DateTime.to_iso8601(trip.promise_time)} pick=#{DateTime.to_iso8601(trip.pick_time)} ors_eta=#{ors_eta} ors_eta_at=#{ors_eta_at} calculated_eta=#{calculated}"
     )
 
     if changed? do

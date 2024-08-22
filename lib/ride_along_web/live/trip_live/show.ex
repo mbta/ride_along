@@ -5,6 +5,7 @@ defmodule RideAlongWeb.TripLive.Show do
   alias Faker.Address, as: FakeAddress
   alias RideAlong.Adept
   alias RideAlong.Adept.{Trip, Vehicle}
+  alias RideAlong.EtaCalculator
   alias RideAlong.LinkShortener
   alias RideAlong.OpenRouteService
   alias RideAlong.OpenRouteService.Route
@@ -126,16 +127,15 @@ defmodule RideAlongWeb.TripLive.Show do
 
   @impl true
   def handle_async(:route, {:ok, {:ok, %Route{} = route}}, socket) do
-    eta =
-      DateTime.add(socket.assigns.vehicle.timestamp, trunc(route.duration * 1000), :millisecond)
+    socket =
+      socket
+      |> assign(:route, route)
+      |> assign_eta()
+      |> push_route()
 
-    Logger.info("#{__MODULE__} route calculated eta=#{DateTime.to_iso8601(eta)}")
+    Logger.info("#{__MODULE__} route calculated eta=#{socket.assigns.eta}")
 
-    {:noreply,
-     socket
-     |> assign(:route, route)
-     |> assign_eta()
-     |> push_route()}
+    {:noreply, socket}
   end
 
   def handle_async(:route, {:ok, nil}, socket) do
@@ -144,6 +144,12 @@ defmodule RideAlongWeb.TripLive.Show do
      |> assign(:route, nil)
      |> assign_eta()
      |> push_route()}
+  end
+
+  def handle_async(:route, {:ok, {:error, reason}}, socket) do
+    Logger.warning("error calculating route reason=#{inspect(reason)}")
+
+    {:noreply, socket}
   end
 
   def handle_async(:route, _, socket) do
@@ -279,29 +285,12 @@ defmodule RideAlongWeb.TripLive.Show do
     Trip.status(trip, vehicle, now)
   end
 
-  def calculate_eta(%{route: %Route{}} = assigns) do
-    vehicle_timestamp = assigns.vehicle.timestamp
-    duration_ms = trunc(assigns.route.duration * 1000)
-    eta = DateTime.add(vehicle_timestamp, duration_ms, :millisecond)
-
-    rounded_eta =
-      if eta.second > 0 or elem(eta.microsecond, 0) > 0 do
-        DateTime.add(eta, 1, :minute)
-      else
-        eta
-      end
-
-    earliest_arrival = DateTime.add(assigns.trip.promise_time, -5, :minute)
-
-    if DateTime.compare(earliest_arrival, rounded_eta) == :gt do
-      earliest_arrival
-    else
-      rounded_eta
-    end
-  end
-
-  def calculate_eta(%{trip: trip}) do
-    trip.pick_time
+  def calculate_eta(%{trip: trip} = assigns) do
+    EtaCalculator.calculate(
+      trip,
+      Map.get(assigns, :vehicle),
+      Map.get(assigns, :route)
+    )
   end
 
   def format_eta(dt) do

@@ -40,7 +40,7 @@ defmodule RideAlong.OpenRouteService do
         units: "mi",
         options: %{
           avoid_features: [:ferries],
-          vehicle_type: :bus,
+          vehicle_type: :bus
         },
         coordinates: [
           [source.lon, source.lat],

@@ -61,6 +61,7 @@ defmodule RideAlong.AdeptFixtures do
 
   defp local_timestamp(add, unit) do
     DateTime.utc_now()
+    |> Map.merge(%{second: 0, millisecond: {0, 0}})
     |> DateTime.add(add, unit)
     |> DateTime.shift_zone!(Application.get_env(:ride_along, :time_zone))
   end
