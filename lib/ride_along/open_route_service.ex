@@ -38,13 +38,17 @@ defmodule RideAlong.OpenRouteService do
         maneuvers: true,
         continue_straight: true,
         units: "mi",
+        options: %{
+          avoid_features: [:ferries],
+          vehicle_type: :bus,
+        },
         coordinates: [
           [source.lon, source.lat],
           [destination.lon, destination.lat]
         ]
       }
 
-    case Req.post(req(), url: "/ors/v2/directions/driving-car", json: query) do
+    case Req.post(req(), url: "/ors/v2/directions/driving-hgv", json: query) do
       {:ok, %{status: 200, body: body}} ->
         {:ok, parse_response(body)}
 
