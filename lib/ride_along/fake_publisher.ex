@@ -168,7 +168,8 @@ defmodule RideAlong.FakePublisher do
         "PickOrder" => 2,
         "DropOrder" => 3,
         "PerformPickup" => 0,
-        "PerformDropoff" => 0
+        "PerformDropoff" => 0,
+        "LoadTime" => 4
       },
       updates
     )

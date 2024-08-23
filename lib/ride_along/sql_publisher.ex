@@ -143,7 +143,7 @@ defmodule RideAlong.SqlPublisher do
              Status, Anchor, PickTime, PromiseTime,
              PickHouseNumber, PickAddress1, PickAddress2, PickCity, PickSt, PickZip,
              PickGridX, PickGridY,
-             PickOrder, DropOrder, PerformPickup, PerformDropoff
+             PickOrder, DropOrder, PerformPickup, PerformDropoff, LoadTime
              FROM Trips t
              WHERE
                t.TripDate = @service_date AND

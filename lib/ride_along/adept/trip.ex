@@ -26,6 +26,7 @@ defmodule RideAlong.Adept.Trip do
     :anchor,
     :pick_order,
     :drop_order,
+    :load_time,
     client_trip_index: 0,
     pickup_performed?: false,
     dropoff_performed?: false
@@ -60,7 +61,8 @@ defmodule RideAlong.Adept.Trip do
       "PickOrder" => pick_order,
       "DropOrder" => drop_order,
       "PerformPickup" => perform_pickup,
-      "PerformDropoff" => perform_dropoff
+      "PerformDropoff" => perform_dropoff,
+      "LoadTime" => load_time
     } = map
 
     trip_date = Date.new!(year, month, day)
@@ -85,7 +87,8 @@ defmodule RideAlong.Adept.Trip do
       pick_order: pick_order,
       drop_order: drop_order,
       pickup_performed?: perform_pickup != 0,
-      dropoff_performed?: perform_dropoff != 0
+      dropoff_performed?: perform_dropoff != 0,
+      load_time: load_time
     }
   end
 

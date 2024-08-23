@@ -31,7 +31,8 @@ defmodule RideAlong.AdeptFixtures do
           zip: "50896",
           anchor: "P",
           pick_order: 5,
-          drop_order: 7
+          drop_order: 7,
+          load_time: 4
         },
         attrs
       )

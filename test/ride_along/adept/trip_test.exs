@@ -30,7 +30,8 @@ defmodule RideAlong.Adept.TripTest do
         "PickOrder" => 14,
         "DropOrder" => 16,
         "PerformPickup" => 2,
-        "PerformDropoff" => 0
+        "PerformDropoff" => 0,
+        "LoadTime" => 7
       }
 
       actual = Trip.from_sql_map(sample)
@@ -54,6 +55,7 @@ defmodule RideAlong.Adept.TripTest do
         anchor: "A",
         pick_order: 14,
         drop_order: 16,
+        load_time: 7,
         pickup_performed?: true,
         dropoff_performed?: false
       }
