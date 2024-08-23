@@ -44,19 +44,19 @@ const csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute('content')
 
-const locationIcon = L.icon({
-  iconUrl: document.getElementById('location-icon').src,
-  iconAnchor: [15, 15],
-  iconSize: [30, 30]
-})
-
-const vehicleIcon = L.icon({
-  iconUrl: document.getElementById('vehicle-icon').src,
-  iconAnchor: [20, 20],
-  iconSize: [40, 40]
-})
-
 function initializeMap (el) {
+  const locationIcon = L.icon({
+    iconUrl: document.getElementById('location-icon').src,
+    iconAnchor: [15, 15],
+    iconSize: [30, 30]
+  })
+
+  const vehicleIcon = L.icon({
+    iconUrl: document.getElementById('vehicle-icon').src,
+    iconAnchor: [20, 20],
+    iconSize: [40, 40]
+  })
+
   const { lat, lon, alt } = JSON.parse(el.dataset.destination)
 
   const destination = L.marker([lat, lon], {
