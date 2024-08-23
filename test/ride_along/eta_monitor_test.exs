@@ -114,7 +114,7 @@ defmodule RideAlong.EtaMonitorTest do
         end)
 
       assert log =~ "EtaMonitor"
-      assert log =~ "ors_eta=2024-06-06"
+      assert log =~ "ors_eta=\"2024-06-06"
     end
   end
 

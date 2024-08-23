@@ -106,6 +106,13 @@ defmodule RideAlong.EtaMonitor do
   end
 
   def log_trip_status_change(state, trip, vehicle, status, changed?, now) do
+    location_timestamp =
+      if vehicle do
+        vehicle.timestamp
+      else
+        nil
+      end
+
     route =
       if status in [:enroute, :waiting] and is_map(vehicle) do
         case RideAlong.OpenRouteService.directions(trip, vehicle) do
@@ -118,9 +125,10 @@ defmodule RideAlong.EtaMonitor do
 
     {ors_eta, ors_eta_at} =
       if route do
-        {DateTime.to_iso8601(
-           DateTime.add(vehicle.timestamp, trunc(route.duration * 1000), :millisecond)
-         ), DateTime.to_iso8601(now)}
+        {
+          DateTime.add(vehicle.timestamp, trunc(route.duration * 1000), :millisecond),
+          now
+        }
       else
         Map.get(state.latest_ors_eta, trip.trip_id, {nil, nil})
       end
@@ -130,8 +138,17 @@ defmodule RideAlong.EtaMonitor do
         DateTime.to_iso8601(RideAlong.EtaCalculator.calculate(trip, vehicle, route))
       end
 
-    Logger.info(
-      "#{__MODULE__} trip_id=#{trip.trip_id} route=#{trip.route_id} status=#{status} promise=#{DateTime.to_iso8601(trip.promise_time)} pick=#{DateTime.to_iso8601(trip.pick_time)} ors_eta=#{ors_eta} ors_eta_at=#{ors_eta_at} calculated_eta=#{calculated}"
+    Logster.info(
+      module: __MODULE__,
+      trip_id: trip.trip_id,
+      route: trip.route_id,
+      status: status,
+      promise: trip.promise_time,
+      pick: trip.pick_time,
+      ors_eta: ors_eta,
+      ors_eta_at: ors_eta_at,
+      calculated: calculated,
+      location: location_timestamp
     )
 
     if changed? do
