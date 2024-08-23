@@ -113,24 +113,23 @@ defmodule RideAlong.Adept do
     if old = get_vehicle_by_route(state.name, v.route_id) do
       if DateTime.compare(v.timestamp, old.timestamp) == :gt or
            max(v.last_pick, v.last_drop) > max(old.last_pick, old.last_drop) do
-        RideAlong.PubSub.publish(
-          "vehicle:#{v.vehicle_id}",
-          {:vehicle_updated, v}
-        )
-
-        [{{:vehicle, v.route_id}, v}]
+        publish_update(v)
       else
         []
       end
     else
-      RideAlong.PubSub.publish(
-        "vehicle:#{v.vehicle_id}",
-        {:vehicle_updated, v}
-      )
-
-      RideAlong.PubSub.publish("vehicle:all", {:vehicle_updated, v})
-
-      [{{:vehicle, v.route_id}, v}]
+      publish_update(v)
     end
+  end
+
+  defp publish_update(v) do
+    RideAlong.PubSub.publish(
+      "vehicle:#{v.vehicle_id}",
+      {:vehicle_updated, v}
+    )
+
+    RideAlong.PubSub.publish("vehicle:all", {:vehicle_updated, v})
+
+    [{{:vehicle, v.route_id}, v}]
   end
 end
