@@ -73,49 +73,6 @@ defmodule RideAlong.EtaMonitorTest do
 
       refute log =~ "EtaMonitor"
     end
-
-    test "keeps track of the last ORS eta, uses it in the arrival/pickup log", %{
-      route_id: route_id,
-      today: today,
-      now: now,
-      state: state
-    } do
-      pick_time = ~U[2024-06-06T14:00:00Z]
-
-      trip =
-        AdeptFixtures.trip_fixture(%{
-          trip_id: 1,
-          route_id: route_id,
-          date: today,
-          pick_time: pick_time,
-          promise_time: pick_time,
-          pick_order: 8,
-          drop_order: 9
-        })
-
-      stub_ors!()
-
-      # enqueued
-      state = EtaMonitor.update_trips(state, [trip], now)
-
-      # enroute
-      trip = %{trip | pick_order: 7}
-
-      state = EtaMonitor.update_trips(state, [trip], now)
-
-      # picked_up
-      trip = %{trip | pick_order: 6, pickup_performed?: true}
-
-      log_level!(:info)
-
-      log =
-        capture_log(fn ->
-          EtaMonitor.update_trips(state, [trip], now)
-        end)
-
-      assert log =~ "EtaMonitor"
-      assert log =~ "ors_eta=\"2024-06-06"
-    end
   end
 
   describe "clean_state/2" do
@@ -131,11 +88,6 @@ defmodule RideAlong.EtaMonitorTest do
           {2, today} => {},
           {3, yesterday} => {},
           {4, day_before_yesterday} => {}
-        },
-        latest_ors_eta: %{
-          2 => "",
-          3 => "",
-          4 => ""
         }
       }
 
@@ -146,8 +98,6 @@ defmodule RideAlong.EtaMonitorTest do
                {2, today},
                {3, yesterday}
              ]
-
-      assert Enum.sort(Map.keys(state.latest_ors_eta)) == [2, 3]
     end
   end
 
