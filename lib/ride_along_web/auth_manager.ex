@@ -22,13 +22,18 @@ defmodule RideAlongWeb.AuthManager do
   end
 
   def login(conn, auth) do
-    logout_url = UeberauthOidcc.initiate_logout_url(auth)
+    logout_url =
+      case UeberauthOidcc.initiate_logout_url(auth) do
+        {:ok, url} -> url
+        _ -> nil
+      end
 
     roles = auth.extra.raw_info.userinfo["roles"] || []
 
     Logger.info("#{__MODULE__} logging_in user=#{auth.uid} roles=#{inspect(roles)}")
 
     conn
+    |> put_session(:uid, auth.uid)
     |> put_session(:logout_url, logout_url)
     |> put_session(:roles, roles)
     |> put_session(:expires_at, System.system_time(:second) + 1_800)

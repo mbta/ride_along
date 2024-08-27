@@ -45,6 +45,7 @@ defmodule RideAlongWeb.Router do
   scope "/auth", RideAlongWeb do
     pipe_through [:shared, :browser]
 
+    get "/logout", AuthController, :logout
     get "/:unused", AuthController, :request
     get "/:unused/callback", AuthController, :callback
   end
