@@ -58,11 +58,7 @@ defmodule RideAlongWeb.TripLive.Show do
         |> request_route(false)
         |> push_route()
 
-      if socket.assigns.status == :closed do
-        raise RideAlongWeb.NotFoundException
-      end
-
-      if connected?(socket) do
+      if connected?(socket) and socket.assigns.status != :closed do
         Logger.info("mounted controller=#{__MODULE__} params=#{inspect(params)}")
 
         :timer.send_interval(1_000, :countdown)
@@ -70,9 +66,17 @@ defmodule RideAlongWeb.TripLive.Show do
         RideAlong.PubSub.subscribe("trips:updated")
       end
 
+      socket =
+        if socket.assigns.status == :closed do
+          redirect(socket, to: "/not-found")
+        else
+          socket
+        end
+
       {:ok, socket, layout: false}
     else
-      _ -> raise RideAlongWeb.NotFoundException
+      _ ->
+        {:ok, redirect(socket, to: "/not-found")}
     end
   end
 
@@ -205,7 +209,7 @@ defmodule RideAlongWeb.TripLive.Show do
           assign(socket, :vehicle, vehicle)
 
         _ ->
-          raise RideAlongWeb.NotFoundException
+          redirect(socket, to: "/not-found")
       end
     end
   end

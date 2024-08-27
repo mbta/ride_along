@@ -26,8 +26,8 @@ defmodule RideAlongWeb.TripLiveTest do
     end
 
     @tag :capture_log
-    test "unknown trip raises 404", %{conn: conn} do
-      assert_raise RideAlongWeb.NotFoundException, fn -> live(conn, ~p"/t/missing") end
+    test "unknown trip redirects to not-found", %{conn: conn} do
+      assert {:error, {:redirect, %{to: "/not-found"}}} = live(conn, ~p"/t/missing")
     end
   end
 
