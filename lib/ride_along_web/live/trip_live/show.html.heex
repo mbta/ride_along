@@ -19,10 +19,7 @@
     <span :if={@status == :arrived}>
       <%= gettext("The driver will go to your door and wait for up to five minutes.") %>
       <%= if @trip.client_trip_index != 0,
-        do:
-          gettext(
-            "If you are delayed, call TRAC as soon as possible at 844-427-7433 to request a new pick-up time."
-          ) %>
+        do: gettext("If you are going to be late, call TRAC as soon as possible at 844-427-7433.") %>
     </span>
     <span :if={@status in [:picked_up, :closed]}>
       <%= gettext("You have been picked up!") %>
@@ -90,9 +87,7 @@
       </div>
       <div :if={@status == :arrived and @trip.client_trip_index != 0} class="pb-4 px-4">
         <.linkify_phone text={
-          gettext(
-            "If you are delayed, call TRAC as soon as possible at 844-427-7433 to request a new pick-up time."
-          )
+          gettext("If you are going to be late, call TRAC as soon as possible at 844-427-7433.")
         } />
       </div>
       <div class="text-center">
