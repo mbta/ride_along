@@ -114,24 +114,50 @@ defmodule RideAlong.EtaMonitor do
       status: status,
       promise: trip.promise_time,
       pick: trip.pick_time,
+      pick_order: trip.pick_order,
+      pick_lat: trip.lat,
+      pick_lon: trip.lon,
+      client_trip_index: trip.client_trip_index,
       time: location_timestamp || now,
       location: location_timestamp,
       load_time: trip.load_time
     ]
 
-    route_metadata =
+    vehicle_metadata =
       with true <- status in [:enroute, :waiting],
-           %{vehicle_timestamp: %DateTime{}} <- vehicle,
-           {:ok, route} <- RideAlong.OpenRouteService.directions(trip, vehicle) do
+           %{} <- vehicle do
         [
-          ors_duration: route.duration,
-          ors_eta: DateTime.add(vehicle.timestamp, trunc(route.duration * 1000), :millisecond),
-          calculated: RideAlong.EtaCalculator.calculate(trip, vehicle, route, now)
+          vehicle_lat: vehicle.lat,
+          vehicle_lon: vehicle.lon,
+          vehicle_heading: vehicle.heading
         ]
       else
         _ -> []
       end
 
-    Logster.info(basic_metadata ++ route_metadata)
+    route_metadata =
+      with true <- status in [:enroute, :waiting],
+           %{} <- vehicle,
+           {:ok, route} <- RideAlong.OpenRouteService.directions(trip, vehicle) do
+        ors_eta =
+          if vehicle.timestamp do
+            DateTime.add(vehicle.timestamp, trunc(route.duration * 1000), :millisecond)
+          else
+            nil
+          end
+
+        [
+          ors_duration: route.duration,
+          ors_heading: route.bearing,
+          ors_distance: route.distance,
+          ors_eta: ors_eta,
+          calculated: RideAlong.EtaCalculator.calculate(trip, vehicle, route, now)
+        ]
+      else
+        _ ->
+          []
+      end
+
+    Logster.info(basic_metadata ++ vehicle_metadata ++ route_metadata)
   end
 end
