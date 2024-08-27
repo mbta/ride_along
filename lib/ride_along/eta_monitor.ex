@@ -126,7 +126,7 @@ defmodule RideAlong.EtaMonitor do
         [
           ors_duration: route.duration,
           ors_eta: DateTime.add(vehicle.timestamp, trunc(route.duration * 1000), :millisecond),
-          calculated: RideAlong.EtaCalculator.calculate(trip, vehicle, route)
+          calculated: RideAlong.EtaCalculator.calculate(trip, vehicle, route, now)
         ]
       else
         _ -> []

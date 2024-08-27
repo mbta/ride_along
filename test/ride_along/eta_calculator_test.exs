@@ -6,72 +6,49 @@ defmodule RideAlong.EtaCalculatorTest do
   alias RideAlong.EtaCalculator
   alias RideAlong.OpenRouteService.Route
 
-  describe "calculate/3" do
-    setup do
-      time =
-        DateTime.shift_zone!(
-          DateTime.utc_now(),
-          Application.get_env(:ride_along, :time_zone)
-        )
+  @now ~U[2024-08-27T12:00:00Z]
 
-      five_before = DateTime.add(time, -5, :minute)
-      five_after = DateTime.add(time, 5, :minute)
+  describe "calculate/4" do
+    for {name, pick_offset, promise_offset, timestamp_offset, duration, expected_offset} <- [
+          {"more than 20m before the promise time, uses the pick time if it's later", 30, 25, 0,
+           5, 30},
+          {"more than 20m before the promise time, uses the vehicle if it's later", 30, 25, 0, 40,
+           40},
+          {"more than 20m before the promise time, uses 5 minutes before the promise time if it's later",
+           10, 25, 0, 5, 20},
+          {"less than 20m before the promise time, uses the vehicle if it's later", 30, 15, 0, 15,
+           15},
+          {"less than 20m before the promise time, uses 5 minutes before the promise time if it's later",
+           30, 15, 0, 5, 10},
+          {"less than 20m before the promise time, uses the pick time if it's later and there's no vehicle",
+           30, 15, nil, nil, 30}
+        ] do
+      test name do
+        promise_time = DateTime.add(@now, unquote(promise_offset) * 60)
+        pick_time = DateTime.add(@now, unquote(pick_offset) * 60)
+        trip = Fixtures.trip_fixture(%{promise_time: promise_time, pick_time: pick_time})
 
-      {:ok,
-       %{
-         five_before: five_before,
-         time: time,
-         five_after: five_after
-       }}
-    end
+        vehicle =
+          if unquote(timestamp_offset) do
+            Fixtures.vehicle_fixture(%{
+              timestamp: DateTime.add(@now, unquote(timestamp_offset) * 60)
+            })
+          else
+            nil
+          end
 
-    test "without a route, uses the pick_time", opts do
-      trip = Fixtures.trip_fixture(%{promise_time: opts.five_before, pick_time: opts.time})
+        route =
+          if unquote(duration) do
+            %Route{duration: unquote(duration) * 60}
+          else
+            nil
+          end
 
-      assert EtaCalculator.calculate(trip, nil, nil) == opts.time
-    end
+        expected = DateTime.add(@now, unquote(expected_offset) * 60)
+        actual = EtaCalculator.calculate(trip, vehicle, route, @now)
 
-    test "without a route, does not use a pick time if it's more than 5 minutes before the promise time",
-         opts do
-      trip = Fixtures.trip_fixture(%{promise_time: opts.five_after, pick_time: opts.five_before})
-
-      assert EtaCalculator.calculate(trip, nil, nil) == opts.time
-    end
-
-    test "with route, uses the duration plus the vehicle timestamp, rounding up to the minute",
-         opts do
-      trip = Fixtures.trip_fixture(%{pick_time: opts.time, promise_time: opts.time})
-      vehicle = Fixtures.vehicle_fixture()
-      route = %Route{duration: 60.5}
-
-      expected =
-        vehicle.timestamp
-        |> DateTime.add(2, :minute)
-        |> Map.merge(%{second: 0, microsecond: {0, 0}})
-
-      actual = EtaCalculator.calculate(trip, vehicle, route)
-
-      diff =
-        DateTime.diff(
-          actual,
-          expected,
-          :second
-        )
-
-      assert diff >= 0
-      assert diff <= 60
-
-      # truncate to the minute
-      assert %DateTime{second: 0, microsecond: {0, 0}} = actual
-    end
-
-    test "does not use an ETA more than 5 minutes before the promise time", opts do
-      # vehicle should not arrive more than 5 minutes early
-      trip = Fixtures.trip_fixture(%{promise_time: opts.five_after, pick_time: opts.five_after})
-      vehicle = Fixtures.vehicle_fixture()
-      route = %Route{duration: 0}
-
-      assert EtaCalculator.calculate(trip, vehicle, route) == opts.five_after
+        assert actual == expected
+      end
     end
   end
 end

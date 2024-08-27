@@ -8,41 +8,50 @@ defmodule RideAlong.EtaCalculator do
   alias RideAlong.Adept.{Trip, Vehicle}
   alias RideAlong.OpenRouteService.Route
 
-  @doc """
-  Currently, the logic is to take the latest of:
-  - pick time
-  - vehicle.timestamp + route.duration (rounded up to the next minute)
-  - 5 minutes before the promise time
-  """
-  def calculate(trip, vehicle, route)
+  @use_pick_time_cutoff_s 60 * 20
 
-  def calculate(%Trip{} = trip, %Vehicle{} = vehicle, %Route{} = route) do
+  @doc """
+  Currently, the logic is:
+  - if the current time is within 20 minutes of the promise time and we have a route:
+    - take the latest of:
+      - vehicle.timestamp + route.duration (truncated to the minute)
+      - 5 minutes before the promise time
+  - otherwise:
+    - take the latest of:
+      - pick time
+      - 5 minutes before the promise time
+  """
+  def calculate(trip, vehicle, route, now)
+
+  def calculate(%Trip{} = trip, vehicle, route, %DateTime{} = now)
+      when (is_nil(vehicle) or is_struct(vehicle, Vehicle)) and
+             (is_nil(route) or is_struct(route, Route)) do
+    earliest_arrival = naive_earliest_arrival(trip, vehicle, route)
+
+    if DateTime.diff(trip.promise_time, now, :second) > @use_pick_time_cutoff_s or is_nil(route) do
+      max_time([trip.pick_time, earliest_arrival])
+    else
+      earliest_arrival
+    end
+  end
+
+  defp truncate_to_minute(dt) do
+    Map.merge(dt, %{second: 0, microsecond: {0, 0}})
+  end
+
+  defp naive_earliest_arrival(trip, %Vehicle{} = vehicle, %Route{} = route) do
     duration_ms = trunc(route.duration * 1_000)
 
     ors_eta =
       vehicle.timestamp
       |> DateTime.add(duration_ms, :millisecond)
-      |> round_up_to_minute()
+      |> truncate_to_minute()
 
-    max_time([ors_eta, calculate(trip, nil, nil)])
+    max_time([ors_eta, earliest_arrival(trip)])
   end
 
-  def calculate(%Trip{} = trip, _vehicle, _trip) do
-    max_time([
-      trip.pick_time,
-      earliest_arrival(trip)
-    ])
-  end
-
-  defp round_up_to_minute(%DateTime{second: second, microsecond: {microsecond, _precision}} = dt)
-       when second > 0 or microsecond > 0 do
-    dt
-    |> DateTime.add(1, :minute)
-    |> Map.merge(%{second: 0, microsecond: {0, 0}})
-  end
-
-  defp round_up_to_minute(dt) do
-    dt
+  defp naive_earliest_arrival(trip, _, _) do
+    earliest_arrival(trip)
   end
 
   defp earliest_arrival(trip) do

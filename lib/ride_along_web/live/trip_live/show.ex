@@ -285,11 +285,12 @@ defmodule RideAlongWeb.TripLive.Show do
     Trip.status(trip, vehicle, now)
   end
 
-  def calculate_eta(%{trip: trip} = assigns) do
+  def calculate_eta(%{trip: trip, now: now} = assigns) do
     EtaCalculator.calculate(
       trip,
       Map.get(assigns, :vehicle),
-      Map.get(assigns, :route)
+      Map.get(assigns, :route),
+      now
     )
   end
 
