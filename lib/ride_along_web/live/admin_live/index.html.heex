@@ -1,20 +1,31 @@
 <.header>
-  Admin
+  <%= gettext("RideAlong Admin") %>
+  <:actions>
+    <%= @uid %>
+    <.link
+      href={~p"/auth/logout"}
+      class="inline-block rounded-lg bg-red-600 hover:bg-red-900 my-2 py-1 px-3 text-sm font-semibold leading-6 text-white active:text-white/80"
+    >
+      <%= gettext("Logout") %>
+    </.link>
+  </:actions>
 </.header>
 
 <div class="flex">
-  <div class="mr-8 overflow-y-scroll max-h-dvh">
+  <div class="mr-8 overflow-y-scroll min-h-[90dvh] max-h-dvh w-80">
     <div>
-      <.simple_form for={@form} phx-submit="update">
+      <div :if={@iframe_url} class="pb-1">
+        URL:
+        <.link navigate={@iframe_url} target="_blank" class="text-sky-500 hover:underline">
+          <%= @iframe_url %>
+        </.link>
+      </div>
+      <.simple_form for={@form} phx-submit="update" class="pr-4">
         <.input field={@form["trip_id"]} label="Trip ID" />
-        <div :if={@iframe_url} class="pb-1">
-          URL:
-          <.link navigate={@iframe_url} target="_blank" class="text-sky-500 hover:underline">
-            <%= @iframe_url %>
-          </.link>
-        </div>
+        <.input type="checkbox" name="demo" value={@demo?} label="Demo mode?" phx-click="demo" />
         <:actions>
           <.button>View</.button>
+          <.button :if={@iframe_url} name="close">Close</.button>
         </:actions>
       </.simple_form>
     </div>
@@ -41,7 +52,7 @@
     </table>
   </div>
   <div>
-    <div :if={@iframe_url} class="admin-h-full resizable size-iphone-12">
+    <div :if={@iframe_url} class="resizable size-iphone-12">
       <iframe src={@iframe_url}></iframe>
     </div>
     <div :if={is_nil(@iframe_url)}>

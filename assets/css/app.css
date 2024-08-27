@@ -30,11 +30,6 @@ html {
   display: none !important;
 }
 
-.admin-h-full {
-  position: absolute;
-  top: 0;
-}
-
 .resizable {
   resize: both;
   overflow: auto;

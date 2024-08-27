@@ -4,14 +4,17 @@ defmodule RideAlongWeb.AdminLive.Index do
   alias RideAlong.Adept
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
     if connected?(socket) do
       RideAlong.PubSub.subscribe("trips:updated")
+      RideAlong.PubSub.subscribe("vehicles:all")
     end
 
     {:ok,
      socket
+     |> assign(:uid, session["uid"])
      |> assign(:now, DateTime.utc_now())
+     |> assign(:demo?, false)
      |> stream_configure(:trips, dom_id: &"trips-#{elem(&1, 0).trip_id}")
      |> stream(:trips, open_trips())}
   end
@@ -25,12 +28,27 @@ defmodule RideAlongWeb.AdminLive.Index do
   end
 
   @impl true
+  def handle_event("update", %{"close" => _}, socket) do
+    {:noreply,
+     push_patch(
+       socket,
+       to: ~p"/admin"
+     )}
+  end
+
   def handle_event("update", params, socket) do
     {:noreply,
      push_patch(
        socket,
        to: ~p"/admin?#{params}"
      )}
+  end
+
+  def handle_event("demo", params, socket) do
+    {:noreply,
+     socket
+     |> assign(:demo?, params["value"] == "true")
+     |> assign_iframe()}
   end
 
   @impl true
@@ -41,12 +59,29 @@ defmodule RideAlongWeb.AdminLive.Index do
      |> stream(:trips, open_trips(), reset: true)}
   end
 
+  def handle_info({:vehicle_updated, vehicle}, socket) do
+    socket =
+      vehicle.route_id
+      |> Adept.get_trips_by_route()
+      |> Enum.reduce(socket, fn trip, socket ->
+        stream_insert(socket, :trips, {trip, vehicle})
+      end)
+
+    {:noreply,
+     socket
+     |> assign(:now, DateTime.utc_now())}
+  end
+
   defp assign_iframe(socket) do
     iframe_url =
       with trip_id_bin when is_binary(trip_id_bin) <- socket.assigns.form.params["trip_id"],
            {trip_id, ""} <- Integer.parse(trip_id_bin),
            token when is_binary(token) <- RideAlong.LinkShortener.get_token(trip_id) do
-        url(~p"/t/#{token}")
+        if socket.assigns.demo? do
+          url(~p"/t/#{token}?demo")
+        else
+          url(~p"/t/#{token}")
+        end
       else
         _ -> nil
       end
