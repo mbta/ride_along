@@ -121,7 +121,7 @@ defmodule RideAlong.EtaMonitor do
 
     route_metadata =
       with true <- status in [:enroute, :waiting],
-           %{} <- vehicle,
+           %{vehicle_timestamp: %DateTime{}} <- vehicle,
            {:ok, route} <- RideAlong.OpenRouteService.directions(trip, vehicle) do
         [
           ors_duration: route.duration,
