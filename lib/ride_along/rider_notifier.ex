@@ -76,7 +76,7 @@ defmodule RideAlong.RiderNotifier do
   end
 
   defp maybe_notify(trip, state) do
-    if MapSet.member?(state.notified_trips, trip.trip_id) and RideAlong.Singleton.singleton?() do
+    if MapSet.member?(state.notified_trips, trip.trip_id) do
       state
     else
       send_notification(state, trip)
@@ -84,10 +84,12 @@ defmodule RideAlong.RiderNotifier do
   end
 
   defp send_notification(state, trip) do
-    RideAlong.PubSub.publish(
-      "notification:trip",
-      {:trip_notification, trip}
-    )
+    if RideAlong.Singleton.singleton?() do
+      RideAlong.PubSub.publish(
+        "notification:trip",
+        {:trip_notification, trip}
+      )
+    end
 
     %{state | notified_trips: MapSet.put(state.notified_trips, trip.trip_id)}
   end
