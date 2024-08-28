@@ -21,6 +21,8 @@ if System.get_env("PHX_SERVER") do
 
   config :ride_along, RideAlong.MqttListener, start: true
 
+  config :ride_along, RideAlong.EtaCalculator.Model, start: true
+
   config :ride_along, RideAlong.EtaMonitor, start: true
 
   config :ride_along, RideAlong.RiderNotifier, start: true

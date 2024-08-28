@@ -12,6 +12,8 @@ config :ride_along, RideAlong.OpenRouteService,
     plug: {Req.Test, RideAlong.OpenRouteService}
   ]
 
+config :ride_along, RideAlong.EtaCalculator.Model, start: true
+
 # Print only warnings and errors during test
 config :logger, level: :warning
 

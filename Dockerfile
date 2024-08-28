@@ -55,7 +55,7 @@ FROM debian:${DEBIAN_VERSION}-slim
 RUN apt-get update --allow-releaseinfo-change && \
   apt-get upgrade -y --no-install-recommends && \
   apt-get install -y --no-install-recommends \
-    ca-certificates curl dumb-init jq && \
+    ca-certificates curl dumb-init jq libgomp1 && \
   rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -70,7 +70,8 @@ COPY --from=app-builder --chown=nobody:root /app/_build/prod/rel/ride_along .
 RUN env SECRET_KEY_BASE=fake ORS_BASE_URL=fake \
   sh -c ' \
      /app/bin/ride_along eval ":crypto.supports()" && \
-     /app/bin/ride_along eval ":ok = :public_key.cacerts_load"'
+     /app/bin/ride_along eval ":ok = :public_key.cacerts_load" && \
+     /app/bin/ride_along eval "{_, _, _} = EXGBoost.xgboost_version()"'
 
 USER nobody
 
