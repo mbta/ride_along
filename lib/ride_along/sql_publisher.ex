@@ -146,7 +146,8 @@ defmodule RideAlong.SqlPublisher do
              PickOrder, DropOrder, PerformPickup, PerformDropoff, LoadTime
              FROM Trips t
              WHERE
-               t.TripDate = @service_date AND
+               t.TripDate >= @service_date AND
+               t.TripDate <= DATEADD(DAY,1,@service_date) AND
                PickGridX != 0 AND PickGridY != 0 AND
                ClientId > 0 AND
                (RouteId < 400000 OR RouteId >= 800000)],
