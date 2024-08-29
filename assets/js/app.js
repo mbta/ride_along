@@ -29,11 +29,22 @@ import polyline from 'polyline-encoded'
 // Core Web Vitals analytics
 import { onCLS, onINP, onLCP } from 'web-vitals'
 
-function sendToAnalytics ({ name, value, id }) {
+const sendBeacon = (blob) => {
   const path = window.location.pathname
-  const body = JSON.stringify({ path, name, value, id });
+  const body = JSON.stringify({ ...blob, path });
+  // trailing ; is necessary above to avoid JS getting confused -ps
   (navigator.sendBeacon && navigator.sendBeacon('/analytics', body)) ||
       fetch('/analytics', { body, method: 'POST', keepalive: true })
+}
+
+window.onerror = (event, source, lineno, colno, error) => {
+  const name = error.name
+  const message = error.message
+  sendBeacon({ source, lineno, colno, name, message })
+}
+
+function sendToAnalytics ({ name, value, id }) {
+  sendBeacon({ name, value, id })
 }
 
 onCLS(sendToAnalytics)

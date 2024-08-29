@@ -1,15 +1,20 @@
 defmodule RideAlongWeb.AnalyticsController do
   use RideAlongWeb, :controller
-  require Logger
 
   def create(conn, _params) do
     conn =
       with {:ok, body, conn} <- read_body(conn),
-           {:ok, %{"path" => path, "name" => name, "value" => value}} <- Jason.decode(body),
-           [user_agent | _] <- get_req_header(conn, "user-agent") do
-        Logger.info(
-          "#{__MODULE__} metric path=#{path} name=#{name} value=#{value} user_agent=#{inspect(user_agent)}"
-        )
+           {:ok, decoded} <- Jason.decode(body) do
+        user_agent =
+          case get_req_header(conn, "user-agent") do
+            [user_agent | _] -> inspect(user_agent)
+            _ -> nil
+          end
+
+        {level, params} = log_decoded(decoded)
+        log = [module: __MODULE__, user_agent: user_agent] ++ params
+
+        Logster.log(level, log)
 
         conn
       else
@@ -19,5 +24,32 @@ defmodule RideAlongWeb.AnalyticsController do
     conn
     |> send_resp(:created, "")
     |> halt()
+  end
+
+  defp log_decoded(%{"name" => metric, "value" => value, "path" => path}) do
+    {:info, [metric: metric, value: value, path: path]}
+  end
+
+  defp log_decoded(%{
+         "name" => error,
+         "message" => message,
+         "source" => source,
+         "lineno" => lineno,
+         "colno" => colno,
+         "path" => path
+       }) do
+    {:error,
+     [
+       error: inspect(error),
+       message: inspect(message),
+       source: source,
+       lineno: lineno,
+       colno: colno,
+       path: path
+     ]}
+  end
+
+  defp log_decoded(decoded) do
+    {:warning, [decoded: Jason.encode!(decoded)]}
   end
 end
