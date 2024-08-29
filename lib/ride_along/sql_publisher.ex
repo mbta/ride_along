@@ -68,7 +68,7 @@ defmodule RideAlong.SqlPublisher do
         {:noreply, state}
 
       {:error, reason} ->
-        Logger.info("#{__MODULE__} query failed name=#{name} reason=#{inspect(reason)}")
+        Logger.warning("#{__MODULE__} query failed name=#{name} reason=#{inspect(reason)}")
         {:noreply, state}
     end
   end
@@ -178,15 +178,31 @@ defmodule RideAlong.SqlPublisher do
 
   defp publish(%{connection: connection} = state, name) when not is_nil(connection) do
     result = state.results[name]
+    payload = :erlang.term_to_binary(result)
 
-    MqttConnection.publish(
-      state.connection,
-      %Message{
-        topic: state.topic_prefix <> Atom.to_string(name),
-        payload: :erlang.term_to_binary(result),
-        qos: 1,
-        retain?: true
-      }
-    )
+    case :timer.tc(
+           MqttConnection,
+           :publish,
+           [
+             state.connection,
+             %Message{
+               topic: state.topic_prefix <> Atom.to_string(name),
+               payload: payload,
+               qos: 1,
+               retain?: true
+             }
+           ],
+           :millisecond
+         ) do
+      {msec, :ok} ->
+        Logger.info(
+          "#{__MODULE__} publish success name=#{name} size=#{byte_size(payload)} duration=#{msec}"
+        )
+
+      {msec, {:error, reason}} ->
+        Logger.warning(
+          "#{__MODULE__} publish failed name=#{name} reason=#{inspect(reason)} duration=#{msec}"
+        )
+    end
   end
 end
