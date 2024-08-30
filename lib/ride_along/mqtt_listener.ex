@@ -84,6 +84,14 @@ defmodule RideAlong.MqttListener do
     }
   end
 
+  defp decode_payload(<<31, 139, _::binary>> = payload) do
+    decode_payload(:zlib.gunzip(payload))
+  end
+
+  defp decode_payload(<<_::binary>> = payload) do
+    decode_payload(Plug.Crypto.non_executable_binary_to_term(payload))
+  end
+
   defp decode_payload(payload) when is_list(payload) do
     %{payload: payload, id: nil}
   end
@@ -97,7 +105,7 @@ defmodule RideAlong.MqttListener do
 
   def parse_and_update(topic, config, message) do
     %{payload: payload, id: id} =
-      decode_payload(Plug.Crypto.non_executable_binary_to_term(message.payload))
+      decode_payload(message.payload)
 
     %{parser: parser, update: update} = config
 
