@@ -104,12 +104,12 @@ defmodule RideAlong.MqttListener do
   end
 
   def parse_and_update(topic, config, message) do
-    %{payload: payload, id: id} =
-      decode_payload(message.payload)
-
-    %{parser: parser, update: update} = config
-
     try do
+      %{payload: payload, id: id} =
+        decode_payload(message.payload)
+
+      %{parser: parser, update: update} = config
+
       {parse_duration, parsed} = :timer.tc(Enum, :map, [payload, parser], :millisecond)
       {duration, _} = :timer.tc(update, [parsed], :millisecond)
 
@@ -118,9 +118,7 @@ defmodule RideAlong.MqttListener do
       )
     catch
       kind, e ->
-        Logger.info(
-          "#{__MODULE__} update failed topic=#{topic} records=#{length(payload)} error=#{inspect(e)}"
-        )
+        Logger.info("#{__MODULE__} update failed topic=#{topic} error=#{inspect(e)}")
 
         Logger.debug(Exception.format(kind, e, __STACKTRACE__))
     end
