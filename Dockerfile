@@ -11,7 +11,8 @@ ENV LANG=C.UTF-8 \
   MIX_ENV=prod
 
 RUN apt-get update --allow-releaseinfo-change && \
-  apt-get install -y --no-install-recommends ca-certificates curl git gnupg
+  apt-get install -y --no-install-recommends ca-certificates curl git gnupg \
+    build-essential make cmake gcc g++ libgomp1
 
 RUN mix local.hex --force && \
   mix local.rebar --force
