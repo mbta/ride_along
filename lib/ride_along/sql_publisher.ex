@@ -185,10 +185,12 @@ defmodule RideAlong.SqlPublisher do
     id = :erlang.unique_integer([:positive])
 
     payload =
-      :erlang.term_to_binary(%{
+      %{
         payload: result,
         id: id
-      })
+      }
+      |> :erlang.term_to_binary()
+      |> :zlib.gzip()
 
     case :timer.tc(
            MqttConnection,
