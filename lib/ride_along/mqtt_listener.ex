@@ -50,7 +50,9 @@ defmodule RideAlong.MqttListener do
 
     for {topic, config} <- topics(),
         message.topic == topic_prefix <> Atom.to_string(topic) do
-      payload = Plug.Crypto.non_executable_binary_to_term(message.payload)
+      %{payload: payload, id: id} =
+        decode_payload(Plug.Crypto.non_executable_binary_to_term(message.payload))
+
       %{parser: parser, update: update} = config
 
       try do
@@ -58,7 +60,7 @@ defmodule RideAlong.MqttListener do
         {duration, _} = :timer.tc(update, [parsed], :microsecond)
 
         Logger.info(
-          "#{__MODULE__} updated topic=#{topic} records=#{length(payload)} parse_duration=#{parse_duration / 1_000} duration=#{duration / 1_000}"
+          "#{__MODULE__} updated topic=#{topic} id=#{id} records=#{length(payload)} parse_duration=#{parse_duration / 1_000} duration=#{duration / 1_000}"
         )
       catch
         kind, e ->
@@ -87,6 +89,17 @@ defmodule RideAlong.MqttListener do
         parser: &Adept.Vehicle.from_sql_map/1,
         update: &Adept.set_vehicles/1
       }
+    }
+  end
+
+  defp decode_payload(payload) when is_list(payload) do
+    %{payload: payload, id: nil}
+  end
+
+  defp decode_payload(%{} = map) do
+    %{
+      payload: Map.get(map, :payload, []),
+      id: Map.get(map, :id)
     }
   end
 end
