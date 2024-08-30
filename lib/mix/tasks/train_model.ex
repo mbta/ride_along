@@ -10,7 +10,7 @@ defmodule Mix.Tasks.TrainModel do
   ```
   index=<index> EtaMonitor time pick_lat status!=closed route > 0
   | sort 0 route, -time
-  | eval noon=strftime(_time, "%Y-%m-%dT12:00:00%z")
+  | eval noon=strftime(_time - 10800, "%Y-%m-%dT12:00:00%z")
   | table time,trip_id,route,status,noon,promise,pick,ors_duration,load_time,pick_lat,pick_lon,pick_order
   ```
   """
