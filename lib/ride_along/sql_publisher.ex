@@ -60,8 +60,11 @@ defmodule RideAlong.SqlPublisher do
     parameters = Map.get(query, :parameters, [])
 
     case tds_query(state.tds, sql, parameters) do
-      {:ok, results} ->
-        Logger.info("#{__MODULE__} query success name=#{name} results=#{length(results)}")
+      {:ok, results, duration} ->
+        Logger.info(
+          "#{__MODULE__} query success name=#{name} results=#{length(results)} duration=#{duration}"
+        )
+
         Logger.debug("#{__MODULE__} query result name=#{name} results=#{inspect(results)}")
         state = put_in(state.results[name], results)
         publish(state, name)
@@ -95,10 +98,11 @@ defmodule RideAlong.SqlPublisher do
       end
 
     try do
-      %{
-        columns: columns,
-        rows: rows
-      } = Tds.query!(tds, sql, parameters)
+      {msec,
+       %{
+         columns: columns,
+         rows: rows
+       }} = :timer.tc(Tds, :query!, [tds, sql, parameters], :millisecond)
 
       mapped =
         for row <- rows do
@@ -107,7 +111,7 @@ defmodule RideAlong.SqlPublisher do
           |> Map.new()
         end
 
-      {:ok, mapped}
+      {:ok, mapped, msec}
     rescue
       e ->
         {:error, e}
@@ -178,7 +182,13 @@ defmodule RideAlong.SqlPublisher do
 
   defp publish(%{connection: connection} = state, name) when not is_nil(connection) do
     result = state.results[name]
-    payload = :erlang.term_to_binary(result)
+    id = :erlang.unique_integer([:positive])
+
+    payload =
+      :erlang.term_to_binary(%{
+        payload: result,
+        id: id
+      })
 
     case :timer.tc(
            MqttConnection,
@@ -196,12 +206,12 @@ defmodule RideAlong.SqlPublisher do
          ) do
       {msec, :ok} ->
         Logger.info(
-          "#{__MODULE__} publish success name=#{name} size=#{byte_size(payload)} duration=#{msec}"
+          "#{__MODULE__} publish success name=#{name} id=#{id} size=#{byte_size(payload)} duration=#{msec}"
         )
 
       {msec, {:error, reason}} ->
         Logger.warning(
-          "#{__MODULE__} publish failed name=#{name} reason=#{inspect(reason)} duration=#{msec}"
+          "#{__MODULE__} publish failed name=#{name} id=#{id} reason=#{inspect(reason)} duration=#{msec}"
         )
     end
   end
