@@ -30,6 +30,13 @@ defmodule RideAlong.OpenRouteService do
       :distance,
       :duration
     ]
+
+    @type t() :: %__MODULE__{
+            timestamp: DateTime.t(),
+            polyline: binary(),
+            distance: float(),
+            duration: float()
+          }
   end
 
   def directions(source, destination) do

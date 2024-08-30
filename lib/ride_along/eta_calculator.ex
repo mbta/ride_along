@@ -19,6 +19,7 @@ defmodule RideAlong.EtaCalculator do
       - pick time
       - 5 minutes before the promise time
   """
+  @spec calculate(Trip.t(), Vehicle.t() | nil, Route.t() | nil, DateTime.t()) :: DateTime.t()
   def calculate(trip, vehicle, route, now)
 
   def calculate(%Trip{} = trip, vehicle, route, %DateTime{} = now)

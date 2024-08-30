@@ -51,6 +51,17 @@ defmodule RideAlong.WebhookPublisher do
     now = DateTime.shift_zone!(DateTime.utc_now(), Application.get_env(:ride_along, :time_zone))
 
     vehicle = Adept.get_vehicle_by_route(trip.route_id)
+
+    route =
+      if vehicle do
+        case RideAlong.OpenRouteService.directions(vehicle, trip) do
+          {:ok, route} -> route
+          {:error, _} -> nil
+        end
+      else
+        nil
+      end
+
     status = Adept.Trip.status(trip, vehicle, now)
 
     notification_hash =
@@ -78,7 +89,7 @@ defmodule RideAlong.WebhookPublisher do
         tripId: trip.trip_id,
         routeId: trip.route_id,
         clientId: trip.client_id,
-        etaTime: trip.pick_time,
+        etaTime: RideAlong.EtaCalculator.calculate(trip, vehicle, route, now),
         promiseTime: trip.promise_time,
         status: status |> Atom.to_string() |> String.upcase(),
         url: url,
