@@ -5,6 +5,7 @@ defmodule RideAlong.EtaCalculator.Model do
   @feature_names [
     "route",
     "ors_duration",
+    "promise_duration",
     "pick_duration",
     "time_of_day",
     "day_of_week",
@@ -39,6 +40,7 @@ defmodule RideAlong.EtaCalculator.Model do
         [
           trip.route_id,
           ors_duration,
+          DateTime.diff(trip.promise_time, now, :second),
           DateTime.diff(trip.pick_time, now, :second),
           DateTime.diff(now, noon, :second),
           Date.day_of_week(noon, :monday),
