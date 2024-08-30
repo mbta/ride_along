@@ -50,32 +50,24 @@ defmodule RideAlong.MqttListener do
 
     for {topic, config} <- topics(),
         message.topic == topic_prefix <> Atom.to_string(topic) do
-      %{payload: payload, id: id} =
-        decode_payload(Plug.Crypto.non_executable_binary_to_term(message.payload))
-
-      %{parser: parser, update: update} = config
-
-      try do
-        {parse_duration, parsed} = :timer.tc(Enum, :map, [payload, parser], :microsecond)
-        {duration, _} = :timer.tc(update, [parsed], :microsecond)
-
-        Logger.info(
-          "#{__MODULE__} updated topic=#{topic} id=#{id} records=#{length(payload)} parse_duration=#{parse_duration / 1_000} duration=#{duration / 1_000}"
-        )
-      catch
-        kind, e ->
-          Logger.info(
-            "#{__MODULE__} update failed topic=#{topic} records=#{length(payload)} error=#{inspect(e)}"
-          )
-
-          Logger.debug(Exception.format(kind, e, __STACKTRACE__))
-      end
+      Task.async(__MODULE__, :parse_and_update, [topic, config, message])
     end
 
     {:noreply, state}
   end
 
   def handle_info({:disconnected, _, _reason}, state) do
+    {:noreply, state}
+  end
+
+  def handle_info({ref, :parse_and_update}, state) when is_reference(ref) do
+    # successful async update, nothing to do
+    {:noreply, state}
+  end
+
+  def handle_info({:DOWN, ref, :process, pid, :normal}, state)
+      when is_reference(ref) and is_pid(pid) do
+    # async task stopped normally
     {:noreply, state}
   end
 
@@ -101,5 +93,30 @@ defmodule RideAlong.MqttListener do
       payload: Map.get(map, :payload, []),
       id: Map.get(map, :id)
     }
+  end
+
+  def parse_and_update(topic, config, message) do
+    %{payload: payload, id: id} =
+      decode_payload(Plug.Crypto.non_executable_binary_to_term(message.payload))
+
+    %{parser: parser, update: update} = config
+
+    try do
+      {parse_duration, parsed} = :timer.tc(Enum, :map, [payload, parser], :millisecond)
+      {duration, _} = :timer.tc(update, [parsed], :millisecond)
+
+      Logger.info(
+        "#{__MODULE__} updated topic=#{topic} id=#{id} records=#{length(payload)} parse_duration=#{parse_duration} duration=#{duration} retain?=#{message.retain?}"
+      )
+    catch
+      kind, e ->
+        Logger.info(
+          "#{__MODULE__} update failed topic=#{topic} records=#{length(payload)} error=#{inspect(e)}"
+        )
+
+        Logger.debug(Exception.format(kind, e, __STACKTRACE__))
+    end
+
+    :parse_and_update
   end
 end
