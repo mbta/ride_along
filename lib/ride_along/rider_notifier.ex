@@ -64,6 +64,7 @@ defmodule RideAlong.RiderNotifier do
     # 30m
     for trip <- all_trips,
         trip.pick_time != nil,
+        trip.promise_time != nil,
         trip.route_id > 0,
         not trip.pickup_performed?,
         diff = DateTime.diff(trip.promise_time, now),
