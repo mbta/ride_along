@@ -23,7 +23,7 @@ defmodule RideAlong.FakePublisher do
     end
   end
 
-  defstruct [:connection, state: :enroute, interval: 15_000, topic_prefix: ""]
+  defstruct state: :enroute, interval: 15_000, topic_prefix: ""
 
   @impl GenServer
   def init(_opts) do
@@ -33,18 +33,12 @@ defmodule RideAlong.FakePublisher do
 
   @impl GenServer
   def handle_continue(:start_timers, state) do
+    RideAlong.PubSub.subscribe("mqtt")
     :timer.send_interval(state.interval, :update)
-
-    {:noreply, state, {:continue, :connect}}
-  end
-
-  def handle_continue(:connect, state) do
-    {:ok, connection} = MqttConnection.start_link()
 
     state = %{
       state
-      | connection: connection,
-        topic_prefix: MqttConnection.topic_prefix()
+      | topic_prefix: MqttConnection.topic_prefix()
     }
 
     {:noreply, state}
@@ -63,12 +57,16 @@ defmodule RideAlong.FakePublisher do
     {:noreply, %{state | state: new_state}}
   end
 
-  def handle_info({:connected, connection}, %{connection: connection} = state) do
+  def handle_info({:connected, _}, state) do
     send(self(), :update)
     {:noreply, state}
   end
 
   def handle_info({:disconnected, _, _reason}, state) do
+    {:noreply, state}
+  end
+
+  def handle_info({:message, _, _reason}, state) do
     {:noreply, state}
   end
 
@@ -197,15 +195,12 @@ defmodule RideAlong.FakePublisher do
     {{now.year, now.month, now.day}, {now.hour, now.minute, now.second, 0}}
   end
 
-  defp publish(%{connection: connection} = state, name, result) when not is_nil(connection) do
-    MqttConnection.publish(
-      state.connection,
-      %Message{
-        topic: state.topic_prefix <> Atom.to_string(name),
-        payload: :erlang.term_to_binary(result),
-        qos: 1,
-        retain?: true
-      }
-    )
+  defp publish(state, name, result) do
+    MqttConnection.publish(%Message{
+      topic: state.topic_prefix <> Atom.to_string(name),
+      payload: :erlang.term_to_binary(result),
+      qos: 1,
+      retain?: true
+    })
   end
 end

@@ -18,11 +18,12 @@ defmodule RideAlong.SqlPublisher do
     end
   end
 
-  defstruct [:tds, :connection, topic_prefix: "", results: %{}]
+  defstruct [:tds, topic_prefix: "", results: %{}]
 
   @impl GenServer
   def init(_opts) do
     state = %__MODULE__{}
+    RideAlong.PubSub.subscribe("mqtt")
     {:ok, state, {:continue, :start_timers}}
   end
 
@@ -41,12 +42,10 @@ defmodule RideAlong.SqlPublisher do
   def handle_continue(:connect, state) do
     app_config = Application.get_env(:ride_along, __MODULE__)
     {:ok, tds} = Tds.start_link(app_config[:database])
-    {:ok, connection} = MqttConnection.start_link()
 
     state = %{
       state
       | tds: tds,
-        connection: connection,
         topic_prefix: MqttConnection.topic_prefix()
     }
 
@@ -76,7 +75,7 @@ defmodule RideAlong.SqlPublisher do
     end
   end
 
-  def handle_info({:connected, connection}, %{connection: connection} = state) do
+  def handle_info({:connected, _connection}, state) do
     for name <- Map.keys(state.results) do
       publish(state, name)
     end
@@ -85,6 +84,10 @@ defmodule RideAlong.SqlPublisher do
   end
 
   def handle_info({:disconnected, _, _reason}, state) do
+    {:noreply, state}
+  end
+
+  def handle_info({:message, _, _}, state) do
     {:noreply, state}
   end
 
@@ -180,7 +183,7 @@ defmodule RideAlong.SqlPublisher do
     }
   end
 
-  defp publish(%{connection: connection} = state, name) when not is_nil(connection) do
+  defp publish(state, name) do
     result = state.results[name]
     id = :erlang.unique_integer([:positive])
 
@@ -196,7 +199,6 @@ defmodule RideAlong.SqlPublisher do
            MqttConnection,
            :publish,
            [
-             state.connection,
              %Message{
                topic: state.topic_prefix <> Atom.to_string(name),
                payload: payload,

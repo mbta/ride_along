@@ -18,6 +18,7 @@ defmodule RideAlong.Application do
        Application.get_env(:ride_along, RideAlong.EtaCalculator.Model)},
       RideAlong.Adept,
       RideAlong.LinkShortener,
+      RideAlong.MqttConnection,
       {RideAlong.SqlPublisher, Application.get_env(:ride_along, RideAlong.SqlPublisher)},
       {RideAlong.FakePublisher, Application.get_env(:ride_along, RideAlong.FakePublisher)},
       {RideAlong.MqttListener, Application.get_env(:ride_along, RideAlong.MqttListener)},

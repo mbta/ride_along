@@ -30,6 +30,7 @@ config :ride_along, RideAlong.MqttConnection,
   broker_configs: [],
   broker_client_prefix: "ride_along"
 
+config :ride_along, RideAlong.MqttConnection, start: false
 config :ride_along, RideAlong.MqttListener, start: false
 
 config :ride_along, RideAlong.FakePublisher, start: false

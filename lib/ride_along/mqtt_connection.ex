@@ -2,18 +2,30 @@ defmodule RideAlong.MqttConnection do
   @moduledoc """
   Shared functionality to connect to the MQTT broker.
   """
-  def start_link(topics \\ []) do
+  @default_name __MODULE__
+
+  def start_link(opts) do
+    name = Keyword.get(opts, :name, @default_name)
     app_config = app_config()
 
-    EmqttFailover.Connection.start_link(
-      configs: app_config[:broker_configs],
-      client_id: EmqttFailover.client_id(prefix: app_config[:broker_client_prefix]),
-      backoff: {1_000, 60_000, :jitter},
-      handler: {EmqttFailover.ConnectionHandler.Parent, parent: self(), topics: topics}
-    )
+    topics = [
+      "#{topic_prefix()}#"
+    ]
+
+    if app_config[:start] do
+      EmqttFailover.Connection.start_link(
+        name: name,
+        configs: app_config[:broker_configs],
+        client_id: EmqttFailover.client_id(prefix: app_config[:broker_client_prefix]),
+        backoff: {1_000, 60_000, :jitter},
+        handler: {RideAlong.MqttConnection.PubSubHandler, topics: topics}
+      )
+    else
+      :ignore
+    end
   end
 
-  def publish(connection, message) do
+  def publish(connection \\ @default_name, message) do
     EmqttFailover.Connection.publish(connection, message)
   end
 
@@ -24,4 +36,14 @@ defmodule RideAlong.MqttConnection do
   defp app_config do
     Application.get_env(:ride_along, __MODULE__)
   end
+
+  def child_spec(opts) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, [opts]}
+    }
+  end
+
+  # this can be removed once :emqtt_failover 0.4.0 is released
+  @dialyzer {:nowarn_function, start_link: 1}
 end

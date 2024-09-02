@@ -18,34 +18,21 @@ defmodule RideAlong.MqttListener do
     end
   end
 
-  defstruct [:connection]
+  defstruct []
 
   @impl GenServer
   def init(_opts) do
     state = %__MODULE__{}
-    {:ok, state, {:continue, :connect}}
+    RideAlong.PubSub.subscribe("mqtt")
+    {:ok, state}
   end
 
   @impl GenServer
-  def handle_continue(:connect, state) do
-    topic_prefix = MqttConnection.topic_prefix()
-
-    topics =
-      for {topic, _} <- topics() do
-        topic_prefix <> Atom.to_string(topic)
-      end
-
-    {:ok, connection} = MqttConnection.start_link(topics)
-    state = %{state | connection: connection}
+  def handle_info({:connected, _connection}, state) do
     {:noreply, state}
   end
 
-  @impl GenServer
-  def handle_info({:connected, connection}, %{connection: connection} = state) do
-    {:noreply, state}
-  end
-
-  def handle_info({:message, connection, message}, %{connection: connection} = state) do
+  def handle_info({:message, _connection, message}, state) do
     topic_prefix = MqttConnection.topic_prefix()
 
     for {topic, config} <- topics(),

@@ -46,6 +46,7 @@ config :ride_along, RideAlong.LinkShortener,
   secret: "UHZ0Lf/EGdIYNHWwTKoowoRJt+HFsrP8iwKPp/2XthQYE2BhRhjtfGJDLU0b70HI"
 
 config :ride_along, RideAlong.MqttConnection,
+  start: true,
   broker_configs: ["mqtt://system:manager@localhost/"],
   broker_topic_prefix: "ride-along-local/"
 
