@@ -33,7 +33,7 @@ defmodule RideAlong.FakePublisher do
 
   @impl GenServer
   def handle_continue(:start_timers, state) do
-    RideAlong.PubSub.subscribe("mqtt")
+    RideAlong.PubSub.subscribe("mqtt", [:connected])
     :timer.send_interval(state.interval, :update)
 
     state = %{
@@ -59,14 +59,6 @@ defmodule RideAlong.FakePublisher do
 
   def handle_info({:connected, _}, state) do
     send(self(), :update)
-    {:noreply, state}
-  end
-
-  def handle_info({:disconnected, _, _reason}, state) do
-    {:noreply, state}
-  end
-
-  def handle_info({:message, _, _reason}, state) do
     {:noreply, state}
   end
 

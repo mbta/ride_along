@@ -23,7 +23,7 @@ defmodule RideAlong.SqlPublisher do
   @impl GenServer
   def init(_opts) do
     state = %__MODULE__{}
-    RideAlong.PubSub.subscribe("mqtt")
+    RideAlong.PubSub.subscribe("mqtt", [:connected])
     {:ok, state, {:continue, :start_timers}}
   end
 
@@ -80,14 +80,6 @@ defmodule RideAlong.SqlPublisher do
       publish(state, name)
     end
 
-    {:noreply, state}
-  end
-
-  def handle_info({:disconnected, _, _reason}, state) do
-    {:noreply, state}
-  end
-
-  def handle_info({:message, _, _}, state) do
     {:noreply, state}
   end
 

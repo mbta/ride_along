@@ -3,8 +3,8 @@ defmodule RideAlong.PubSub do
   Pub/sub wrapper for internal RideAlong use.
   """
 
-  def subscribe(topic) do
-    Registry.register(RideAlong.Registry, topic, [])
+  def subscribe(topic, filters \\ :all) do
+    Registry.register(RideAlong.Registry, topic, filters)
   end
 
   def unsubscribe(topic) do
@@ -13,9 +13,19 @@ defmodule RideAlong.PubSub do
 
   def publish(topic, body) do
     Registry.dispatch(RideAlong.Registry, topic, fn entries ->
-      for {pid, _} <- entries do
+      for {pid, filters} <- entries,
+          matches_filters?(body, filters) do
         send(pid, body)
       end
     end)
+  end
+
+  defp matches_filters?(_body, :all) do
+    true
+  end
+
+  defp matches_filters?(body, filters) do
+    tag = elem(body, 0)
+    tag in filters
   end
 end

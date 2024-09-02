@@ -23,15 +23,11 @@ defmodule RideAlong.MqttListener do
   @impl GenServer
   def init(_opts) do
     state = %__MODULE__{}
-    RideAlong.PubSub.subscribe("mqtt")
+    RideAlong.PubSub.subscribe("mqtt", [:message])
     {:ok, state}
   end
 
   @impl GenServer
-  def handle_info({:connected, _connection}, state) do
-    {:noreply, state}
-  end
-
   def handle_info({:message, _connection, message}, state) do
     topic_prefix = MqttConnection.topic_prefix()
 
@@ -40,10 +36,6 @@ defmodule RideAlong.MqttListener do
       Task.async(__MODULE__, :parse_and_update, [topic, config, message])
     end
 
-    {:noreply, state}
-  end
-
-  def handle_info({:disconnected, _, _reason}, state) do
     {:noreply, state}
   end
 
