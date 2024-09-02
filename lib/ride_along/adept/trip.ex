@@ -34,7 +34,9 @@ defmodule RideAlong.Adept.Trip do
 
   @type id :: integer()
   @type t :: %__MODULE__{
-          trip_id: id()
+          trip_id: id(),
+          pick_time: DateTime.t() | nil,
+          promise_time: DateTime.t() | nil
         }
 
   @type status :: :closed | :enqueued | :enroute | :waiting | :arrived | :picked_up
