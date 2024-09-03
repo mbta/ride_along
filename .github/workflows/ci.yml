@@ -75,7 +75,7 @@ jobs:
       - name: Credo
         run: mix credo --strict
       - name: Sobelow (Security)
-        run: mix sobelow -i Config.HTTPS --skip --exit
+        run: mix sobelow -i Config.HTTPS,Config.Headers --skip --exit
       - uses: mbta/actions/dialyzer@v2
 
   tests:

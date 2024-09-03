@@ -12,8 +12,9 @@ defmodule RideAlongWeb.Router do
     plug :put_root_layout, html: {RideAlongWeb.Layouts, :root}
     plug :protect_from_forgery
 
-    plug :put_secure_browser_headers, %{
-      "content-security-policy" => "default-src 'self'; img-src https://cdn.mbta.com data: 'self'"
+    plug :put_secure_browser_headers_runtime, %{
+      "content-security-policy" =>
+        "default-src 'self'; img-src https://cdn.mbta.com data: 'self'; connect-src 'self' wss://$HOST"
     }
   end
 
@@ -71,6 +72,21 @@ defmodule RideAlongWeb.Router do
       live "/trip/:trip", RideAlongWeb.TripLive.Show, :show
       live_dashboard "/dashboard", metrics: RideAlongWeb.Telemetry
     end
+  end
+
+  def put_secure_browser_headers_runtime(conn, params) do
+    host =
+      case conn.port do
+        443 -> conn.host
+        port -> "#{conn.host}:#{port}"
+      end
+
+    params =
+      for {key, value} <- params, into: %{} do
+        {key, String.replace(value, "$HOST", host)}
+      end
+
+    put_secure_browser_headers(conn, params)
   end
 
   def preconnect(conn, url) do

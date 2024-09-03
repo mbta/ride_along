@@ -95,7 +95,7 @@ defmodule RideAlong.MixProject do
         "compile --warnings-as-errors",
         "format --check-formatted",
         "credo --strict",
-        "sobelow -i Config.HTTPS --skip --exit",
+        "sobelow -i Config.HTTPS,Config.Headers --skip --exit",
         "dialyzer"
       ],
       "checks.test": ["test --cover"]
