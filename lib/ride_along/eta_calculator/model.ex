@@ -52,7 +52,7 @@ defmodule RideAlong.EtaCalculator.Model do
 
     predicted =
       model()
-      |> EXGBoost.predict(tensor, feature_name: @feature_names)
+      |> predict_from_tensor(tensor)
       |> Nx.sum()
       |> Nx.max(0)
       |> Nx.to_number()
@@ -67,6 +67,10 @@ defmodule RideAlong.EtaCalculator.Model do
       end
 
     DateTime.add(origin_time, to_add, :millisecond)
+  end
+
+  def predict_from_tensor(model, tensor) do
+    EXGBoost.predict(model, tensor, feature_name: @feature_names)
   end
 
   def read_model do
