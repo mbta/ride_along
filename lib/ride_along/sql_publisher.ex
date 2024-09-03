@@ -83,8 +83,8 @@ defmodule RideAlong.SqlPublisher do
     {:noreply, state}
   end
 
-  defp tds_query(tds, sql, parameters) do
-    parameters =
+  defp tds_query(tds, sql, parameters, retry_count \\ 0) do
+    tds_parameters =
       for {name, value} <- parameters do
         %Tds.Parameter{
           name: "@#{name}",
@@ -97,7 +97,7 @@ defmodule RideAlong.SqlPublisher do
        %{
          columns: columns,
          rows: rows
-       }} = :timer.tc(Tds, :query!, [tds, sql, parameters], :millisecond)
+       }} = :timer.tc(Tds, :query!, [tds, sql, tds_parameters], :millisecond)
 
       mapped =
         for row <- rows do
@@ -108,6 +108,15 @@ defmodule RideAlong.SqlPublisher do
 
       {:ok, mapped, msec}
     rescue
+      e in Tds.Error ->
+        if String.contains?(e.message, "Rerun the transaction.") and retry_count == 0 do
+          Logger.info("#{__MODULE__} retrying due to deadlock query=#{inspect(sql)}")
+          Process.sleep(500)
+          tds_query(tds, sql, parameters, retry_count + 1)
+        else
+          {:error, e}
+        end
+
       e ->
         {:error, e}
     end
