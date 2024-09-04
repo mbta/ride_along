@@ -9,6 +9,12 @@ defmodule RideAlongWeb.AuthController do
     AuthManager.logout(conn)
   end
 
+  def request(conn, _params) do
+    conn
+    |> redirect(to: "/not-found")
+    |> halt()
+  end
+
   def callback(%{assigns: %{ueberauth_auth: auth}} = conn, _) do
     redirect =
       if redirect_to = get_session(conn, :redirect_to) do
