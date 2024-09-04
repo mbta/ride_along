@@ -1,12 +1,28 @@
 if Mix.env() in [:dev, :test] do
   defmodule RideAlong.EtaCalculator.Training do
     @moduledoc """
-               Private module to support model training.
-               """ || false
+    Private module to support model training.
+    """
 
     require Explorer.DataFrame, as: DF
     alias Explorer.{Duration, Series}
     alias RideAlong.EtaCalculator.Model
+
+    def training_params do
+      [
+        booster: :gbtree,
+        device: :cuda,
+        objective: :reg_absoluteerror,
+        eval_metric: :mae,
+        tree_method: :approx,
+        max_depth: 5,
+        num_boost_rounds: 100,
+        subsample: 0.75,
+        colsample_bynode: 0.9,
+        learning_rate: 0.3,
+        feature_name: Model.feature_names()
+      ]
+    end
 
     def populate(df) do
       df
@@ -82,7 +98,7 @@ if Mix.env() in [:dev, :test] do
           arrival_time: select(is_nil(pure_arrival_time), pickup_arrival_time, pure_arrival_time)
         )
         |> DF.mutate(arrival_duration: diff_seconds(arrival_time, promise_time))
-        |> DF.mutate(on_time?: arrival_duration > -300 and arrival_duration < 900)
+        |> DF.mutate(on_time?: arrival_duration < 900)
 
       on_time_performance =
         Float.round(
@@ -142,6 +158,80 @@ if Mix.env() in [:dev, :test] do
             category: ["0-3", "3-6", "6-12", "12-30", "30+"],
             allowed_early: [-60, -90, -150, -240, -330],
             allowed_late: [60, 120, 210, 360, 510]
+          },
+          dtypes: %{
+            category: :category,
+            allowed_early: {:s, 16},
+            allowed_late: {:u, 16}
+          }
+        )
+
+      cat
+      |> DF.join(bins, how: :left, on: :category)
+    end
+
+    def transit_app_accuracy(series) do
+      cat =
+        series
+        |> Explorer.Series.cut([3 * 60, 6 * 60, 10 * 60, 15 * 60],
+          labels: ["0-3", "3-6", "6-10", "10-15", "15+"]
+        )
+
+      bins =
+        DF.new(
+          %{
+            category: ["0-3", "3-6", "6-10", "10-15", "15+"],
+            allowed_early: [-30, -60, -60, -90, -120],
+            allowed_late: [90, 150, 210, 270, 330]
+          },
+          dtypes: %{
+            category: :category,
+            allowed_early: {:s, 16},
+            allowed_late: {:u, 16}
+          }
+        )
+
+      DF.join(cat, bins, how: :left, on: :category)
+    end
+
+    def larger_bins_accuracy(series) do
+      cat =
+        series
+        |> Explorer.Series.cut([5 * 60, 10 * 60, 20 * 60, 40 * 60],
+          labels: ["0-5", "5-10", "10-20", "20-40", "40+"]
+        )
+
+      bins =
+        DF.new(
+          %{
+            category: ["0-5", "5-10", "10-20", "20-40", "40+"],
+            allowed_early: [-90, -150, -240, -300, -360],
+            allowed_late: [90, 180, 300, 420, 540]
+          },
+          dtypes: %{
+            category: :category,
+            allowed_early: {:s, 16},
+            allowed_late: {:u, 16}
+          }
+        )
+
+      cat
+      |> DF.join(bins, how: :left, on: :category)
+    end
+
+    def on_time_performance_accuracy(series) do
+      cat =
+        series
+        |> Explorer.Series.cut([5 * 60, 10 * 60, 20 * 60, 40 * 60],
+          labels: ["0-5", "5-10", "10-20", "20-40", "40+"]
+        )
+
+      bins =
+        DF.new(
+          %{
+            category: ["0-5", "5-10", "10-20", "20-40", "40+"],
+            allowed_early: [-300, -300, -300, -300, -300],
+            allowed_late: [900, 900, 900, 900, 900]
           },
           dtypes: %{
             category: :category,

@@ -65,19 +65,10 @@ defmodule Mix.Tasks.TrainModel do
 
     y = DF.select(train_df, :ors_to_add) |> Nx.concatenate()
 
-    opts = [
-      booster: :gbtree,
-      device: :cuda,
-      objective: :reg_absoluteerror,
-      tree_method: :approx,
-      max_depth: 5,
-      num_boost_rounds: 100,
-      subsample: 0.75,
-      colsample_bynode: 0.9,
-      learning_rate: 0.3,
-      feature_name: training_fields,
-      seed: seed
-    ]
+    opts =
+      Keyword.merge(training_params(),
+        seed: seed
+      )
 
     IO.puts("About to train (using seed #{seed})...")
     model = EXGBoost.train(x, y, opts)
@@ -104,9 +95,15 @@ defmodule Mix.Tasks.TrainModel do
            regression:
              time + %Duration{value: 1_000, precision: :millisecond} * (add + ors_duration)
          )
-         |> overall_accuracy(:time, :arrival_time, :regression, &accuracy/1))[:accuracy][0]
+         |> overall_accuracy(:time, :arrival_time, :regression, &accuracy/1))[
+          :accuracy
+        ][0]
+
+      size_mb =
+        Float.round(byte_size(EXGBoost.dump_model(model, format: :ubj)) / 1024.0 / 1024.0, 1)
 
       IO.puts("Overall accuracy: #{overall}%")
+      IO.puts("Model size: #{size_mb} MB")
     else
       EXGBoost.write_model(model, Model.model_path(), overwrite: true, format: :ubj)
       IO.puts("Wrote model!")

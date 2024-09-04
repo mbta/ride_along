@@ -1,4 +1,4 @@
-<!-- livebook:{"file_entries":[{"file":{"file_system_id":"local","file_system_type":"local","path":"/Users/paulswartz/Dropbox/0-Inbox/data-2024-09-02.csv"},"name":"data.csv","type":"file"}]} -->
+<!-- livebook:{"file_entries":[{"file":{"file_system_id":"local","file_system_type":"local","path":"/Users/pswartz/Dropbox/0-Inbox/data-2024-09-02.csv"},"name":"data.csv","type":"file"}]} -->
 
 # RideAlong Prediction Accuracy pt2
 
@@ -65,53 +65,104 @@ alias RideAlong.EtaCalculator.Training
 
 arrival_times = Training.arrival_times(df)
 
-arrival_times
-|> DF.join(df, on: :trip_id)
-|> DF.distinct([:trip_id, :arrival_time, :promise])
-|> DF.mutate(diff: Training.diff_seconds(arrival_time, promise))
-|> DF.mutate(on_time?: diff <= 900)
-|> DF.sort_by(promise)
-|> Kino.DataTable.new()
-
-# Kino.nothing()
+Kino.nothing()
 ```
 
 <!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 alias Explorer.Duration
+IEx.Helpers.r(RideAlong.EtaCalculator.Model)
+IEx.Helpers.r(RideAlong.EtaCalculator.Training)
 
-model = Model.read_model()
+training_fields = Model.feature_names()
 
+seed = 4055183217 # Enum.random(0..(Integer.pow(2, 32) - 1))
+
+df = DF.shuffle(df, seed: seed)
 df =
   df
   |> DF.join(arrival_times, on: "trip_id")
   |> Training.populate()
-  |> DF.shuffle(seed: 0)
   |> DF.mutate(ors_eta: time + %Duration{value: 1_000, precision: :millisecond} * ors_duration)
 
-# predicted = Training.predict_from_data_frame(model, df)
+size = Series.size(df[:time])
+validation_size = min(trunc(size * 0.9), 25_000)
 
-# df =
-#   df
-#   |> DF.put(:model_to_add, predicted)
-#   |> DF.mutate(
-#     model: time + %Duration{value: 1_000, precision: :millisecond} * (ors_duration + model_to_add)
-#   )
-#   |> Training.with_accuracy(:time, :arrival_time, :model, &Training.accuracy/1)
+train_df = DF.slice(df, validation_size..-1//1)
 
-fields = [:pick, :ors_eta]
+x =
+  train_df
+  |> DF.select(training_fields)
+  |> Nx.stack(axis: 1)
+
+y = DF.select(train_df, :ors_to_add) |> Nx.concatenate()
+
+opts = Keyword.merge(Training.training_params(), [
+  seed: seed
+])
+
+IO.puts("About to train (using seed #{seed})...")
+model = EXGBoost.train(x, y, opts)
+IO.puts("Trained!")
+
+df =
+  df
+  |> DF.slice(0..(validation_size - 1))
+
+predicted = Training.predict_from_data_frame(model, df)
+
+df = df
+  |> DF.put(:model_to_add, predicted)
+  |> DF.mutate(
+    model: time + %Duration{value: 1_000, precision: :millisecond} * (ors_duration + model_to_add)
+  )
+  |> DF.discard([:model_to_add])
+
+[model_size: byte_size(EXGBoost.dump_model(model, format: :ubj)) / 1024.0 / 1024.0]
 ```
 
 ## Accuracy Analysis
 
+```elixir
+IEx.Helpers.r(RideAlong.EtaCalculator.Training)
+fields = [:pick, :ors_eta, :model]
+```
+
 <!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
+quantiles = fn df, field ->
+  df = Training.with_accuracy(df, :time, :arrival_time, field, &Training.accuracy/1)
+
+  [five, twenty_five, seventy_five, ninety_five] =
+    for q <- [0.05, 0.25, 0.75, 0.95] do
+      (Series.quantile(df[:diff], q) / 60) |> Float.round(1)
+    end
+
+  DF.new(%{
+    :field => ["#{field}"],
+    :median => [Float.round(Series.median(df[:diff]) / 60, 1)],
+    "50%" => ["#{twenty_five} - #{seventy_five} (#{abs(seventy_five - twenty_five)})"],
+    "90%" => ["#{five} - #{ninety_five} (#{abs(ninety_five - five)})"]
+  })
+end
+
+fields
+|> Enum.map(&quantiles.(df, &1))
+|> DF.concat_rows()
+|> Kino.DataTable.new()
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+accuracy = &Training.accuracy/1
+
 for field <- fields do
   %{
     "field" => "#{field}",
-    "accuracy" => Training.overall_accuracy(df, :time, :arrival_time, field, &Training.accuracy/1)[:accuracy][0]
+    "accuracy" => Training.overall_accuracy(df, :time, :arrival_time, field, accuracy)[:accuracy][0]
   }
 end
 |> Kino.DataTable.new(name: "Overall Accuracy %", keys: ["field", "accuracy"])
@@ -121,48 +172,72 @@ end
 
 ```elixir
 for field <- fields do
-  Training.grouped_accuracy(df, :time, :arrival_time, field, &Training.accuracy/1) |> Kino.DataTable.new(name: field)
+  Training.grouped_accuracy(df, :time, :arrival_time, field, accuracy) |> Kino.DataTable.new(name: field)
 end
 |> Kino.Layout.grid(columns: 2)
 ```
 
-```elixir
-df
-|> DF.mutate(on_time_diff: Training.diff_seconds(arrival_time, promise))
-|> DF.mutate(on_time?: on_time_diff > -300 and on_time_diff < 900)
-#|> DF.select(
-#  ~w(trip_id route status time arrival_time promise on_time_diff pick ors_eta)
-#)
-|> DF.mutate(diff: (pick_duration - actual_duration) / 60)
-#|> DF.sort_by(asc: trip_id, asc: time)
-|> DF.select([:diff])|>DF.describe()
-|> Kino.DataTable.new()
-```
+## Model Parameter Tuning
 
 ```elixir
-Vl.new()
-|> Vl.data_from_values(df |> DF.shuffle() |> DF.slice(0..10000))
-  |> Vl.mark(:point, tooltip: true)
-  |> Vl.encode_field(:color, "accurate?", type: :nominal)
-  |> Vl.encode_field(:x, "day_of_week", type: :quantitative)
-  |> Vl.encode_field(:y, "time_of_day", type: :quantitative)
-```
+best_result = %{
+  opts: [],
+  accuracy: 0.0,
+  ratio: 0.0
+}
 
-```elixir
-for is_accurate <- [true, false] do
-df
-|> DF.filter(accurate? == ^is_accurate)
-|> DF.select([:time_of_day, :promise_duration, :pick_duration, :ors_duration, :actual_duration])
-|> DF.describe()
-|> Kino.DataTable.new(name: "Accurate: #{is_accurate}")
-  |> Kino.render()
-end
+df =
+  df
+  |> DF.slice(0..(validation_size - 1))
+
+results =
+  for max_depth <- [7,8, 9],
+      num_boost_rounds <- 1400..1600//100 do
+    new_opts = [
+      max_depth: max_depth,
+      num_boost_rounds: num_boost_rounds,
+      seed: seed
+    ]
+
+    opts = Keyword.merge(Training.training_params(), new_opts)
+    model = EXGBoost.train(x, y, opts)
+
+    predicted = Training.predict_from_data_frame(model, df)
+
+    df =
+      df
+      |> DF.put(:model_to_add, predicted)
+      |> DF.mutate(
+        model:
+          time +
+            %Duration{value: 1_000, precision: :millisecond} * (ors_duration + model_to_add)
+      )
+      |> DF.discard([:model_to_add])
+
+    overall =
+      Training.overall_accuracy(df, :time, :arrival_time, :model, accuracy)[:accuracy][0]
+
+    size_mb = byte_size(EXGBoost.dump_model(model, format: :ubj)) / 1024.0 / 1024.0
+
+    %{
+      #opts: Jason.encode!(Map.new(new_opts)),
+      max_depth: max_depth,
+      num_boost_rounds: num_boost_rounds,
+      accuracy: overall,
+      model_size: size_mb,
+    } |> IO.inspect()
+  end
 
 :ok
 ```
 
 ```elixir
-df|> DF.filter(accurate?)|>DF.select([:diff])|>DF.describe()|>Kino.DataTable.new()
+Vl.new()
+|> Vl.data_from_values(results)
+|> Vl.mark(:point, tooltip: [content: :data])
+|> Vl.encode_field(:color, "max_depth", type: :nominal)
+|> Vl.encode_field(:y, "accuracy", type: :quantitative, scale: [zero: false])
+|> Vl.encode_field(:x, "model_size", type: :quantitative)
 ```
 
-<!-- livebook:{"offset":4204,"stamp":{"token":"XCP.XLm4rzqdW-aD6Ch2_7WVnOBPRpISBM7N46tNKF7tpWOjS9rArxjkLDV9em44xivGQi6IqGCJi6RpBnFBVcZxtzkEYz2iFO3qnVSDdg","version":2}} -->
+<!-- livebook:{"offset":5760,"stamp":{"token":"XCP.qNBgjBt7EvdL6-Xax2Um8ZCOky6j0vk4oKwLQk03dN7G4InM_6lC3Td4SQSmMk1qlWNwrQ31lnNO7dyzO9fG8sYCZ75JhnJKiGxPoA","version":2}} -->

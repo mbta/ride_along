@@ -54,10 +54,11 @@ defmodule RideAlong.EtaCalculator.Model do
       model()
       |> predict_from_tensor(tensor)
       |> Nx.sum()
+      |> Nx.add(ors_duration)
       |> Nx.max(0)
       |> Nx.to_number()
 
-    to_add = trunc((ors_duration + predicted) * 1000)
+    to_add = trunc(predicted * 1000)
 
     origin_time =
       if vehicle && vehicle.timestamp do
