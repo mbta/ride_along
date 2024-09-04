@@ -208,22 +208,33 @@ df = df
   |> DF.mutate(
     new: select(
       ahead > 1200, 
-      select(pick > min_ors_eta, pick, min_ors_eta), 
+      select(pick > naive_ors_eta, pick, naive_ors_eta), 
       naive_ors_eta)
   )
 
 accuracy = &Support.ibi_accuracy/1
-fields = [:pick, :ors_eta, :naive_ors_eta, :new, :calculated]
+fields = [:pick, :ors_eta, :naive_ors_eta, :new]#, :calculated]
 
 #Kino.DataTable.new(DF.mutate(df, ahead: Support.diff_seconds(pick, time)))
 #Kino.nothing()
 ```
 
 ```elixir
-# Support.with_accuracy(df, :time, :arrival_time, :new, accuracy)
-# |> DF.filter(trip_id==95200463)
-# |> Kino.DataTable.new()
-Kino.nothing()
+ahead_chart = for ahead <- 600..1800//60 do
+  df =
+    DF.mutate(df,
+      new: select(ahead > ^ahead, select(pick > min_ors_eta, pick, min_ors_eta), naive_ors_eta)
+    )
+
+  calc = Support.overall_accuracy(df, :time, :arrival_time, :new, accuracy)[:accuracy][0] - 42
+  %{ahead: ahead, accuracy: calc}
+end
+
+Vl.new()
+|> Vl.data_from_values(ahead_chart)
+|> Vl.mark(:bar, tooltip: true)
+|> Vl.encode_field(:x, "ahead", type: :quantitative)
+|> Vl.encode_field(:y, "accuracy", type: :quantitative)
 ```
 
 ## Accuracy Analysis
@@ -237,7 +248,7 @@ for field <- fields do
     "accuracy" => Support.overall_accuracy(df, :time, :arrival_time, field, accuracy)[:accuracy][0]
   }
 end
-|> Kino.DataTable.new(keys: ["field", "accuracy"])
+|> Kino.DataTable.new(name: "Overall Accuracy %", keys: ["field", "accuracy"])
 ```
 
 <!-- livebook:{"reevaluate_automatically":true} -->
@@ -264,7 +275,7 @@ accuracies = for hour <- 0..23 do
 end
 Vl.new()
 |> Vl.data_from_values(accuracies)
-|> Vl.mark(:bar)
+|> Vl.mark(:bar, tooltip: true)
 |> Vl.encode_field(:x, "hour", type: :nominal)
 |> Vl.encode_field(:y, "accuracy", type: :quantitative)
 
@@ -291,7 +302,7 @@ df = df
 )
 df = df
 |> DF.mutate(
-  weekend?: Series.day_of_week(noon) > 5,
+  weekend?: select(Series.day_of_week(noon) > 5, 1.0, 0.0),
   waiting?: select(status == "waiting", 1.0, 0.0),
   early?: select(ors_duration < min_ors_duration, 1.0, 0.0),
   within_30m?: select(promise_duration < 1800, 1.0, 0.0)
@@ -504,34 +515,36 @@ boosted_opts = [
   booster: :gbtree,
   device: :cuda,
   objective: :reg_absoluteerror,
-  verbose_eval: true,
+  verbose_eval: false,
   tree_method: :hist,
-  max_depth: 10,
-  num_boost_rounds: 100000,
-  subsample: 0.5,
+  max_depth: 5,
+  num_boost_rounds: 100,
+  subsample: 0.75,
   #colsample_by_tree: 0.9,
   #colsample_bylevel: 0.9,
-  #colsample_bynode: 0.9,
+  colsample_bynode: 0.9,
   #grow_policy: :lossguide,
-  early_stopping_rounds: 20,
+  #early_stopping_rounds: 5,
   #monotone_constraints: [1],
-  learning_rate: 0.2,
+  learning_rate: 0.3,
   seed: :erlang.unique_integer([:positive]),
-  evals: [{x_test, y_test, "training"}],
+  #feature_name: Enum.map(training_fields, &Atom.to_string/1),
+  #evals: [{x_test, y_test, "training"}],
+  #validate_features: false
 ]
 
 # random_forest_opts = [
 #   booster: :gbtree,
 #   device: :cuda,
-#   objective: :reg_absoluteerror,
-#   verbose_eval: true,
+#   objective: :reg_squarederror,
+#   verbose_eval: false,
 #   tree_method: :hist,
 #   max_depth: 10,
 #   num_parallel_tree: 100,
 #   subsample: 0.5,
-#   colsample_bynode: 0.75,
+  #   colsample_bynode: 0.75,
 #   learning_rate: 1,
-#   evals: [{x_train, y_train, "training"}]
+#   evals: [{x_test, y_test, "training"}]
 # ]
 opts = boosted_opts
 model = EXGBoost.train(x_train, y_train, opts)
@@ -540,7 +553,11 @@ model = EXGBoost.train(x_train, y_train, opts)
 ```
 
 ```elixir
-#IO.inspect(EXGBoost.dump_model(model))
+#EXGBoost.plot_tree(model, rankdir: :lr, index: nil)
+```
+
+```elixir
+IO.inspect(EXGBoost.write_model(model, "Projects/github/ride_along/priv/model", overwrite: true))
 y_pred = EXGBoost.predict(model, x_test)
 IO.inspect(y_test)
 IO.inspect(y_pred)
@@ -560,18 +577,91 @@ mae = Metrics.mean_absolute_error(y_test, y_pred)
 ```
 
 ```elixir
-df = df |> DF.slice(30000..-1//1) |> DF.shuffle() |> DF.slice(0..10000)
-all_x =
-  df
+validate_df = df |> DF.slice(30000..-1//1) |> DF.shuffle() |> DF.slice(0..15000)
+x =
+  validate_df
   |> DF.select(training_fields)
   |> Nx.stack(axis: 1)
-pred = EXGBoost.predict(model, all_x)
-df 
+pred = EXGBoost.predict(model, x)
+validate_df 
 |> DF.put(:add, Nx.as_type(pred, :s32))
 |> DF.mutate(regression: ors_eta + %Duration{value: 1_000, precision: :millisecond} * add)
 #|> DF.mutate(regression: select(regression > min_ors_eta, regression, min_ors_eta))
 |> Support.overall_accuracy(:time, :arrival_time, :regression, accuracy)
 |> Kino.DataTable.new()
+```
+
+```elixir
+boosted_opts = [
+  booster: :gbtree,
+  device: :cuda,
+  objective: :reg_squarederror,
+  verbose_eval: false,
+  tree_method: :hist,
+  max_depth: 10,
+  # num_parallel_tree: 100,
+  num_boost_rounds: 100,
+  subsample: 0.5,
+  # colsample_by_tree: 0.9,
+  # colsample_bylevel: 0.9,
+  # colsample_bynode: 0.9,
+  grow_policy: :lossguide,
+  early_stopping_rounds: 5,
+  # monotone_constraints: [1],
+  learning_rate: 0.2,
+  seed: :erlang.unique_integer([:positive]),
+  # feature_name: Enum.map(training_fields, &Atom.to_string/1),
+  evals: [{x_test, y_test, "training"}]
+  # validate_features: false
+]
+
+acc =
+  for max_depth <- [5],
+      objective <- [:reg_absoluteerror],
+      subsample <- [0.75],
+      colsample_bynode <- [0.9],
+      num_boost_rounds <- [100],
+      tree_method <- [:approx], #:hist]
+      booster <- [:gbtree],#, :dart],
+      grow_policy <- [:depthwise],#, :lossguide],
+      learning_rate <- [0.3],# 0.1, 0.2, 0.5, 0.7, 0.9, 1.0],
+      reduce: %{accuracy: 46} do
+    acc ->
+      new_opts = [
+        objective: objective,
+        max_depth: max_depth,
+        subsample: subsample,
+        colsample_bynode: colsample_bynode,
+        num_boost_rounds: num_boost_rounds,
+        tree_method: tree_method,
+        grow_policy: grow_policy,
+        learning_rate: learning_rate,
+        booster: booster
+      ]
+
+      opts = Keyword.merge(boosted_opts, new_opts)
+
+      model = EXGBoost.train(x_train, y_train, opts)
+      pred = EXGBoost.predict(model, x)
+
+      overall =
+        (validate_df
+         |> DF.put(:add, Nx.as_type(pred, :s32))
+         |> DF.mutate(
+           regression: ors_eta + %Duration{value: 1_000, precision: :millisecond} * add
+         )
+         |> Support.overall_accuracy(:time, :arrival_time, :regression, accuracy))[:accuracy][0]
+
+      if overall > acc.accuracy do
+        IO.inspect({:new_accuracy, overall})
+        IO.inspect({:opts, new_opts})
+        Map.merge(acc, %{accuracy: overall, opts: new_opts, model: model})
+      else
+        acc
+      end
+  end
+
+acc
 ```
 
 ```elixir
@@ -583,18 +673,42 @@ model
 ## Neural Network
 
 ```elixir
-input = Axon.input("input", shape: {nil, 5})
+input = Axon.input("input", shape: {nil, length(training_fields)})
+neurons = trunc(length(training_fields) / 2)
 model = input
-  |> Axon.dense(32, activation: :relu)
-  |> Axon.dropout(rate: 0.5)
-  |> Axon.dense(32, activation: :relu)
+  |> Axon.dense(neurons)
+  |> Axon.dense(neurons)
   |> Axon.dense(1)
-  #|> Axon.relu()
 
 model
 ```
 
 ```elixir
+train_df=  train_df
+  |> DF.mutate(
+    ors_duration: (ors_duration - 1800) / 3600,
+    pick_duration: (pick_duration - 1800) / 3600,
+    min_ors_duration: (min_ors_duration - 1800) / 3600,
+    hour: (hour - 12) / 24,
+    ors_to_add: (ors_to_add - 1800) / 3600
+  )
+
+train_df
+  |> DF.select(training_fields)
+  |> DF.describe()
+  |> Kino.DataTable.new()
+  |> Kino.render()
+
+x = train_df
+  |> DF.select(training_fields)
+  |> Nx.stack(axis: 1)
+  |> Nx.as_type(:f32)
+
+y = DF.select(train_df, :ors_to_add) |> Nx.concatenate() |> Nx.as_type(:f32)
+
+{x_train, x_test} = Nx.split(x, 0.9)
+{y_train, y_test} = Nx.split(y, 0.9)
+
 batch_size = 32
 y_train_batches = Nx.to_batched(y_train, batch_size)
 x_train_batches = Nx.to_batched(x_train, batch_size)
@@ -611,7 +725,7 @@ plot =
   |> Kino.render()
 
 empty = %{} # Axon.ModelState.empty()
-optimizer = :sgd #Polaris.Optimizers.adam()#learning_rate: 0.001)
+optimizer = Polaris.Optimizers.adam()#learning_rate: 0.001)
 params = model
   |> Axon.Loop.trainer(:mean_absolute_error, optimizer)
   #|> Axon.Loop.metric(:mean_squared_error)
@@ -637,36 +751,46 @@ mae = Metrics.mean_absolute_error(y_test, y_pred)
 [
   RMSE: Nx.to_number(rmse),
   MAE: Nx.to_number(mae),
-  mean: Nx.to_number(Nx.mean(y))
+  mean: Nx.to_number(Nx.mean(y)),
+  std: Nx.to_number(Nx.standard_deviation(y)),
+  pred_mean: Nx.to_number(Nx.mean(y_pred)),
+  pred_std: Nx.to_number(Nx.standard_deviation(y_pred))
 ]
 ```
 
 ```elixir
-
+df = df |> DF.slice(30000..-1//1) |> DF.shuffle() |> DF.slice(0..15000)
 all_x =
   df
-  |> DF.select([
-    :ors_duration,
-    :promise_duration, 
-    :pick_duration,
-    :time_of_day,
-    :waiting?,
-    :early?,
-    :within_30m?
-  ])
+  |> DF.mutate(
+    ors_duration: (ors_duration - 1800) / 3600,
+    pick_duration: (pick_duration - 1800) / 3600,
+    min_ors_duration: (min_ors_duration - 1800) / 3600,
+    hour: (hour - 12) / 24,
+    ors_to_add: (ors_to_add - 1800) / 3600
+  )
+  |> DF.select(training_fields)
   |> Nx.stack(axis: 1)
+  |> Nx.as_type(:f32)
 
 pred = Axon.predict(model, params, %{
   "input" => all_x,
 }) |> Nx.flatten()
 
-df 
-|> DF.put(:add, Nx.max(pred, 0))
+df = df 
+|> DF.put(:add_orig, pred)
+|> DF.mutate(add: (add_orig * 3600) + 1800)
+|> DF.discard(:add_orig)
+|> DF.mutate(add: select(add > 0, add, 0))
 |> DF.mutate(regression: ors_eta + %Duration{value: 1_000, precision: :millisecond} * add)
+
+df |> DF.describe() |> Kino.DataTable.new() |> Kino.render()
 #|> DF.mutate(regression: select(regression > min_ors_eta, regression, min_ors_eta))
+
+df
 |> Support.overall_accuracy(:time, :arrival_time, :regression, accuracy)
 #|> DF.filter(add != 1.0)
 #|> Kino.DataTable.new()
 ```
 
-<!-- livebook:{"offset":17079,"stamp":{"token":"XCP.PGaW3Q-UAyD5GBs-5n_cO9lDwXvbBn8dQO90XpN_CS_qt_RXH-fNMNNAMJRYPQmN-TnBmmLYGiHmomekYbZW5oldOijz7aSpghFqWg","version":2}} -->
+<!-- livebook:{"offset":20910,"stamp":{"token":"XCP.Df1l6w3dmdIwASIkQtSjmklF54Sw8d8DTiX5h3XrAnB9Urm8fTYHy_R1opJuxFjvM6IDIiMvlYT9ynFPqAqAMQ5zbbmVmmEtC0IGsw","version":2}} -->

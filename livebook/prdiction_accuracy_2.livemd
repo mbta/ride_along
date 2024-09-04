@@ -1,0 +1,168 @@
+<!-- livebook:{"file_entries":[{"file":{"file_system_id":"local","file_system_type":"local","path":"/Users/paulswartz/Dropbox/0-Inbox/data-2024-09-02.csv"},"name":"data.csv","type":"file"}]} -->
+
+# RideAlong Prediction Accuracy pt2
+
+```elixir
+Mix.install(
+  [
+    {:kino, "~> 0.13"},
+    {:kino_vega_lite, "~> 0.1.13"},
+    {:ride_along, path: Path.join(__DIR__, ".."), env: :dev}
+  ],
+  config_path: Path.join([__DIR__, "..", "config", "config.exs"]),
+  start_applications: false
+)
+```
+
+## Load/Group Data
+
+```elixir
+require Explorer.DataFrame, as: DF
+alias Explorer.{Duration, Series}
+alias VegaLite, as: Vl
+
+df =
+  "data.csv"
+  |> Kino.FS.file_path()
+  |> DF.from_csv!(
+    parse_dates: true,
+    nil_values: [""],
+    dtypes: %{status: :category}
+  )
+  |> DF.filter(route > 0)
+
+defmodule Support do
+  def truncate_to_minute(%DateTime{} = dt) do
+    Map.merge(dt, %{second: 0, microsecond: {0, 0}})
+  end
+
+  def round_up_to_minute(%DateTime{second: second, microsecond: {microsecond, _precision}} = dt)
+      when second > 0 or microsecond > 0 do
+    dt
+    |> Map.put(:time_zone, "Etc/UTC")
+    |> DateTime.add(1, :minute)
+    |> Map.merge(%{second: 0, microsecond: {0, 0}})
+
+    dt
+  end
+
+  def round_up_to_minute(dt) do
+    dt
+  end
+end
+  
+:ok
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+Application.ensure_all_started(:kino)
+IEx.Helpers.r(RideAlong.EtaCalculator.Model)
+IEx.Helpers.r(RideAlong.EtaCalculator.Training)
+alias RideAlong.EtaCalculator.Model
+alias RideAlong.EtaCalculator.Training
+
+arrival_times = Training.arrival_times(df)
+
+arrival_times
+|> DF.join(df, on: :trip_id)
+|> DF.distinct([:trip_id, :arrival_time, :promise])
+|> DF.mutate(diff: Training.diff_seconds(arrival_time, promise))
+|> DF.mutate(on_time?: diff <= 900)
+|> DF.sort_by(promise)
+|> Kino.DataTable.new()
+
+# Kino.nothing()
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+alias Explorer.Duration
+
+model = Model.read_model()
+
+df =
+  df
+  |> DF.join(arrival_times, on: "trip_id")
+  |> Training.populate()
+  |> DF.shuffle(seed: 0)
+  |> DF.mutate(ors_eta: time + %Duration{value: 1_000, precision: :millisecond} * ors_duration)
+
+# predicted = Training.predict_from_data_frame(model, df)
+
+# df =
+#   df
+#   |> DF.put(:model_to_add, predicted)
+#   |> DF.mutate(
+#     model: time + %Duration{value: 1_000, precision: :millisecond} * (ors_duration + model_to_add)
+#   )
+#   |> Training.with_accuracy(:time, :arrival_time, :model, &Training.accuracy/1)
+
+fields = [:pick, :ors_eta]
+```
+
+## Accuracy Analysis
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+for field <- fields do
+  %{
+    "field" => "#{field}",
+    "accuracy" => Training.overall_accuracy(df, :time, :arrival_time, field, &Training.accuracy/1)[:accuracy][0]
+  }
+end
+|> Kino.DataTable.new(name: "Overall Accuracy %", keys: ["field", "accuracy"])
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+for field <- fields do
+  Training.grouped_accuracy(df, :time, :arrival_time, field, &Training.accuracy/1) |> Kino.DataTable.new(name: field)
+end
+|> Kino.Layout.grid(columns: 2)
+```
+
+```elixir
+df
+|> DF.mutate(on_time_diff: Training.diff_seconds(arrival_time, promise))
+|> DF.mutate(on_time?: on_time_diff > -300 and on_time_diff < 900)
+#|> DF.select(
+#  ~w(trip_id route status time arrival_time promise on_time_diff pick ors_eta)
+#)
+|> DF.mutate(diff: (pick_duration - actual_duration) / 60)
+#|> DF.sort_by(asc: trip_id, asc: time)
+|> DF.select([:diff])|>DF.describe()
+|> Kino.DataTable.new()
+```
+
+```elixir
+Vl.new()
+|> Vl.data_from_values(df |> DF.shuffle() |> DF.slice(0..10000))
+  |> Vl.mark(:point, tooltip: true)
+  |> Vl.encode_field(:color, "accurate?", type: :nominal)
+  |> Vl.encode_field(:x, "day_of_week", type: :quantitative)
+  |> Vl.encode_field(:y, "time_of_day", type: :quantitative)
+```
+
+```elixir
+for is_accurate <- [true, false] do
+df
+|> DF.filter(accurate? == ^is_accurate)
+|> DF.select([:time_of_day, :promise_duration, :pick_duration, :ors_duration, :actual_duration])
+|> DF.describe()
+|> Kino.DataTable.new(name: "Accurate: #{is_accurate}")
+  |> Kino.render()
+end
+
+:ok
+```
+
+```elixir
+df|> DF.filter(accurate?)|>DF.select([:diff])|>DF.describe()|>Kino.DataTable.new()
+```
+
+<!-- livebook:{"offset":4204,"stamp":{"token":"XCP.XLm4rzqdW-aD6Ch2_7WVnOBPRpISBM7N46tNKF7tpWOjS9rArxjkLDV9em44xivGQi6IqGCJi6RpBnFBVcZxtzkEYz2iFO3qnVSDdg","version":2}} -->
