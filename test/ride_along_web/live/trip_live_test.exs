@@ -22,7 +22,7 @@ defmodule RideAlongWeb.TripLiveTest do
       {:ok, _show_live, html} = live(conn, ~p"/t/#{token}")
       {:ok, document} = Floki.parse_document(html)
       elements = Floki.find(document, "[aria-live]")
-      assert Floki.text(elements) =~ "ETA"
+      assert Floki.text(elements) =~ "Estimated time of pick-up"
     end
 
     @tag :capture_log

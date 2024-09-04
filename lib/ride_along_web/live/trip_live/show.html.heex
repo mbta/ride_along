@@ -7,7 +7,7 @@
     <h2 class="sr-only"><%= gettext("Status") %></h2>
     <%= @popup %>
     <span :if={@status in [:enroute, :waiting]}>
-      <%= gettext("Estimated time of arrival (ETA):") %> <%= @eta_text %>
+      <%= gettext("Estimated time of pick-up:") %> <%= @eta_text %>
     </span>
     <span :if={@status == :enqueued}>
       <%= ngettext(
@@ -34,7 +34,7 @@
             <%= gettext("Vehicle #%{vehicle}", %{vehicle: @vehicle.vehicle_id}) %>
           </div>
           <div :if={@status in [:enroute, :waiting]}>
-            <%= gettext("Estimated time of arrival (ETA):") %>
+            <%= gettext("Estimated time of pick-up:") %>
             <time class="block text-2xl font-bold" datetime={@eta}>
               <%= @eta_text %>
             </time>

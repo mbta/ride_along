@@ -243,10 +243,14 @@ defmodule RideAlongWeb.TripLive.Show do
   def put_schedule_change_flash(socket, old_trip) do
     cond do
       socket.assigns.trip.route_id != old_trip.route_id ->
-        put_flash(socket, :warning, gettext("Your ETA and vehicle have changed."))
+        put_flash(
+          socket,
+          :warning,
+          gettext("Your estimated pick-up time and vehicle have changed.")
+        )
 
       socket.assigns.trip.pick_order != old_trip.pick_order ->
-        put_flash(socket, :warning, gettext("Your ETA has changed."))
+        put_flash(socket, :warning, gettext("Your estimated pick-up time has changed."))
 
       true ->
         socket
