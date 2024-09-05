@@ -23,7 +23,13 @@ defmodule Mix.Tasks.TrainModel do
   def run(opts) do
     {parsed, [file_name | _], _} =
       OptionParser.parse(opts,
-        strict: [validate: :boolean, seed: :integer]
+        strict: [
+          validate: :boolean,
+          seed: :integer,
+          max_depth: :integer,
+          num_boost_rounds: :integer,
+          tree_method: :string
+        ]
       )
 
     df =
@@ -66,13 +72,19 @@ defmodule Mix.Tasks.TrainModel do
     y = DF.select(train_df, :ors_to_add) |> Nx.concatenate()
 
     opts =
-      Keyword.merge(training_params(),
-        seed: seed
+      Keyword.merge(
+        training_params(),
+        [seed: seed] ++ training_params_from_opts(parsed)
       )
 
     IO.puts("About to train (using seed #{seed})...")
-    model = EXGBoost.train(x, y, opts)
-    IO.puts("Trained!")
+    {timing, model} = :timer.tc(EXGBoost, :train, [x, y, opts], :millisecond)
+    IO.puts("Trained! (in #{Float.round(timing / 1000.0, 1)}s)")
+
+    size_mb =
+      Float.round(byte_size(EXGBoost.dump_model(model, format: :ubj)) / 1024.0 / 1024.0, 1)
+
+    IO.puts("Model size: #{size_mb} MB")
 
     if parsed[:validate] do
       IO.puts("Validating model...")
@@ -99,11 +111,7 @@ defmodule Mix.Tasks.TrainModel do
           :accuracy
         ][0]
 
-      size_mb =
-        Float.round(byte_size(EXGBoost.dump_model(model, format: :ubj)) / 1024.0 / 1024.0, 1)
-
       IO.puts("Overall accuracy: #{overall}%")
-      IO.puts("Model size: #{size_mb} MB")
     else
       EXGBoost.write_model(model, Model.model_path(), overwrite: true, format: :ubj)
       IO.puts("Wrote model!")
@@ -112,5 +120,23 @@ defmodule Mix.Tasks.TrainModel do
     end
 
     :ok
+  end
+
+  defp training_params_from_opts(opts) do
+    _tree_methods = [:exact, :approx, :hist]
+
+    Enum.reduce(opts, [], fn
+      {:num_boost_rounds, rounds}, acc ->
+        [num_boost_rounds: rounds] ++ acc
+
+      {:max_depth, depth}, acc ->
+        [max_depth: depth] ++ acc
+
+      {:tree_method, method}, acc ->
+        [tree_method: String.to_existing_atom(method)] ++ acc
+
+      _, acc ->
+        acc
+    end)
   end
 end

@@ -191,8 +191,8 @@ df =
   |> DF.slice(0..(validation_size - 1))
 
 results =
-  for max_depth <- [7,8, 9],
-      num_boost_rounds <- 1400..1600//100 do
+  for max_depth <- [9],
+      num_boost_rounds <- 1600..2000//100 do
     new_opts = [
       max_depth: max_depth,
       num_boost_rounds: num_boost_rounds,
@@ -240,4 +240,4 @@ Vl.new()
 |> Vl.encode_field(:x, "model_size", type: :quantitative)
 ```
 
-<!-- livebook:{"offset":5760,"stamp":{"token":"XCP.qNBgjBt7EvdL6-Xax2Um8ZCOky6j0vk4oKwLQk03dN7G4InM_6lC3Td4SQSmMk1qlWNwrQ31lnNO7dyzO9fG8sYCZ75JhnJKiGxPoA","version":2}} -->
+<!-- livebook:{"offset":5755,"stamp":{"token":"XCP.pdCWXtHeMmJ5i8soFsc1rhDSqC1EgryvR2RCS9iL6PvzTPhL5gOHnQH4igsi6kqQIIqgz7IsZeHg47gn7EBCiRfiBuMcwOcvG9um5Q","version":2}} -->

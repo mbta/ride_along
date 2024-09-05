@@ -72,7 +72,7 @@ RUN env SECRET_KEY_BASE=fake ORS_BASE_URL=fake \
   sh -c ' \
      /app/bin/ride_along eval ":crypto.supports()" && \
      /app/bin/ride_along eval ":ok = :public_key.cacerts_load" && \
-     /app/bin/ride_along eval "{_, _, _} = EXGBoost.xgboost_version()"'
+     /app/bin/ride_along eval "%{} = RideAlong.EtaCalculator.Model.read_model()"'
 
 USER nobody
 

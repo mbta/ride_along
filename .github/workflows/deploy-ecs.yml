@@ -25,6 +25,10 @@ jobs:
       docker-tag-suffix: ${{ steps.build-push.outputs.docker-tag-suffix }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Fetch LFS objects
+        run: git lfs checkout
       - uses: mbta/actions/build-push-ecr@v2
         id: build-push
         with:

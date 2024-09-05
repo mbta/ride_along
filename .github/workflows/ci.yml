@@ -84,6 +84,10 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Fetch LFS objects
+        run: git lfs checkout
       - uses: actions/cache@v4
         with:
           path: ~/.asdf
