@@ -151,7 +151,7 @@ defmodule RideAlong.SqlPublisher do
              Status, Anchor, PickTime, PromiseTime,
              PickHouseNumber, PickAddress1, PickAddress2, PickCity, PickSt, PickZip,
              PickGridX, PickGridY,
-             PickOrder, DropOrder, PerformPickup, PerformDropoff, LoadTime
+             PickOrder, DropOrder, PerformPickup, PerformDropoff, LoadTime, APtime1
              FROM Trips t
              WHERE
                t.TripDate >= @service_date AND
@@ -163,7 +163,7 @@ defmodule RideAlong.SqlPublisher do
         interval: 300_000
       },
       locations: %{
-        sql: ~s[SELECT RouteId, VehicleId, Latitude, Longitude, Heading, LocationDate,
+        sql: ~s[SELECT RouteId, VehicleId, Latitude, Longitude, Speed, Heading, LocationDate,
                COALESCE((SELECT MAX(PickOrder) FROM dbo.TRIP t
                  WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.PerformPickup != 0), 1) AS LastPick,
                COALESCE((SELECT MAX(DropOrder) FROM dbo.TRIP t

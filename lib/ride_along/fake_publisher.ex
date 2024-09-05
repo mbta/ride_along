@@ -159,7 +159,8 @@ defmodule RideAlong.FakePublisher do
         "DropOrder" => 3,
         "PerformPickup" => 0,
         "PerformDropoff" => 0,
-        "LoadTime" => 4
+        "LoadTime" => 4,
+        "APtime1" => "00:00"
       },
       updates
     )
@@ -171,6 +172,7 @@ defmodule RideAlong.FakePublisher do
         "RouteId" => @route_id,
         "VehicleId" => @vehicle_id,
         "Heading" => Decimal.new("90"),
+        "Speed" => Decimal.new("15"),
         "Latitude" => Decimal.new("42.346"),
         "Longitude" => Decimal.new("-71.071"),
         "LocationDate" => erl_dt(now),

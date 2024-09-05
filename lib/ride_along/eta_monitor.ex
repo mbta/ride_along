@@ -120,7 +120,8 @@ defmodule RideAlong.EtaMonitor do
       client_trip_index: trip.client_trip_index,
       time: location_timestamp || now,
       location: location_timestamp,
-      load_time: trip.load_time
+      load_time: trip.load_time,
+      pickup_arrival: trip.pickup_arrival_time
     ]
 
     vehicle_metadata =
@@ -129,7 +130,8 @@ defmodule RideAlong.EtaMonitor do
         [
           vehicle_lat: vehicle.lat,
           vehicle_lon: vehicle.lon,
-          vehicle_heading: vehicle.heading
+          vehicle_heading: vehicle.heading,
+          vehicle_speed: vehicle.speed
         ]
       else
         _ -> []

@@ -15,6 +15,7 @@ defmodule RideAlong.Adept.Trip do
     :date,
     :pick_time,
     :promise_time,
+    :pickup_arrival_time,
     :lat,
     :lon,
     :house_number,
@@ -64,7 +65,8 @@ defmodule RideAlong.Adept.Trip do
       "DropOrder" => drop_order,
       "PerformPickup" => perform_pickup,
       "PerformDropoff" => perform_dropoff,
-      "LoadTime" => load_time
+      "LoadTime" => load_time,
+      "APtime1" => pickup_arrival_time
     } = map
 
     trip_date = Date.new!(year, month, day)
@@ -77,6 +79,7 @@ defmodule RideAlong.Adept.Trip do
       date: trip_date,
       pick_time: relative_time(pick_time, trip_date),
       promise_time: relative_time(promise_time, trip_date),
+      pickup_arrival_time: relative_time(pickup_arrival_time, trip_date),
       lat: grid_to_decimal(grid_lat),
       lon: grid_to_decimal(grid_lon),
       house_number: house_number,
@@ -209,6 +212,10 @@ defmodule RideAlong.Adept.Trip do
   end
 
   defp relative_time("", _date_time) do
+    nil
+  end
+
+  defp relative_time("00:00", _date_time) do
     nil
   end
 

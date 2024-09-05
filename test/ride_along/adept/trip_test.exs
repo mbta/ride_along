@@ -31,7 +31,8 @@ defmodule RideAlong.Adept.TripTest do
         "DropOrder" => 16,
         "PerformPickup" => 2,
         "PerformDropoff" => 0,
-        "LoadTime" => 7
+        "LoadTime" => 7,
+        "APtime1" => "00:00"
       }
 
       actual = Trip.from_sql_map(sample)
@@ -44,6 +45,7 @@ defmodule RideAlong.Adept.TripTest do
         client_trip_index: 1,
         pick_time: DateTime.new!(~D[2024-05-30], ~T[03:33:00], time_zone),
         promise_time: DateTime.new!(~D[2024-05-31], ~T[00:50:00], time_zone),
+        pickup_arrival_time: nil,
         lat: Decimal.new("42.3434"),
         lon: Decimal.new("-71.06166"),
         house_number: "144",
