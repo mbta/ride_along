@@ -102,7 +102,7 @@ defmodule RideAlong.Adept.Trip do
         %Vehicle{} = vehicle,
         %DateTime{} = now
       ) do
-    minutes_remaining = minutes_until_pick(trip, now)
+    minutes_remaining = minutes_until(trip, now)
 
     cond do
       trip.dropoff_performed? ->
@@ -136,7 +136,7 @@ defmodule RideAlong.Adept.Trip do
       trip.dropoff_performed? ->
         :closed
 
-      minutes_until_pick(trip, now) > {:ok, 59} ->
+      minutes_until(trip, now) > {:ok, 59} ->
         :closed
 
       trip.pickup_performed? ->
@@ -227,9 +227,9 @@ defmodule RideAlong.Adept.Trip do
     DateTime.add(noon, (hours - 12) * 60 + minutes, :minute)
   end
 
-  @spec minutes_until_pick(t(), DateTime.t()) :: {:ok, integer()} | :unknown
-  def minutes_until_pick(%__MODULE__{pick_time: nil}, _now), do: :unknown
+  @spec minutes_until(t(), DateTime.t()) :: {:ok, integer()} | :unknown
+  def minutes_until(%__MODULE__{promise_time: nil}, _now), do: :unknown
 
-  def minutes_until_pick(%__MODULE__{pick_time: pick_time}, now),
-    do: {:ok, DateTime.diff(pick_time, now, :minute)}
+  def minutes_until(%__MODULE__{promise_time: time}, now),
+    do: {:ok, DateTime.diff(time, now, :minute)}
 end
