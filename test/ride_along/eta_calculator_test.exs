@@ -10,7 +10,7 @@ defmodule RideAlong.EtaCalculatorTest do
   @now ~U[2024-08-27T12:00:00Z]
 
   describe "calculate/4" do
-    test "never returns a time before now" do
+    test "never returns a time before now or the route duration" do
       check all(
               pick_offset <- integer(-15..30),
               promise_offset <- integer(-15..30),
@@ -41,6 +41,13 @@ defmodule RideAlong.EtaCalculatorTest do
 
         assert DateTime.compare(actual, @now) != :lt,
                "Assertion failed: predicted #{actual} is earlier than now #{@now}"
+
+        if duration do
+          ors_eta = DateTime.add(@now, duration, :minute)
+
+          assert DateTime.compare(actual, ors_eta) != :lt,
+                 "Assertion failed: predicted #{actual} is earlier than OpenRouteService ETA #{ors_eta}"
+        end
       end
     end
   end

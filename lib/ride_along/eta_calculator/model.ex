@@ -54,6 +54,7 @@ defmodule RideAlong.EtaCalculator.Model do
       model()
       |> predict_from_tensor(tensor)
       |> Nx.sum()
+      |> Nx.max(0)
       |> Nx.add(ors_duration)
       |> Nx.max(0)
       |> Nx.to_number()
