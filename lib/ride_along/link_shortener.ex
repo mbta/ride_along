@@ -84,10 +84,16 @@ defmodule RideAlong.LinkShortener do
     short_bytes = :binary.part(hash, 0, 6)
     short_b64 = Base.url_encode64(short_bytes)
 
-    if Map.has_key?(link_map, short_b64) do
-      hash_trip(trip, link_map, index + 1)
-    else
-      Map.put(link_map, short_b64, trip)
+    case Map.fetch(link_map, short_b64) do
+      :error ->
+        Map.put(link_map, short_b64, trip)
+
+      {:ok, original} ->
+        Logger.warning(
+          "#{__MODULE__} duplicate generated token=#{short_b64} trip=#{original.trip_id} new_trip=#{trip.trip_id}"
+        )
+
+        hash_trip(trip, link_map, index + 1)
     end
   end
 
