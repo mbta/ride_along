@@ -117,6 +117,18 @@ defmodule RideAlong.SqlPublisher do
           {:error, e}
         end
 
+      e in DBConnection.ConnectionError ->
+        if retry_count < 6 do
+          Logger.info(
+            "#{__MODULE__} retrying due to connection error query=#{inspect(sql)} reason=#{inspect(e)}"
+          )
+
+          Process.sleep(500)
+          tds_query(tds, sql, parameters, retry_count + 1)
+        else
+          {:error, e}
+        end
+
       e ->
         {:error, e}
     end
