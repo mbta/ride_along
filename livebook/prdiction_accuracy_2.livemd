@@ -1,4 +1,4 @@
-<!-- livebook:{"file_entries":[{"file":{"file_system_id":"local","file_system_type":"local","path":"/Users/pswartz/Dropbox/0-Inbox/data-2024-09-02.csv"},"name":"data.csv","type":"file"}]} -->
+<!-- livebook:{"file_entries":[{"file":{"file_system_id":"local","file_system_type":"local","path":"/Users/pswartz/Dropbox/0-Inbox/data-2024-09-09.csv"},"name":"data.csv","type":"file"}]} -->
 
 # RideAlong Prediction Accuracy pt2
 
@@ -64,8 +64,20 @@ alias RideAlong.EtaCalculator.Model
 alias RideAlong.EtaCalculator.Training
 
 arrival_times = Training.arrival_times(df)
+#arrival_times = df |> DF.group_by([:trip_id, :route])
+#|> DF.filter(not is_nil(pickup_arrival))
+#|> DF.summarise(arrival_time: Series.min(pickup_arrival))
 
-Kino.nothing()
+df
+|> DF.select([:trip_id, :route, :pickup_arrival])
+|> DF.filter(not is_nil(pickup_arrival))
+|> DF.distinct()
+|> DF.join(arrival_times, on: [:trip_id, :route])
+|> DF.mutate(database_arrival_diff: Training.diff_seconds(arrival_time, pickup_arrival))
+#|> DF.filter(database_arrival_diff >= 0 and database_arrival_diff <= 60)
+|> DF.select([:database_arrival_diff])
+|> DF.describe()
+|> Kino.DataTable.new()
 ```
 
 <!-- livebook:{"reevaluate_automatically":true} -->
@@ -79,17 +91,18 @@ training_fields = Model.feature_names()
 
 seed = 4055183217 # Enum.random(0..(Integer.pow(2, 32) - 1))
 
-df = DF.shuffle(df, seed: seed)
+df = DF.sort_by(df, asc: time)
 df =
   df
-  |> DF.join(arrival_times, on: "trip_id")
+  |> DF.join(arrival_times, on: [:trip_id, :route])
   |> Training.populate()
   |> DF.mutate(ors_eta: time + %Duration{value: 1_000, precision: :millisecond} * ors_duration)
 
 size = Series.size(df[:time])
-validation_size = min(trunc(size * 0.9), 25_000)
+validation_size = trunc(size * 0.1)
+train_size = size - validation_size
 
-train_df = DF.slice(df, validation_size..-1//1)
+train_df = DF.slice(df, 0..train_size-1)
 
 x =
   train_df
@@ -98,24 +111,45 @@ x =
 
 y = DF.select(train_df, :ors_to_add) |> Nx.concatenate()
 
+df =
+  df
+  |> DF.slice(train_size .. size)
+
+validate_x =
+  df
+  |> DF.select(training_fields)
+  |> Nx.stack(axis: 1)
+
+validate_y = DF.select(df, :ors_to_add) |> Nx.concatenate()
+
 opts = Keyword.merge(Training.training_params(), [
-  seed: seed
+  seed: seed,
+  #early_stopping_rounds: 5,
+  #verbose_eval: true,
+  #verbose_eval: false,
+  #evals: [{validate_x, validate_y, "validate"}]
+  #num_boost_rounds: 4000
 ])
 
 IO.puts("About to train (using seed #{seed})...")
 model = EXGBoost.train(x, y, opts)
 IO.puts("Trained!")
 
-df =
-  df
-  |> DF.slice(0..(validation_size - 1))
+#model = Model.read_model()
+
+IO.puts(inspect(model))
+:ok
+```
+
+```elixir
+IEx.Helpers.r(RideAlong.EtaCalculator.Model)
+IEx.Helpers.r(RideAlong.EtaCalculator.Training)
 
 predicted = Training.predict_from_data_frame(model, df)
 
 df = df
-  |> DF.put(:model_to_add, predicted)
   |> DF.mutate(
-    model: time + %Duration{value: 1_000, precision: :millisecond} * (ors_duration + model_to_add)
+    model: time + %Duration{value: 1_000, precision: :millisecond} * ^predicted
   )
   |> DF.discard([:model_to_add])
 
@@ -126,14 +160,15 @@ df = df
 
 ```elixir
 IEx.Helpers.r(RideAlong.EtaCalculator.Training)
-fields = [:pick, :ors_eta, :model]
+fields = [:pick, :model]
+accuracy = &Training.accuracy/1
 ```
 
 <!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 quantiles = fn df, field ->
-  df = Training.with_accuracy(df, :time, :arrival_time, field, &Training.accuracy/1)
+  df = Training.with_accuracy(df, :time, :arrival_time, field, accuracy)
 
   [five, twenty_five, seventy_five, ninety_five] =
     for q <- [0.05, 0.25, 0.75, 0.95] do
@@ -143,21 +178,40 @@ quantiles = fn df, field ->
   DF.new(%{
     :field => ["#{field}"],
     :median => [Float.round(Series.median(df[:diff]) / 60, 1)],
-    "50%" => ["#{twenty_five} - #{seventy_five} (#{abs(seventy_five - twenty_five)})"],
-    "90%" => ["#{five} - #{ninety_five} (#{abs(ninety_five - five)})"]
+    "50%" => ["#{twenty_five} - #{seventy_five} (#{Float.round(abs(seventy_five - twenty_five), 1)})"],
+    "90%" => ["#{five} - #{ninety_five} (#{Float.round(abs(ninety_five - five), 1)})"],
+    :size => [Series.size(df[field])]
   })
 end
 
 fields
 |> Enum.map(&quantiles.(df, &1))
 |> DF.concat_rows()
+|> DF.select([:field, :median, "50%", "90%", :size])
 |> Kino.DataTable.new()
 ```
 
 <!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
-accuracy = &Training.accuracy/1
+vl_df = for field <- fields, reduce: DF.new(%{field: [], diff: []}, dtypes: [field: :string, diff: {:s, 64}]) do
+  acc ->
+    field = "#{field}"
+    df = Training.with_accuracy(df, :time, :arrival_time, field, accuracy)
+    |> DF.mutate(diff: diff / 60, field: ^field)
+    DF.concat_rows(acc, DF.select(df, [:field, :diff]))
+end
+
+Vl.new(height: 200, width: 800)
+|> Vl.data_from_values(vl_df)
+|> Vl.mark(:boxplot, extent: "min-max")
+|> Vl.encode_field(:x, "diff", type: :quantitative, scale: [zero: false], outliers: false)
+|> Vl.encode_field(:y, "field", type: :nominal)
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
 
 for field <- fields do
   %{
@@ -171,10 +225,22 @@ end
 <!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
+IEx.Helpers.r(RideAlong.EtaCalculator.Training)
 for field <- fields do
-  Training.grouped_accuracy(df, :time, :arrival_time, field, accuracy) |> Kino.DataTable.new(name: field)
+  df
+  |> Training.grouped_accuracy(:time, :arrival_time, field, accuracy) 
+  |> DF.select([:category, :accuracy, :size, :accurate_count, :early_count, :late_count])
+  |> Kino.DataTable.new(name: field)
 end
 |> Kino.Layout.grid(columns: 2)
+```
+
+```elixir
+df
+|> DF.mutate(diff: Training.diff_seconds(arrival_time, model))
+|> DF.filter(abs(diff) >= 2700 and Training.diff_seconds(arrival_time, time) < 1800)
+|> DF.select([:time, :trip_id, :route, :status, :arrival_time, :promise, :pick, :model, :ors_eta])
+|> Kino.DataTable.new()
 ```
 
 ## Model Parameter Tuning
@@ -186,17 +252,22 @@ best_result = %{
   ratio: 0.0
 }
 
-df =
+validate_x =
   df
-  |> DF.slice(0..(validation_size - 1))
+  |> DF.select(training_fields)
+  |> Nx.stack(axis: 1)
+
+validate_y = DF.select(df, :ors_to_add) |> Nx.concatenate()
 
 results =
-  for max_depth <- [9],
-      num_boost_rounds <- 1600..2000//100 do
+  for max_depth <- [8],
+      num_boost_rounds <- [50] do
     new_opts = [
       max_depth: max_depth,
       num_boost_rounds: num_boost_rounds,
-      seed: seed
+      seed: seed,
+      early_stopping_rounds: 20,
+      evals: [{validate_x, validate_y, "validate"}]
     ]
 
     opts = Keyword.merge(Training.training_params(), new_opts)
@@ -240,4 +311,4 @@ Vl.new()
 |> Vl.encode_field(:x, "model_size", type: :quantitative)
 ```
 
-<!-- livebook:{"offset":5755,"stamp":{"token":"XCP.pdCWXtHeMmJ5i8soFsc1rhDSqC1EgryvR2RCS9iL6PvzTPhL5gOHnQH4igsi6kqQIIqgz7IsZeHg47gn7EBCiRfiBuMcwOcvG9um5Q","version":2}} -->
+<!-- livebook:{"offset":8048,"stamp":{"token":"XCP.uu7bSEKcZlvF3sDOBNJzvNOV9KR4WsjhATC0ps3NJWNMrEcCLqGL4NiaQrjaGaadgdOLh3kkrp6ezuNpc7qj2Ny8sL2JKut8sZPUug","version":2}} -->

@@ -15,11 +15,14 @@ if Mix.env() in [:dev, :test] do
         objective: :reg_absoluteerror,
         eval_metric: :mae,
         tree_method: :approx,
-        max_depth: 9,
-        num_boost_rounds: 4000,
+        seed: 1_111_534_962,
+        max_depth: 7,
+        num_boost_rounds: 30,
+        max_bin: 512,
         subsample: 0.75,
         colsample_bynode: 0.9,
-        learning_rate: 0.3,
+        learning_rate: 0.01,
+        verbose_eval: false,
         feature_name: Model.feature_names()
       ]
     end
@@ -32,6 +35,7 @@ if Mix.env() in [:dev, :test] do
         time_of_day: diff_seconds(time, noon),
         day_of_week: Series.day_of_week(noon),
         ors_duration: Series.fill_missing(ors_duration, -1),
+        vehicle_speed: Series.fill_missing(vehicle_speed, -1),
         promise_duration: diff_seconds(promise, time),
         pick_duration: diff_seconds(pick, time),
         actual_duration: diff_seconds(arrival_time, time),
@@ -44,7 +48,7 @@ if Mix.env() in [:dev, :test] do
     end
 
     def predict_from_data_frame(model, df) do
-      slice_size = 20_000
+      slice_size = 25_000
       size = Series.size(df[:time])
       slices = div(size, slice_size)
 
@@ -68,7 +72,8 @@ if Mix.env() in [:dev, :test] do
     end
 
     def arrival_times(df) do
-      grouped = DF.group_by(df, :trip_id)
+      group = [:trip_id, :route]
+      grouped = DF.group_by(df, group)
 
       pure_arrival_times =
         grouped
@@ -85,19 +90,23 @@ if Mix.env() in [:dev, :test] do
         |> DF.mutate(time: time - load_time)
         |> DF.summarise(
           pickup_promise_time: Series.min(promise),
-          pickup_arrival_time: Series.min(time)
+          pickup_arrival_time: Series.min(time),
+          pickup_arrival_adept: Series.min(pickup_arrival)
         )
 
       arrival_times =
         df
-        |> DF.distinct([:trip_id])
-        |> DF.join(pure_arrival_times, how: :left, on: :trip_id)
-        |> DF.join(pickup_arrival_times, how: :left, on: :trip_id)
+        |> DF.distinct(group)
+        |> DF.join(pure_arrival_times, how: :left, on: group)
+        |> DF.join(pickup_arrival_times, how: :left, on: group)
         |> DF.mutate(
           promise_time: select(is_nil(pure_promise_time), pickup_promise_time, pure_promise_time),
           arrival_time: select(is_nil(pure_arrival_time), pickup_arrival_time, pure_arrival_time)
         )
-        |> DF.mutate(arrival_duration: diff_seconds(arrival_time, promise_time))
+        |> DF.mutate(
+          arrival_duration: diff_seconds(arrival_time, promise_time),
+          pickup_arrival_adept_duration: diff_seconds(arrival_time, pickup_arrival_adept)
+        )
         |> DF.mutate(on_time?: arrival_duration < 900)
 
       on_time_performance =
@@ -109,8 +118,11 @@ if Mix.env() in [:dev, :test] do
       IO.puts("On-time performance: #{on_time_performance}%")
 
       arrival_times
-      |> DF.select([:trip_id, :arrival_time])
-      |> DF.filter(not is_nil(arrival_time))
+      |> DF.filter(
+        not is_nil(arrival_time) and
+          abs(pickup_arrival_adept_duration) <= 60
+      )
+      |> DF.select(group ++ [:arrival_time])
     end
 
     def overall_accuracy(df, time_col, actual_col, prediction_col, accuracy) do
@@ -123,11 +135,13 @@ if Mix.env() in [:dev, :test] do
       df
       |> DF.distinct([time_col, actual_col, prediction_col])
       |> with_accuracy(time_col, actual_col, prediction_col, accuracy)
-      |> DF.filter(category != "30+")
+      |> DF.filter(category != "15+" and category != "30+" and category != "40+")
       |> DF.group_by(:category)
       |> DF.summarise(
         size: size(accurate?),
-        accurate_count: sum(accurate?)
+        accurate_count: sum(accurate?),
+        early_count: sum(early?),
+        late_count: sum(late?)
       )
       |> DF.mutate(accuracy: round(100 * cast(accurate_count, {:u, 32}) / size, 1))
       |> DF.ungroup()
@@ -142,7 +156,8 @@ if Mix.env() in [:dev, :test] do
       df
       |> DF.put(:diff, diff_seconds)
       |> DF.put(:category, binned[:category])
-      |> DF.mutate(accurate?: diff >= ^binned[:allowed_early] and diff <= ^binned[:allowed_late])
+      |> DF.mutate(early?: diff < ^binned[:allowed_early], late?: diff > ^binned[:allowed_late])
+      |> DF.mutate(accurate?: not early? and not late?)
     end
 
     def accuracy(series) do

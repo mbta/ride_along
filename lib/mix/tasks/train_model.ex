@@ -4,15 +4,13 @@ defmodule Mix.Tasks.TrainModel do
 
   Options:
   --validate: whether to return a validation score instead of fully training the model
-  --seed <integer>: value to use for randomiziation (default: randomized)
+  --seed <integer>: value to use for randomization (or 0 to pick a random one)
+  --max-depth <integer>: how deep to create trees
+  --num-boost-rounds: how many rounds to boost
+  --num-parallel-trees: how many trees to make during each iteration
+  --tree-method: method for generating trees (approx, hist, exact)
 
-  Splunk query:
-  ```
-  index=<index> EtaMonitor time pick_lat status!=closed route > 0
-  | sort 0 route, -time
-  | eval noon=strftime(_time - 10800, "%Y-%m-%dT12:00:00%z")
-  | table time,trip_id,route,status,noon,promise,pick,ors_duration,load_time,pick_lat,pick_lon,pick_order
-  ```
+  There's a Splunk report (EtaMonitor results) which can generate a CSV in the right format.
   """
 
   require Explorer.DataFrame, as: DF
@@ -28,6 +26,7 @@ defmodule Mix.Tasks.TrainModel do
           seed: :integer,
           max_depth: :integer,
           num_boost_rounds: :integer,
+          num_parallel_trees: :integer,
           tree_method: :string
         ]
       )
@@ -37,7 +36,7 @@ defmodule Mix.Tasks.TrainModel do
       |> DF.from_csv!(
         parse_dates: true,
         nil_values: [""],
-        dtypes: %{status: :category}
+        dtypes: %{status: :category, vehicle_speed: {:f, 32}}
       )
       |> DF.filter(route > 0)
 
@@ -45,24 +44,27 @@ defmodule Mix.Tasks.TrainModel do
 
     df =
       df
-      |> DF.join(arrival_times, on: "trip_id")
+      |> DF.join(arrival_times, on: [:trip_id, :route])
       |> populate()
 
     training_fields = Model.feature_names()
 
-    seed = parsed[:seed] || Enum.random(0..(Integer.pow(2, 32) - 1))
-
-    df = DF.shuffle(df, seed: seed)
+    df = DF.sort_by(df, asc: time)
 
     size = Series.size(df[:time])
-    validation_size = min(trunc(size * 0.9), 10_000)
+    validation_size = min(trunc(size * 0.1), 25_000)
+    train_size = size - validation_size
 
     train_df =
       if parsed[:validate] do
-        DF.slice(df, validation_size..-1//1)
+        DF.slice(df, 0..(train_size - 1))
       else
         df
       end
+
+    validate_df =
+      df
+      |> DF.slice(train_size..size)
 
     x =
       train_df
@@ -71,15 +73,20 @@ defmodule Mix.Tasks.TrainModel do
 
     y = DF.select(train_df, :ors_to_add) |> Nx.concatenate()
 
-    opts =
-      Keyword.merge(
-        training_params(),
-        [seed: seed] ++ training_params_from_opts(parsed)
-      )
+    opts = training_params_from_opts(parsed, training_params(), validate_df)
 
-    IO.puts("About to train (using seed #{seed})...")
+    IO.puts("About to train...")
     {timing, model} = :timer.tc(EXGBoost, :train, [x, y, opts], :millisecond)
+
+    model =
+      if model.best_iteration < opts[:num_boost_rounds] do
+        %{model | best_iteration: model.best_iteration - opts[:early_stopping_rounds] - 1}
+      else
+        model
+      end
+
     IO.puts("Trained! (in #{Float.round(timing / 1000.0, 1)}s)")
+    IO.puts(inspect(model))
 
     size_mb =
       Float.round(byte_size(EXGBoost.dump_model(model, format: :ubj)) / 1024.0 / 1024.0, 1)
@@ -87,26 +94,21 @@ defmodule Mix.Tasks.TrainModel do
     IO.puts("Model size: #{size_mb} MB")
 
     if parsed[:validate] do
+      IO.puts("Training options:")
+
+      opts
+      |> Keyword.drop([:evals, :early_stopping_rounds, :feature_name])
+      |> Keyword.put(:num_boost_rounds, model.best_iteration)
+      |> inspect(pretty: true)
+      |> IO.puts()
+
       IO.puts("Validating model...")
 
-      validate_df =
-        df
-        |> DF.slice(0..(validation_size - 1))
-
-      x =
-        validate_df
-        |> DF.select(training_fields)
-        |> Nx.stack(axis: 1)
-
-      pred = EXGBoost.predict(model, x, feature_name: training_fields)
+      pred = predict_from_data_frame(model, validate_df)
 
       overall =
         (validate_df
-         |> DF.put(:add, Nx.as_type(pred, :s32))
-         |> DF.mutate(
-           regression:
-             time + %Duration{value: 1_000, precision: :millisecond} * (add + ors_duration)
-         )
+         |> DF.mutate(regression: time + %Duration{value: 1_000, precision: :millisecond} * ^pred)
          |> overall_accuracy(:time, :arrival_time, :regression, &accuracy/1))[
           :accuracy
         ][0]
@@ -122,18 +124,40 @@ defmodule Mix.Tasks.TrainModel do
     :ok
   end
 
-  defp training_params_from_opts(opts) do
+  defp training_params_from_opts(opts, acc, validate_df) do
     _tree_methods = [:exact, :approx, :hist]
 
-    Enum.reduce(opts, [], fn
+    Enum.reduce(opts, acc, fn
+      {:seed, 0}, acc ->
+        Keyword.put(acc, :seed, Enum.random(0..(Integer.pow(2, 32) - 1)))
+
+      {:seed, seed}, acc ->
+        Keyword.put(acc, :seed, seed)
+
       {:num_boost_rounds, rounds}, acc ->
-        [num_boost_rounds: rounds] ++ acc
+        Keyword.put(acc, :num_boost_rounds, rounds)
+
+      {:num_parallel_trees, rounds}, acc ->
+        Keyword.put(acc, :num_parallel_trees, rounds)
 
       {:max_depth, depth}, acc ->
-        [max_depth: depth] ++ acc
+        Keyword.put(acc, :max_depth, depth)
 
       {:tree_method, method}, acc ->
-        [tree_method: String.to_existing_atom(method)] ++ acc
+        Keyword.put(acc, :tree_method, String.to_existing_atom(method))
+
+      {:validate, _}, acc ->
+        x =
+          validate_df
+          |> DF.select(Model.feature_names())
+          |> Nx.stack(axis: 1)
+
+        y = validate_df |> DF.select(:ors_to_add) |> Nx.concatenate()
+
+        Keyword.merge(acc,
+          early_stopping_rounds: 10,
+          evals: [{x, y, "validate"}]
+        )
 
       _, acc ->
         acc
