@@ -27,7 +27,10 @@ RUN mix do deps.get --only prod
 COPY config/config.exs config/
 COPY config/prod.exs config/
 
-RUN mix deps.compile
+RUN <<EOT
+mix deps.compile
+mix eval "Application.ensure_all_started(:tzdata); Tzdata.DataBuilder.load_and_save_table()"
+EOT
 
 FROM node:${NODE_VERSION}-${DEBIAN_RELEASE} AS assets-builder
 
