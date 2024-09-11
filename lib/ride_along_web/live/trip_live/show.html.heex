@@ -139,21 +139,21 @@
         )
       }
     />
-    <.labeled_field
-      :if={@route}
-      title={gettext("ETA")}
-      value={DateTime.add(@vehicle.timestamp, trunc(@route.duration * 1000), :millisecond)}
-    />
+    <.labeled_field :if={@route} title={gettext("ETA")} value={@eta} />
     <.labeled_field :if={@route} title={gettext("Duration (s)")} value={@route.duration} />
+    <.labeled_field :if={@route} title={gettext("Route bearing")} value={@route.bearing} />
     <.labeled_field title={gettext("Last updated")} value={@vehicle.timestamp} />
     <.labeled_field title={gettext("Pick order")} value={@trip.pick_order} />
     <.labeled_field title={gettext("Last pick")} value={@vehicle.last_pick} />
     <.labeled_field title={gettext("Last drop")} value={@vehicle.last_drop} />
     <pre>
-      <%= inspect(@trip) %>
+      <%= inspect(@trip, pretty: true) %>
     </pre>
     <pre>
-      <%= inspect(@vehicle) %>
+      <%= inspect(@vehicle, pretty: true) %>
+    </pre>
+    <pre :if={@route}>
+      <%= inspect(@route, pretty: true) %>
     </pre>
   </div>
 

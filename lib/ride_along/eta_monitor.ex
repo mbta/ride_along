@@ -140,7 +140,7 @@ defmodule RideAlong.EtaMonitor do
     route =
       with true <- status in [:enroute, :waiting],
            %{} <- vehicle,
-           {:ok, route} <- RideAlong.OpenRouteService.directions(trip, vehicle) do
+           {:ok, route} <- RideAlong.OpenRouteService.directions(vehicle, trip) do
         route
       else
         _ -> nil
