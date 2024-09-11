@@ -23,6 +23,7 @@ defmodule Mix.Tasks.TrainModel do
       OptionParser.parse(opts,
         strict: [
           validate: :boolean,
+          replan: :boolean,
           seed: :integer,
           max_depth: :integer,
           num_boost_rounds: :integer,
@@ -42,10 +43,17 @@ defmodule Mix.Tasks.TrainModel do
 
     arrival_times = arrival_times(df)
 
+    df = DF.join(df, arrival_times, on: [:trip_id, :route])
+
     df =
-      df
-      |> DF.join(arrival_times, on: [:trip_id, :route])
-      |> populate()
+      if parsed[:replan] do
+        Application.ensure_all_started(:req)
+        recalculate_eta(df)
+      else
+        df
+      end
+
+    df = populate(df)
 
     training_fields = Model.feature_names()
 
@@ -162,5 +170,37 @@ defmodule Mix.Tasks.TrainModel do
       _, acc ->
         acc
     end)
+  end
+
+  defp recalculate_eta(df) do
+    empty = %{lat: nil, lon: nil}
+
+    new_cols =
+      df
+      |> DF.select([:pick_lat, :pick_lon, :vehicle_lat, :vehicle_lon])
+      |> DF.to_rows()
+      |> Task.async_stream(
+        fn row ->
+          source = %{lat: row["vehicle_lat"], lon: row["vehicle_lon"]}
+          destination = %{lat: row["pick_lat"], lon: row["pick_lon"]}
+
+          with true <- source != empty,
+               true <- destination != empty,
+               {:ok, route} <- RideAlong.OpenRouteService.directions(source, destination) do
+            %{ors_duration: route.duration}
+          else
+            _ ->
+              %{ors_duration: -1}
+          end
+        end,
+        max_concurrency: System.schedulers_online() * 4,
+        ordered: true
+      )
+      |> Enum.map(fn {:ok, val} -> val end)
+      |> DF.new()
+
+    df
+    |> DF.discard([:ors_duration])
+    |> DF.concat_columns(new_cols)
   end
 end
