@@ -16,7 +16,7 @@ defmodule RideAlong.EtaCalculator.Training do
       tree_method: :approx,
       seed: 1_111_534_962,
       max_depth: 7,
-      num_boost_rounds: 188,
+      num_boost_rounds: 94,
       max_bin: 512,
       subsample: 0.75,
       colsample_bynode: 0.9,

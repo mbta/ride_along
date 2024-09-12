@@ -19,7 +19,7 @@ defmodule Mix.Tasks.TrainModel do
   import RideAlong.EtaCalculator.Training
 
   def run(opts) do
-    {parsed, [file_name | _], _} =
+    {parsed, [_ | _] = file_names, _} =
       OptionParser.parse(opts,
         strict: [
           validate: :boolean,
@@ -32,33 +32,40 @@ defmodule Mix.Tasks.TrainModel do
         ]
       )
 
-    df =
-      file_name
-      |> DF.from_csv!(
-        parse_dates: true,
-        nil_values: [""],
-        dtypes: %{status: :category, vehicle_speed: {:f, 32}}
-      )
-      |> DF.filter(route > 0)
-
-    df =
-      if parsed[:replan] do
-        Application.ensure_all_started(:req)
-        df = recalculate_eta(df)
-        IO.puts("Replanned; writing data back to #{file_name}...")
-        DF.to_csv!(df, file_name)
-        df
-      else
-        df
-      end
-
-    arrival_times = arrival_times(df)
-
-    df = DF.join(df, arrival_times, on: [:trip_id, :route])
-
-    df = populate(df)
-
     training_fields = Model.feature_names()
+
+    df =
+      file_names
+      |> Enum.map(fn file_name ->
+        df =
+          file_name
+          |> DF.from_csv!(
+            parse_dates: true,
+            nil_values: [""],
+            dtypes: %{status: :category, vehicle_speed: {:f, 32}}
+          )
+          |> DF.filter(route > 0)
+
+        df =
+          if parsed[:replan] do
+            Application.ensure_all_started(:req)
+            df = recalculate_eta(df)
+            IO.puts("Replanned; writing data back to #{file_name}...")
+            DF.to_csv!(df, file_name)
+            df
+          else
+            df
+          end
+
+        arrival_times = arrival_times(df)
+
+        df = DF.join(df, arrival_times, on: [:trip_id, :route])
+
+        df
+        |> populate()
+        |> DF.select(training_fields ++ [:time, :ors_to_add, :arrival_time])
+      end)
+      |> DF.concat_rows()
 
     df = DF.sort_by(df, asc: time)
 
