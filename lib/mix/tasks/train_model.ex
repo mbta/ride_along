@@ -41,17 +41,20 @@ defmodule Mix.Tasks.TrainModel do
       )
       |> DF.filter(route > 0)
 
-    arrival_times = arrival_times(df)
-
-    df = DF.join(df, arrival_times, on: [:trip_id, :route])
-
     df =
       if parsed[:replan] do
         Application.ensure_all_started(:req)
-        recalculate_eta(df)
+        df = recalculate_eta(df)
+        IO.puts("Replanned; writing data back to #{file_name}...")
+        DF.to_csv!(df, file_name)
+        df
       else
         df
       end
+
+    arrival_times = arrival_times(df)
+
+    df = DF.join(df, arrival_times, on: [:trip_id, :route])
 
     df = populate(df)
 
@@ -187,10 +190,14 @@ defmodule Mix.Tasks.TrainModel do
           with true <- source != empty,
                true <- destination != empty,
                {:ok, route} <- RideAlong.OpenRouteService.directions(source, destination) do
-            %{ors_duration: route.duration}
+            %{
+              ors_duration: route.duration,
+              ors_heading: route.bearing,
+              ors_distance: route.distance
+            }
           else
             _ ->
-              %{ors_duration: -1}
+              %{ors_duration: -1, ors_heading: -1, ors_distance: -1}
           end
         end,
         max_concurrency: System.schedulers_online() * 4,
@@ -200,7 +207,7 @@ defmodule Mix.Tasks.TrainModel do
       |> DF.new()
 
     df
-    |> DF.discard([:ors_duration])
+    |> DF.discard([:ors_duration, :ors_heading, :ors_distance])
     |> DF.concat_columns(new_cols)
   end
 end

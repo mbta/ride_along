@@ -7,12 +7,14 @@ defmodule RideAlong.EtaCalculator.Model do
     "route",
     "promise_duration",
     "pick_duration",
+    "pick_offset",
     "time_of_day",
     "day_of_week",
     "pick_lat",
     "pick_lon",
     "pick_order",
-    "vehicle_speed"
+    "vehicle_speed",
+    "ors_distance"
   ]
   def start_link(opts) do
     if opts[:start] do
@@ -27,11 +29,11 @@ defmodule RideAlong.EtaCalculator.Model do
   end
 
   def predict(trip, vehicle, route, now) do
-    ors_duration =
+    {ors_duration, ors_distance} =
       if route do
-        route.duration
+        {route.duration, route.distance}
       else
-        -1
+        {-1, -1}
       end
 
     vehicle_speed =
@@ -44,20 +46,25 @@ defmodule RideAlong.EtaCalculator.Model do
       end
 
     noon = %{now | hour: 12, minute: 0, second: 0, microsecond: {0, 0}}
+    promise_duration = DateTime.diff(trip.promise_time, now, :second)
+    pick_duration = DateTime.diff(trip.pick_time, now, :second)
+    pick_offset = pick_duration - promise_duration
 
     tensor =
       Nx.tensor([
         [
           ors_duration,
           trip.route_id,
-          DateTime.diff(trip.promise_time, now, :second),
-          DateTime.diff(trip.pick_time, now, :second),
+          promise_duration,
+          pick_duration,
+          pick_offset,
           DateTime.diff(now, noon, :second),
           Date.day_of_week(noon, :monday),
           Decimal.to_float(trip.lat),
           Decimal.to_float(trip.lon),
           trip.pick_order,
-          vehicle_speed
+          vehicle_speed,
+          ors_distance
         ]
       ])
 

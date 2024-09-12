@@ -16,11 +16,11 @@ defmodule RideAlong.EtaCalculator.Training do
       tree_method: :approx,
       seed: 1_111_534_962,
       max_depth: 7,
-      num_boost_rounds: 30,
+      num_boost_rounds: 188,
       max_bin: 512,
       subsample: 0.75,
       colsample_bynode: 0.9,
-      learning_rate: 0.01,
+      learning_rates: fn _ -> 0.1 end,
       verbose_eval: false,
       feature_name: Model.feature_names()
     ]
@@ -38,10 +38,19 @@ defmodule RideAlong.EtaCalculator.Training do
       promise_duration: diff_seconds(promise, time),
       pick_duration: diff_seconds(pick, time),
       actual_duration: diff_seconds(arrival_time, time),
-      waiting?: select(status == "waiting", 1, 0)
+      waiting?: select(status == "waiting", 1, 0),
+      ors_distance: Series.fill_missing(ors_distance, -1)
     )
     |> DF.filter(actual_duration < 7200)
     |> DF.mutate(
+      pick_offset: pick_duration - promise_duration,
+      heading_offset:
+        select(
+          not is_nil(ors_heading) and not is_nil(vehicle_heading) and ors_heading != -1 and
+            vehicle_heading != -1,
+          abs(ors_heading - vehicle_heading),
+          -1
+        ),
       ors_to_add: select(actual_duration > ors_duration, actual_duration - ors_duration, 0)
     )
   end

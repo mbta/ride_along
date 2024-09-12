@@ -32,7 +32,7 @@ defmodule RideAlong.EtaCalculatorTest do
 
         route =
           if duration do
-            %Route{duration: duration * 60}
+            %Route{duration: duration * 60, distance: 1.0}
           else
             nil
           end
