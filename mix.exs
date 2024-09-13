@@ -55,6 +55,7 @@ defmodule RideAlong.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
+      {:jsonapi, "~> 1.8"},
       {:bandit, "~> 1.2"},
       {:req, "~> 0.4"},
       {:tzdata, "~> 1.1"},

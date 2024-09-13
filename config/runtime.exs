@@ -135,3 +135,8 @@ with <<webhooks_json::binary>> <- System.get_env("WEBHOOKS"),
      {:ok, webhooks} <- Jason.decode(webhooks_json) do
   config :ride_along, RideAlong.WebhookPublisher, webhooks: webhooks
 end
+
+with <<api_keys_json::binary>> <- System.get_env("API_KEYS"),
+     {:ok, %{} = api_keys} <- Jason.decode(api_keys_json) do
+  config :ride_along, RideAlongWeb.Api, api_keys: api_keys
+end
