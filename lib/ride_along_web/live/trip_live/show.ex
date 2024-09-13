@@ -28,7 +28,8 @@ defmodule RideAlongWeb.TripLive.Show do
       Logger.metadata(
         token: params["token"],
         trip_id: trip.trip_id,
-        route_id: trip.route_id
+        route_id: trip.route_id,
+        client_id: trip.client_id
       )
 
       trip =
