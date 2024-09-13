@@ -16,7 +16,13 @@ defmodule RideAlong.Singleton do
   end
 
   def singleton?(name \\ @default_name) do
-    :persistent_term.get(name, true)
+    case :global.whereis_name(name) do
+      pid when is_pid(pid) ->
+        node(pid) == node()
+
+      :undefined ->
+        true
+    end
   end
 
   @impl GenServer
@@ -31,7 +37,7 @@ defmodule RideAlong.Singleton do
     result =
       case :global.register_name(name, self(), &:global.random_notify_name/3) do
         :yes ->
-          set_singleton(name, true)
+          log_singleton(true)
           :hibernate
 
         :no ->
@@ -57,17 +63,18 @@ defmodule RideAlong.Singleton do
       :undefined ->
         {:continue, :register}
 
+      pid when pid == self() ->
+        log_singleton(true)
+        :hibernate
+
       pid ->
         Process.monitor(pid)
-        set_singleton(name, false)
+        log_singleton(false)
         :hibernate
     end
   end
 
-  defp set_singleton(name, value) do
-    if value != singleton?(name) do
-      :persistent_term.put(name, value)
-      Logger.info("#{__MODULE__} node=#{inspect(node())} singleton=#{value}")
-    end
+  defp log_singleton(value) do
+    Logger.info("#{__MODULE__} node=#{inspect(node())} singleton=#{value}")
   end
 end
