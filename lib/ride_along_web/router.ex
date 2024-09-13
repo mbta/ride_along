@@ -22,6 +22,12 @@ defmodule RideAlongWeb.Router do
     plug :preconnect, "https://cdn.mbta.com"
   end
 
+  pipeline :api do
+    plug RideAlongWeb.Api
+    plug JSONAPI.EnsureSpec
+    plug JSONAPI.UnderscoreParameters
+  end
+
   pipeline :admin do
     plug RideAlongWeb.AuthManager, roles: ["admin"]
   end
@@ -41,6 +47,12 @@ defmodule RideAlongWeb.Router do
     pipe_through [:shared, :browser, :preconnect_cdn]
 
     live "/:token", Show
+  end
+
+  scope "/api", RideAlongWeb.Api do
+    pipe_through [:shared, :api]
+
+    get("/trips/:trip_id", TripController, :show)
   end
 
   scope "/auth", RideAlongWeb do

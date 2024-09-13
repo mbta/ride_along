@@ -26,6 +26,8 @@ config :ride_along, RideAlongWeb.Endpoint,
 config :ride_along, RideAlongWeb.PageController,
   redirect_to: "https://www.mbta.com/accessibility/the-ride"
 
+config :ride_along, RideAlongWeb.Api, api_keys: %{}
+
 config :ride_along, RideAlong.MqttConnection,
   broker_configs: [],
   broker_client_prefix: "ride_along"
@@ -97,6 +99,9 @@ config :phoenix,
 config :elixir, :time_zone_database, Tzdata.TimeZoneDatabase
 
 config :ehmon, :report_mf, {:ehmon, :info_report}
+
+# transform JSON:API responses into camelCase
+config :jsonapi, field_transformation: :camelize, namespace: "/api"
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
