@@ -158,7 +158,7 @@ defmodule RideAlong.EtaCalculator.Training do
 
   def with_accuracy(df, time_col, actual_col, prediction_col, accuracy) do
     time_ahead_seconds = diff_seconds(df[actual_col], df[time_col])
-    diff_seconds = diff_seconds(df[prediction_col], df[actual_col])
+    diff_seconds = diff_seconds(df[actual_col], df[prediction_col])
     binned = accuracy.(time_ahead_seconds)
 
     df
