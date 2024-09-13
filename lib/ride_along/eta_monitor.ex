@@ -12,25 +12,29 @@ defmodule RideAlong.EtaMonitor do
   alias RideAlong.Adept
   alias RideAlong.EtaCalculator.Training
 
+  @default_name __MODULE__
   def start_link(opts) do
     if opts[:start] do
-      GenServer.start_link(__MODULE__, [])
+      name = Keyword.get(opts, :name, @default_name)
+      GenServer.start_link(__MODULE__, name, name: name)
     else
       :ignore
     end
   end
 
-  defstruct trip_date_to_key: %{}, trip_predictions: %{}
+  defstruct [:name, trip_date_to_key: %{}, trip_predictions: %{}]
 
   @type trip_date :: {Adept.Trip.id(), Date.t()}
   @type key :: {pick_time :: DateTime.t(), status :: Adept.Trip.status()}
 
   @impl GenServer
-  def init(_) do
+  def init(name) do
     :timer.send_interval(86_400_000, :clean_state)
-    state = update_trips(%__MODULE__{})
+    state = update_trips(%__MODULE__{name: name})
     RideAlong.PubSub.subscribe("trips:updated")
     RideAlong.PubSub.subscribe("vehicle:all")
+
+    :net_kernel.monitor_nodes(true)
 
     {:ok, state}
   end
@@ -62,6 +66,41 @@ defmodule RideAlong.EtaMonitor do
   def handle_info(:clean_state, state) do
     state = clean_state(state)
 
+    {:noreply, state}
+  end
+
+  def handle_info({:nodeup, node}, state) do
+    Process.send({state.name, node}, {:request_state, self()}, [:noconnect])
+
+    {:noreply, state}
+  end
+
+  def handle_info({:nodedown, _node}, state) do
+    {:noreply, state}
+  end
+
+  def handle_info({:request_state, pid}, state) do
+    Process.send(pid, {:state_response, {self(), node()}, state}, [])
+
+    {:noreply, state}
+  end
+
+  def handle_info({:state_response, from, remote_state}, state) do
+    state = %{
+      state
+      | trip_date_to_key:
+          Map.merge(Map.get(remote_state, :trip_date_to_key, %{}), state.trip_date_to_key),
+        trip_predictions:
+          Map.merge(
+            Map.get(remote_state, :trip_predictions, %{}),
+            state.trip_predictions,
+            fn _key, l1, l2 ->
+              Enum.uniq(l1 ++ l2)
+            end
+          )
+    }
+
+    Logger.info("#{__MODULE__} received state update from #{inspect(from)}")
     {:noreply, state}
   end
 

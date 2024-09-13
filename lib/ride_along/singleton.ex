@@ -44,7 +44,7 @@ defmodule RideAlong.Singleton do
   @impl GenServer
   def handle_info({:global_name_conflict, other}, name) do
     Process.monitor(other)
-    set_singleton(name, false)
+    log_singleton(false)
     {:noreply, name, :hibernate}
   end
 
