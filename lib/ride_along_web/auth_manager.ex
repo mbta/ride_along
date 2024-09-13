@@ -14,10 +14,16 @@ defmodule RideAlongWeb.AuthManager do
     if authenticated?(conn) and Enum.all?(required_roles, &has_role?(conn, &1)) do
       conn
     else
-      conn
-      |> put_session(:redirect_to, request_url(conn))
-      |> redirect(to: ~p[/auth/keycloak])
-      |> halt()
+      conn =
+        if authenticated?(conn) do
+          redirect(conn, to: ~p[/])
+        else
+          conn
+          |> put_session(:redirect_to, request_url(conn))
+          |> redirect(to: ~p[/auth/keycloak])
+        end
+
+      halt(conn)
     end
   end
 
