@@ -67,7 +67,7 @@ defmodule Mix.Tasks.TrainModel do
       end)
       |> DF.concat_rows()
 
-    df = DF.sort_by(df, asc: time)
+    df = df |> DF.sort_by(asc: time) |> DF.distinct()
 
     size = Series.size(df[:time])
     validation_size = min(trunc(size * 0.1), 25_000)
@@ -75,14 +75,14 @@ defmodule Mix.Tasks.TrainModel do
 
     train_df =
       if parsed[:validate] do
-        DF.slice(df, 0..(train_size - 1))
+        DF.head(df, train_size - 1)
       else
         df
       end
 
     validate_df =
       df
-      |> DF.slice(train_size..size)
+      |> DF.tail(validation_size)
 
     x =
       train_df
