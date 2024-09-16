@@ -75,19 +75,12 @@ defmodule RideAlong.EtaCalculator.Model do
 
     to_add = trunc(predicted * 1000)
 
-    origin_time =
-      if vehicle && vehicle.timestamp do
-        vehicle.timestamp
-      else
-        now
-      end
-
-    DateTime.add(origin_time, to_add, :millisecond)
+    DateTime.add(now, to_add, :millisecond)
   end
 
-  def predict_from_tensor(model, tensor) do
+  def predict_from_tensor(model, tensor, opts \\ []) do
     model
-    |> EXGBoost.predict(tensor, feature_name: @feature_names)
+    |> EXGBoost.predict(tensor, Keyword.merge(opts, feature_name: @feature_names))
     |> Nx.max(0)
     |> Nx.add(Nx.max(tensor[[.., 0]], 0))
     |> Nx.squeeze()

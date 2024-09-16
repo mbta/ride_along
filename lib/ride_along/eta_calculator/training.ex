@@ -55,7 +55,7 @@ defmodule RideAlong.EtaCalculator.Training do
     )
   end
 
-  def predict_from_data_frame(model, df) do
+  def predict_from_data_frame(model, df, opts \\ []) do
     slice_size = 25_000
     size = Series.size(df[:time])
     slices = div(size, slice_size)
@@ -72,7 +72,8 @@ defmodule RideAlong.EtaCalculator.Training do
         df
         |> DF.select(Model.feature_names())
         |> DF.slice((slice * slice_size)..((slice + 1) * slice_size - 1))
-        |> Nx.stack(axis: 1)
+        |> Nx.stack(axis: 1),
+        opts
       )
       |> Series.from_tensor()
     end
