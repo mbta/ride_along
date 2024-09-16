@@ -255,7 +255,12 @@ defmodule RideAlong.EtaMonitor do
 
           predictions =
             for {prediction_time, ^route_id, pick, calculated} <- predictions do
-              %{arrival_time: time, time: prediction_time, pick: pick, calculated: calculated}
+              %{
+                arrival_time: shift_to_utc!(time),
+                time: shift_to_utc!(prediction_time),
+                pick: shift_to_utc!(pick),
+                calculated: shift_to_utc!(calculated)
+              }
             end
 
           if predictions != [] do
@@ -288,6 +293,12 @@ defmodule RideAlong.EtaMonitor do
       end
 
     %{state | trip_predictions: trip_predictions}
+  end
+
+  defp shift_to_utc!(nil), do: nil
+
+  defp shift_to_utc!(%DateTime{} = dt) do
+    DateTime.shift_zone!(dt, "Etc/UTC")
   end
 
   @spec grouped_accuracy_rows(DF.t()) :: [map()]

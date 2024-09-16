@@ -18,7 +18,6 @@ defmodule RideAlong.EtaCalculator do
   def calculate(%Trip{} = trip, vehicle, route, %DateTime{} = now)
       when (is_nil(vehicle) or is_struct(vehicle, Vehicle)) and
              (is_nil(route) or is_struct(route, Route)) do
-
     case Trip.status(trip, vehicle, now) do
       status when status in [:enroute, :waiting] ->
         __MODULE__.Model.predict(trip, vehicle, route, now)
