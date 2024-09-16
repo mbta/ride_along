@@ -31,7 +31,7 @@ defmodule RideAlong.EtaCalculatorTest do
           end
 
         route =
-          if duration do
+          if has_vehicle? and duration do
             %Route{duration: duration * 60, distance: 1.0}
           else
             nil
@@ -42,13 +42,20 @@ defmodule RideAlong.EtaCalculatorTest do
         assert DateTime.compare(actual, @now) != :lt,
                "Assertion failed: predicted #{actual} is earlier than now #{@now}"
 
-        if duration do
+        if route do
           ors_eta = DateTime.add(@now, duration, :minute)
 
           assert DateTime.compare(actual, ors_eta) != :lt,
                  "Assertion failed: predicted #{actual} is earlier than OpenRouteService ETA #{ors_eta}"
         end
       end
+    end
+
+    test "always returns the pick time if the trip is closed" do
+      trip = Fixtures.trip_fixture()
+      vehicle = Fixtures.vehicle_fixture(%{last_drop: trip.drop_order + 1})
+
+      assert EtaCalculator.calculate(trip, vehicle, nil, @now) == trip.pick_time
     end
   end
 end
