@@ -89,7 +89,7 @@ defmodule RideAlongWeb.TripComponents do
   def hidden_image(assigns) do
     ~H"""
     <img
-      class="absolute -top-left -left-full"
+      class="absolute -top-full -left-full"
       aria-hidden="true"
       phx-track-static
       id={@id}
