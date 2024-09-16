@@ -186,8 +186,8 @@ defmodule RideAlong.SqlPublisher do
                (SELECT TOP 1 t.Id FROM dbo.TRIP t
                  WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.Status = 'S'
                  ORDER BY t.APtime1 DESC) AS LastDispatchArrivedTrip
-                  FROM dbo.MDCVEHICLELOCATION l 
-                  WHERE LocationDate >= @service_date AND 
+                  FROM dbo.MDCVEHICLELOCATION l
+                  WHERE LocationDate >= DATEADD(HOUR, -2, CURRENT_TIMESTAMP) AND
                   LocationDate = (SELECT max(l1.LocationDate) from dbo.MDCVEHICLELOCATION l1 where l1.RouteId = l.RouteId)
                   ORDER BY l.LocationDate DESC],
         parameters: %{service_date: service_date},
