@@ -243,6 +243,18 @@ df
 |> Kino.DataTable.new()
 ```
 
+```elixir
+IEx.Helpers.r(RideAlong.EtaCalculator.Training)
+
+df
+|> Training.with_accuracy(:time, :model, :pick, accuracy)
+|> DF.group_by(:category)
+|> DF.mutate(diff: Training.diff_seconds(arrival_time, model))
+|> DF.summarise(median: Series.median(diff), std: Series.standard_deviation(diff))
+|> DF.sort_by(asc: category)
+|> Kino.DataTable.new()
+```
+
 ## Model Parameter Tuning
 
 ```elixir

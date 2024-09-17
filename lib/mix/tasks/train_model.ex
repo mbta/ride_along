@@ -13,6 +13,7 @@ defmodule Mix.Tasks.TrainModel do
   There's a Splunk report (EtaMonitor results) which can generate a CSV in the right format.
   """
 
+  alias EXGBoost.Training.Callback
   require Explorer.DataFrame, as: DF
   alias Explorer.{Duration, Series}
   alias RideAlong.EtaCalculator.Model
@@ -45,6 +46,8 @@ defmodule Mix.Tasks.TrainModel do
             dtypes: %{status: :category, vehicle_speed: {:f, 32}}
           )
           |> DF.filter(route > 0)
+
+        IO.puts("Loaded #{file_name}.")
 
         df =
           if parsed[:replan] do
@@ -91,17 +94,11 @@ defmodule Mix.Tasks.TrainModel do
 
     y = DF.select(train_df, :ors_to_add) |> Nx.concatenate()
 
-    opts = training_params_from_opts(parsed, training_params(), validate_df)
+    opts =
+      training_params_from_opts(parsed, training_params(), validate_df)
 
     IO.puts("About to train...")
     {timing, model} = :timer.tc(EXGBoost, :train, [x, y, opts], :millisecond)
-
-    model =
-      if model.best_iteration < opts[:num_boost_rounds] do
-        %{model | best_iteration: model.best_iteration - opts[:early_stopping_rounds] - 1}
-      else
-        model
-      end
 
     IO.puts("Trained! (in #{Float.round(timing / 1000.0, 1)}s)")
     IO.puts(inspect(model))
@@ -115,14 +112,14 @@ defmodule Mix.Tasks.TrainModel do
       IO.puts("Training options:")
 
       opts
-      |> Keyword.drop([:evals, :early_stopping_rounds, :feature_name])
-      |> Keyword.put(:num_boost_rounds, model.best_iteration)
+      |> Keyword.drop([:learning_rates, :callbacks, :feature_name])
       |> inspect(pretty: true)
       |> IO.puts()
 
       IO.puts("Validating model...")
 
-      pred = predict_from_data_frame(model, validate_df)
+      pred =
+        predict_from_data_frame(model, validate_df, iteration_range: {0, model.best_iteration})
 
       overall =
         (validate_df
@@ -132,6 +129,13 @@ defmodule Mix.Tasks.TrainModel do
         ][0]
 
       IO.puts("Overall accuracy: #{overall}%")
+
+      if not is_nil(model.best_iteration) and
+           model.best_iteration != training_params()[:num_boost_rounds] do
+        IO.puts(
+          "Best iteration was #{model.best_iteration}: consider updating `num_boost_rounds` in Training."
+        )
+      end
     else
       EXGBoost.write_model(model, Model.model_path(), overwrite: true, format: :ubj)
       IO.puts("Wrote model!")
@@ -165,17 +169,25 @@ defmodule Mix.Tasks.TrainModel do
         Keyword.put(acc, :tree_method, String.to_existing_atom(method))
 
       {:validate, _}, acc ->
-        x =
-          validate_df
-          |> DF.select(Model.feature_names())
-          |> Nx.stack(axis: 1)
-
-        y = validate_df |> DF.select(:ors_to_add) |> Nx.concatenate()
-
-        Keyword.merge(acc,
-          early_stopping_rounds: 10,
-          evals: [{x, y, "validate"}]
-        )
+        acc
+        |> Keyword.put(:callbacks, [
+          Callback.new(
+            :after_iteration,
+            &callback_evaluate_accuracy/1,
+            :evaluate_accuracy,
+            %{
+              best_iteration: 0,
+              best_score: 0,
+              validate_df: validate_df,
+              verbose?: not not acc[:verbose_eval]
+            }
+          ),
+          Callback.new(
+            :after_training,
+            &callback_set_best_iteration/1,
+            :set_best_iteration
+          )
+        ])
 
       _, acc ->
         acc

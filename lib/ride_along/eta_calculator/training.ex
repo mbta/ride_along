@@ -3,6 +3,7 @@ defmodule RideAlong.EtaCalculator.Training do
   Private module to support model training.
   """
 
+  alias EXGBoost.Booster
   require Explorer.DataFrame, as: DF
   alias Explorer.{Duration, Series}
   alias RideAlong.EtaCalculator.Model
@@ -11,16 +12,16 @@ defmodule RideAlong.EtaCalculator.Training do
     [
       booster: :gbtree,
       device: :cuda,
-      objective: :reg_absoluteerror,
-      eval_metric: :mae,
+      objective: :reg_pseudohubererror,
       tree_method: :approx,
       seed: 1_111_534_962,
       max_depth: 7,
-      num_boost_rounds: 94,
+      num_boost_rounds: 9,
       max_bin: 512,
       subsample: 0.75,
       colsample_bynode: 0.9,
-      learning_rates: fn _ -> 0.1 end,
+      huber_slope: 2.5,
+      learning_rates: fn x -> x / 100 end,
       verbose_eval: false,
       feature_name: Model.feature_names()
     ]
@@ -282,6 +283,47 @@ defmodule RideAlong.EtaCalculator.Training do
     duration_to_seconds(Series.subtract(first, second))
   end
 
+  def callback_evaluate_accuracy(state) do
+    %{best_score: best_score, validate_df: validate_df, verbose?: verbose?} =
+      state.meta_vars.evaluate_accuracy
+
+    pred = predict_from_data_frame(state.booster, validate_df)
+
+    overall =
+      (validate_df
+       |> DF.mutate(regression: time + %Duration{value: 1_000, precision: :millisecond} * ^pred)
+       |> overall_accuracy(:time, :arrival_time, :regression, &accuracy/1))[
+        :accuracy
+      ][0]
+
+    if verbose? do
+      IO.puts("Iteration #{state.iteration}: #{overall}%")
+    end
+
+    if overall > best_score do
+      put_in(state.meta_vars.evaluate_accuracy, %{
+        state.meta_vars.evaluate_accuracy
+        | best_iteration: state.iteration,
+          best_score: overall
+      })
+    else
+      state
+    end
+  end
+
+  def callback_set_best_iteration(state) do
+    accuracy =
+      Map.take(state.meta_vars.evaluate_accuracy, [:best_score, :best_iteration])
+
+    booster =
+      state.booster
+      |> Map.merge(accuracy)
+      |> Booster.set_attr(accuracy)
+
+    %{state | booster: booster}
+  end
+
   # these functions work, but the DF.summarize/2 macro confuses Dialyzer
-  @dialyzer {:nowarn_function, overall_accuracy: 5, grouped_accuracy: 5}
+  @dialyzer {:nowarn_function,
+             overall_accuracy: 5, grouped_accuracy: 5, callback_evaluate_accuracy: 1}
 end

@@ -79,10 +79,12 @@ defmodule RideAlong.EtaCalculator.Model do
   end
 
   def predict_from_tensor(model, tensor, opts \\ []) do
+    original_prediction = Nx.max(tensor[[.., 0]], 0)
+
     model
     |> EXGBoost.predict(tensor, Keyword.merge(opts, feature_name: @feature_names))
     |> Nx.max(0)
-    |> Nx.add(Nx.max(tensor[[.., 0]], 0))
+    |> Nx.add(original_prediction)
     |> Nx.squeeze()
   end
 
