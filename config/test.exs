@@ -19,6 +19,8 @@ config :ride_along, RideAlongWeb.Api, api_keys: %{"testApiKey" => "Test API Key"
 # Print only warnings and errors during test
 config :logger, level: :warning
 
+config :logger, :console, level: :emergency
+
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
 
