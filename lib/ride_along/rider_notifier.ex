@@ -20,16 +20,16 @@ defmodule RideAlong.RiderNotifier do
   def start_link(opts) do
     if opts[:start] do
       name = Keyword.get(opts, :name, @default_name)
-      GenServer.start_link(__MODULE__, [], name: name)
+      GenServer.start_link(__MODULE__, opts, name: name)
     else
       :ignore
     end
   end
 
-  defstruct notified_trips: MapSet.new()
+  defstruct notified_trips: MapSet.new(), client_ids: :all
   @impl GenServer
-  def init(_opts) do
-    state = %__MODULE__{}
+  def init(opts) do
+    state = struct(__MODULE__, opts)
     RideAlong.PubSub.subscribe("trips:updated")
     RideAlong.PubSub.subscribe("vehicle:all")
     {:ok, state}
@@ -77,22 +77,33 @@ defmodule RideAlong.RiderNotifier do
   end
 
   defp maybe_notify(trip, state) do
-    if MapSet.member?(state.notified_trips, trip.trip_id) do
-      state
-    else
-      send_notification(state, trip)
-    end
-  end
+    send? =
+      cond do
+        MapSet.member?(state.notified_trips, trip.trip_id) ->
+          false
 
-  defp send_notification(state, trip) do
-    if RideAlong.Singleton.singleton?() do
-      RideAlong.PubSub.publish(
-        "notification:trip",
-        {:trip_notification, trip}
-      )
+        not RideAlong.Singleton.singleton?() ->
+          false
+
+        state.client_ids != :all and trip.client_id not in state.client_ids ->
+          false
+
+        true ->
+          true
+      end
+
+    if send? do
+      send_notification(trip)
     end
 
     %{state | notified_trips: MapSet.put(state.notified_trips, trip.trip_id)}
+  end
+
+  defp send_notification(trip) do
+    RideAlong.PubSub.publish(
+      "notification:trip",
+      {:trip_notification, trip}
+    )
   end
 
   defp cleanup_old_notifications(state, all_trips) do

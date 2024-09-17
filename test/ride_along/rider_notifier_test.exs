@@ -12,7 +12,9 @@ defmodule RideAlong.RiderNotifierTest do
       {:DOWN, ^ref, :process, _, _} -> :ok
     end
 
-    {:ok, _} = RideAlong.RiderNotifier.start_link(start: true, name: __MODULE__)
+    {:ok, _} =
+      RideAlong.RiderNotifier.start_link(start: true, name: __MODULE__, client_ids: [70_000])
+
     RideAlong.PubSub.subscribe("notification:trip")
 
     on_exit(fn ->
@@ -59,6 +61,15 @@ defmodule RideAlong.RiderNotifierTest do
     assert_receive {:trip_notification, _}
 
     Adept.set_vehicles([AdeptFixtures.vehicle_fixture()])
+
+    refute_receive {:trip_notification, %Adept.Trip{trip_id: ^trip_id}}
+  end
+
+  test "does not trigger a notification for clients who are not configured" do
+    trip_id = :erlang.unique_integer()
+
+    Adept.set_vehicles([AdeptFixtures.vehicle_fixture()])
+    Adept.set_trips([AdeptFixtures.trip_fixture(%{trip_id: trip_id, client_id: 70_001})])
 
     refute_receive {:trip_notification, %Adept.Trip{trip_id: ^trip_id}}
   end

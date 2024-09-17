@@ -41,7 +41,9 @@ config :ride_along, RideAlong.SqlPublisher, start: false
 config :ride_along, RideAlong.EtaCalculator.Model, start: false
 config :ride_along, RideAlong.EtaMonitor, start: false
 
-config :ride_along, RideAlong.RiderNotifier, start: false
+config :ride_along, RideAlong.RiderNotifier,
+  start: false,
+  client_ids: :all
 
 config :ride_along, RideAlong.WebhookPublisher,
   start: false,

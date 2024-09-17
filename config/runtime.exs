@@ -140,3 +140,8 @@ with <<api_keys_json::binary>> <- System.get_env("API_KEYS"),
      {:ok, %{} = api_keys} <- Jason.decode(api_keys_json) do
   config :ride_along, RideAlongWeb.Api, api_keys: api_keys
 end
+
+with <<client_ids_json::binary>> <- System.get_env("RIDER_NOTIFIER_CLIENT_IDS"),
+     {:ok, client_ids} when is_list(client_ids) <- Jason.decode(client_ids_json) do
+  config :ride_along, RideAlong.RiderNotifier, client_ids: client_ids
+end
