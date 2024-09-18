@@ -18,11 +18,9 @@ defmodule RideAlong.MqttListener do
     end
   end
 
-  defstruct []
-
   @impl GenServer
   def init(_opts) do
-    state = %__MODULE__{}
+    state = nil
     RideAlong.PubSub.subscribe("mqtt", [:message])
     {:ok, state}
   end

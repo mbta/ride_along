@@ -12,6 +12,8 @@ config :ride_along, RideAlong.OpenRouteService,
     plug: {Req.Test, RideAlong.OpenRouteService}
   ]
 
+config :ride_along, RideAlong.MqttConnection, broker_topic_prefix: "ride-along-test/"
+
 config :ride_along, RideAlong.EtaCalculator.Model, start: true
 
 config :ride_along, RideAlongWeb.Api, api_keys: %{"testApiKey" => "Test API Key"}

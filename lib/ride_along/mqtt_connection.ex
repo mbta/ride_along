@@ -6,7 +6,7 @@ defmodule RideAlong.MqttConnection do
 
   def start_link(opts) do
     name = Keyword.get(opts, :name, @default_name)
-    app_config = app_config()
+    app_config = Keyword.merge(app_config(), opts)
 
     topics = [
       "#{topic_prefix()}#"
