@@ -51,6 +51,22 @@ defmodule RideAlong.EtaCalculatorTest do
       end
     end
 
+    test "returns the ETA in the same timezone as the promise time" do
+      trip = Fixtures.trip_fixture(%{})
+      vehicle = Fixtures.vehicle_fixture(%{})
+      route = %Route{duration: 60, distance: 1.0}
+
+      actual =
+        EtaCalculator.calculate(
+          trip,
+          vehicle,
+          route,
+          DateTime.shift_zone!(trip.promise_time, "Etc/UTC")
+        )
+
+      assert actual.time_zone == trip.promise_time.time_zone
+    end
+
     test "always returns the pick time if the trip is closed" do
       trip = Fixtures.trip_fixture()
       vehicle = Fixtures.vehicle_fixture(%{last_drop: trip.drop_order + 1})

@@ -20,7 +20,9 @@ defmodule RideAlong.EtaCalculator do
              (is_nil(route) or is_struct(route, Route)) do
     case Trip.status(trip, vehicle, now) do
       status when status in [:enroute, :waiting] ->
-        __MODULE__.Model.predict(trip, vehicle, route, now)
+        predicted = __MODULE__.Model.predict(trip, vehicle, route, now)
+
+        DateTime.shift_zone!(predicted, trip.promise_time.time_zone)
 
       :enqueued ->
         Enum.max([trip.pick_time, now], DateTime)
