@@ -119,6 +119,19 @@
         data-popup={@popup}
       />
     </section>
+    <section class="p-2 bg-blue-900 text-white">
+      <span class="float-left border-2 p-1 border-blue-900">
+        <%= gettext("RideAlong is in beta.") %>
+      </span>
+      <.link
+        class="float-right border-2 p-1 rounded-lg"
+        href="https://www.mbta.com/customer-support"
+        target="_blank"
+        rel="noopener"
+      >
+        <%= gettext("Feedback") %>
+      </.link>
+    </section>
   </div>
   <div
     :if={Application.get_env(:ride_along, :dev_routes)}
