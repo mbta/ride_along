@@ -18,12 +18,12 @@ defmodule RideAlong.SqlPublisher do
     end
   end
 
-  defstruct [:tds, topic_prefix: "", results: %{}]
+  defstruct [:tds, topic_prefix: "", results: %{}, connected?: false]
 
   @impl GenServer
   def init(_opts) do
     state = %__MODULE__{}
-    RideAlong.PubSub.subscribe("mqtt", [:connected])
+    RideAlong.PubSub.subscribe("mqtt", [:connected, :disconnected])
     {:ok, state, {:continue, :start_timers}}
   end
 
@@ -76,11 +76,17 @@ defmodule RideAlong.SqlPublisher do
   end
 
   def handle_info({:connected, _connection}, state) do
+    state = %{state | connected?: true}
+
     for name <- Map.keys(state.results) do
       publish(state, name)
     end
 
     {:noreply, state}
+  end
+
+  def handle_info({:disconnected, _connection, _reason}, state) do
+    {:noreply, %{state | connected?: false}}
   end
 
   defp tds_query(tds, sql, parameters, retry_count \\ 0) do
@@ -196,7 +202,7 @@ defmodule RideAlong.SqlPublisher do
     }
   end
 
-  defp publish(state, name) do
+  defp publish(%{connected?: true} = state, name) do
     result = state.results[name]
     id = :erlang.unique_integer([:positive])
 
@@ -231,5 +237,9 @@ defmodule RideAlong.SqlPublisher do
           "#{__MODULE__} publish failed name=#{name} id=#{id} reason=#{inspect(reason)} duration=#{msec}"
         )
     end
+  end
+
+  defp publish(%{connected?: false}, _name) do
+    :ok
   end
 end
