@@ -138,8 +138,6 @@ defmodule RideAlongWeb.TripLive.Show do
       |> assign_eta()
       |> push_route()
 
-    Logger.info("#{__MODULE__} route calculated eta=#{socket.assigns.eta}")
-
     {:noreply, socket}
   end
 
@@ -224,14 +222,7 @@ defmodule RideAlongWeb.TripLive.Show do
   end
 
   defp assign_status(socket) do
-    old_status = Map.get(socket.assigns, :status)
     new_status = status(socket.assigns)
-
-    if new_status != old_status do
-      Logger.info(
-        "#{__MODULE__} status pick_time=#{DateTime.to_iso8601(socket.assigns.trip.pick_time)} status=#{new_status}"
-      )
-    end
 
     if new_status in [:picked_up, :closed] do
       RideAlong.PubSub.unsubscribe("vehicle:#{socket.assigns.vehicle.vehicle_id}")
