@@ -32,6 +32,22 @@ defmodule RideAlongWeb.TripLiveTest do
       RideAlong.Adept.set_vehicles([vehicle])
       assert {:error, {:redirect, %{to: "/not-found"}}} = live(conn, ~p"/t/#{token}")
     end
+
+    @tag :capture_log
+    test "does not show an estimate time if there's no promise or pick times", %{
+      conn: conn,
+      trip: trip,
+      token: token
+    } do
+      trip = %{trip | promise_time: nil, pick_time: nil}
+      RideAlong.Adept.set_trips([trip])
+      {:ok, _show_live, html} = live(conn, ~p"/t/#{token}")
+      {:ok, document} = Floki.parse_document(html)
+      elements = Floki.find(document, "[aria-live]")
+      text = Floki.text(elements)
+      refute text =~ "Estimated"
+      refute text =~ "promise"
+    end
   end
 
   def ors(_) do

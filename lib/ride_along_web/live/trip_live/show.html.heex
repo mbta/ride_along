@@ -6,7 +6,7 @@
   <div id="status" class="sr-only" aria-live="assertive" aria-atomic="true">
     <h2 class="sr-only"><%= gettext("Status") %></h2>
     <%= @popup %>
-    <span :if={@status in [:enroute, :waiting]}>
+    <span :if={@eta && @status in [:enroute, :waiting]}>
       <%= gettext("Estimated time of pick-up:") %> <%= @eta_text %>
     </span>
     <span :if={@status == :enqueued}>
@@ -62,7 +62,7 @@
             </span>
           </div>
           <time
-            :if={@status in [:enqueued, :enroute, :waiting]}
+            :if={@trip.promise_time && @status in [:enqueued, :enroute, :waiting]}
             class="block text-sm"
             datetime={@trip.promise_time}
           >

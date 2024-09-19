@@ -220,11 +220,15 @@ defmodule RideAlongWeb.TripLive.Show do
   end
 
   defp assign_eta(socket) do
-    eta = calculate_eta(socket.assigns)
-
-    socket
-    |> assign(:eta, DateTime.to_iso8601(eta))
-    |> assign(:eta_text, format_eta(eta))
+    if eta = calculate_eta(socket.assigns) do
+      socket
+      |> assign(:eta, DateTime.to_iso8601(eta))
+      |> assign(:eta_text, format_eta(eta))
+    else
+      socket
+      |> assign(:eta, nil)
+      |> assign(:eta_text, nil)
+    end
   end
 
   defp assign_status(socket) do

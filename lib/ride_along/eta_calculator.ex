@@ -14,7 +14,8 @@ defmodule RideAlong.EtaCalculator do
   Currently, we use a machine-learning model if the status is "enroute" or
   "waiting", and the pick time otherwise.
   """
-  @spec calculate(Trip.t(), Vehicle.t() | nil, Route.t() | nil, DateTime.t()) :: DateTime.t()
+  @spec calculate(Trip.t(), Vehicle.t() | nil, Route.t() | nil, DateTime.t()) ::
+          DateTime.t() | nil
   def calculate(trip, vehicle, route, now)
 
   def calculate(%Trip{} = trip, vehicle, route, %DateTime{} = now)
