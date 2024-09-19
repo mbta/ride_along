@@ -59,19 +59,25 @@ defmodule RideAlongWeb.TripLive.Show do
         |> request_route(false)
         |> push_route()
 
-      if connected?(socket) and socket.assigns.status != :closed do
-        Logger.info("mounted controller=#{__MODULE__} params=#{inspect(params)}")
-
-        :timer.send_interval(1_000, :countdown)
-        RideAlong.PubSub.subscribe("vehicle:#{socket.assigns.vehicle.vehicle_id}")
-        RideAlong.PubSub.subscribe("trips:updated")
-      end
-
       socket =
-        if socket.assigns.status == :closed do
-          redirect(socket, to: "/not-found")
-        else
-          socket
+        cond do
+          socket.assigns.status == :closed ->
+            redirect(socket, to: "/not-found")
+
+          connected?(socket) ->
+            Logger.info("mounted controller=#{__MODULE__} params=#{inspect(params)}")
+
+            if socket.assigns.status != :picked_up do
+              {:ok, ref} = :timer.send_interval(1_000, :countdown)
+              RideAlong.PubSub.subscribe("vehicle:#{socket.assigns.vehicle.vehicle_id}")
+              RideAlong.PubSub.subscribe("trips:updated")
+              assign(socket, :countdown_ref, ref)
+            else
+              socket
+            end
+
+          true ->
+            socket
         end
 
       {:ok, socket, layout: false}
@@ -224,10 +230,19 @@ defmodule RideAlongWeb.TripLive.Show do
   defp assign_status(socket) do
     new_status = status(socket.assigns)
 
-    if new_status in [:picked_up, :closed] do
-      RideAlong.PubSub.unsubscribe("vehicle:#{socket.assigns.vehicle.vehicle_id}")
-      RideAlong.PubSub.unsubscribe("trips:updated")
-    end
+    socket =
+      if new_status in [:picked_up, :closed] do
+        if socket.assigns[:countdown_ref] do
+          :timer.cancel(socket.assigns.countdown_ref)
+        end
+
+        RideAlong.PubSub.unsubscribe("vehicle:#{socket.assigns.vehicle.vehicle_id}")
+        RideAlong.PubSub.unsubscribe("trips:updated")
+
+        assign(socket, :countdown_ref, nil)
+      else
+        socket
+      end
 
     assign(socket, :status, new_status)
   end

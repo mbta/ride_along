@@ -9,7 +9,7 @@ defmodule RideAlong.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       test_coverage: [
-        summary: [threshold: 54]
+        summary: [threshold: 55]
       ],
       aliases: aliases(),
       preferred_cli_env: ["checks.test": :test],

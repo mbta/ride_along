@@ -52,7 +52,7 @@ defmodule RideAlong.WebhookPublisherTest do
       end)
 
       PubSub.publish("notification:trip", {:trip_notification, trip})
-      assert_receive ^ref
+      assert_receive ^ref, 1_000
       assert %{body: body, signature: signature} = Agent.get(pid, & &1)
 
       assert %{

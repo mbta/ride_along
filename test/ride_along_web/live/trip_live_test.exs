@@ -8,17 +8,13 @@ defmodule RideAlongWeb.TripLiveTest do
   describe "Show" do
     setup [:ors, :adept]
 
-    test "displays trip", %{conn: conn} do
-      trip = List.first(RideAlong.Adept.all_trips())
-      token = RideAlong.LinkShortener.get_token(trip.trip_id)
+    test "displays trip", %{conn: conn, token: token} do
       {:ok, _show_live, html} = live(conn, ~p"/t/#{token}")
       {:ok, document} = Floki.parse_document(html)
       assert Floki.get_by_id(document, "map") != nil
     end
 
-    test "ETA is in an aria-live region", %{conn: conn} do
-      trip = List.first(RideAlong.Adept.all_trips())
-      token = RideAlong.LinkShortener.get_token(trip.trip_id)
+    test "ETA is in an aria-live region", %{conn: conn, token: token} do
       {:ok, _show_live, html} = live(conn, ~p"/t/#{token}")
       {:ok, document} = Floki.parse_document(html)
       elements = Floki.find(document, "[aria-live]")
@@ -28,6 +24,13 @@ defmodule RideAlongWeb.TripLiveTest do
     @tag :capture_log
     test "unknown trip redirects to not-found", %{conn: conn} do
       assert {:error, {:redirect, %{to: "/not-found"}}} = live(conn, ~p"/t/missing")
+    end
+
+    @tag :capture_log
+    test "closed trip redirects to not-found", %{conn: conn, vehicle: vehicle, token: token} do
+      vehicle = %{vehicle | last_drop: 10}
+      RideAlong.Adept.set_vehicles([vehicle])
+      assert {:error, {:redirect, %{to: "/not-found"}}} = live(conn, ~p"/t/#{token}")
     end
   end
 
@@ -42,14 +45,17 @@ defmodule RideAlongWeb.TripLiveTest do
   end
 
   def adept(_) do
-    RideAlong.Adept.set_trips([Fixtures.trip_fixture()])
-    RideAlong.Adept.set_vehicles([Fixtures.vehicle_fixture()])
+    trip = Fixtures.trip_fixture()
+    vehicle = Fixtures.vehicle_fixture()
+    RideAlong.Adept.set_trips([trip])
+    RideAlong.Adept.set_vehicles([vehicle])
 
     on_exit(fn ->
       RideAlong.Adept.set_trips([])
       RideAlong.Adept.set_vehicles([])
     end)
 
-    :ok
+    token = RideAlong.LinkShortener.get_token(trip.trip_id)
+    {:ok, trip: trip, vehicle: vehicle, token: token}
   end
 end
