@@ -4,7 +4,7 @@ defmodule RideAlongWeb.TokenUrlGenerator do
   """
   use RideAlongWeb, :html
 
-  def generate(trip_id) do
+  def generate(trip_id) when is_integer(trip_id) do
     if token = RideAlong.LinkShortener.get_token(trip_id) do
       {:ok, url(~p"/t/#{token}")}
     else
