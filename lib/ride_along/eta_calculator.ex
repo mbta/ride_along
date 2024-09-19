@@ -5,6 +5,8 @@ defmodule RideAlong.EtaCalculator do
   - vehicle (optional)
   - OpenRouteService.Route (optional)
   """
+  require Logger
+
   alias RideAlong.Adept.{Trip, Vehicle}
   alias RideAlong.OpenRouteService.Route
 
@@ -20,9 +22,18 @@ defmodule RideAlong.EtaCalculator do
              (is_nil(route) or is_struct(route, Route)) do
     case Trip.status(trip, vehicle, now) do
       status when status in [:enroute, :waiting] ->
-        predicted = __MODULE__.Model.predict(trip, vehicle, route, now)
+        try do
+          predicted = __MODULE__.Model.predict(trip, vehicle, route, now)
 
-        DateTime.shift_zone!(predicted, trip.promise_time.time_zone)
+          DateTime.shift_zone!(predicted, trip.promise_time.time_zone)
+        rescue
+          e ->
+            Logger.error(
+              "#{__MODULE__} error calculating trip_id=#{trip.trip_id} route=#{trip.route_id} promise=#{trip.promise_time} pick=#{trip.pick_time} error=#{inspect(e)}"
+            )
+
+            trip.pick_time
+        end
 
       :enqueued ->
         Enum.max([trip.pick_time, now], DateTime)

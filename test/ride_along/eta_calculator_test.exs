@@ -73,5 +73,15 @@ defmodule RideAlong.EtaCalculatorTest do
 
       assert EtaCalculator.calculate(trip, vehicle, nil, @now) == trip.pick_time
     end
+
+    test "returns a time even if the model crashes" do
+      assert %DateTime{} =
+               EtaCalculator.calculate(
+                 Fixtures.trip_fixture(%{promise_time: nil}),
+                 Fixtures.vehicle_fixture(),
+                 %Route{duration: 60, distance: 1.0},
+                 @now
+               )
+    end
   end
 end
