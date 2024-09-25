@@ -61,6 +61,7 @@ defmodule RideAlong.WebhookPublisherTest do
                "tripId" => 1234,
                "routeId" => 4567,
                "clientId" => 70_000,
+               "clientNotificationPreference" => "TEXT ONLY",
                "notificationId" => _,
                "etaTime" => _,
                "promiseTime" => _

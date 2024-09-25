@@ -89,6 +89,7 @@ defmodule RideAlong.WebhookPublisher do
         tripId: trip.trip_id,
         routeId: trip.route_id,
         clientId: trip.client_id,
+        clientNotificationPreference: trip.client_notification_preference,
         etaTime: RideAlong.EtaCalculator.calculate(trip, vehicle, route, now),
         promiseTime: trip.promise_time,
         status: status |> Atom.to_string() |> String.upcase(),

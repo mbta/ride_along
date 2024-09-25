@@ -18,6 +18,7 @@ defmodule RideAlong.AdeptFixtures do
           route_id: @route_id,
           client_id: 70_000,
           client_trip_index: 0,
+          client_notification_preference: "TEXT ONLY",
           date: DateTime.to_date(local_timestamp(0, :second)),
           pick_time: local_timestamp(30, :minute),
           promise_time: local_timestamp(35, :minute),

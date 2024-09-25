@@ -28,6 +28,7 @@ defmodule RideAlong.Adept.Trip do
     :pick_order,
     :drop_order,
     :load_time,
+    :client_notification_preference,
     client_trip_index: 0,
     pickup_performed?: false,
     dropoff_performed?: false
@@ -76,6 +77,8 @@ defmodule RideAlong.Adept.Trip do
       route_id: route_id,
       client_id: client_id,
       client_trip_index: client_trip_index - 1,
+      # can move this to the pattern match once the MQTT data has updated. -ps
+      client_notification_preference: map["ClientNotificationPreference"],
       date: trip_date,
       pick_time: relative_time(pick_time, trip_date),
       promise_time: relative_time(promise_time, trip_date),

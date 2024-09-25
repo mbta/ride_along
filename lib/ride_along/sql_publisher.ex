@@ -164,13 +164,14 @@ defmodule RideAlong.SqlPublisher do
               ROW_NUMBER() OVER (PARTITION BY ClientId ORDER BY ClientId, TripDate) AS ClientTripIndex
               FROM dbo.TRIP
              )
-             SELECT Id, TripDate, RouteId,
-             ClientId, ClientTripIndex,
-             Status, Anchor, PickTime, PromiseTime,
+             SELECT t.Id AS Id, TripDate, RouteId,
+             ClientId, c.UDF3 AS ClientNotificationPreference, ClientTripIndex,
+             t.Status AS Status, Anchor, PickTime, PromiseTime,
              PickHouseNumber, PickAddress1, PickAddress2, PickCity, PickSt, PickZip,
              PickGridX, PickGridY,
-             PickOrder, DropOrder, PerformPickup, PerformDropoff, LoadTime, APtime1
+             PickOrder, DropOrder, PerformPickup, PerformDropoff, t.LoadTime AS LoadTime, APtime1
              FROM Trips t
+             JOIN dbo.CLIENT c ON t.ClientId = c.Id
              WHERE
                t.TripDate >= @service_date AND
                t.TripDate <= DATEADD(DAY,1,@service_date) AND
