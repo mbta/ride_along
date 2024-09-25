@@ -85,6 +85,7 @@ defmodule RideAlongWeb.TripComponents do
 
   attr :id, :string, required: true
   attr :src, :string, required: true
+  attr :rest, :global
 
   def hidden_image(assigns) do
     ~H"""
@@ -95,6 +96,7 @@ defmodule RideAlongWeb.TripComponents do
       id={@id}
       src={@src}
       integrity={RideAlongWeb.Endpoint.static_integrity(@src)}
+      {@rest}
     />
     """
   end

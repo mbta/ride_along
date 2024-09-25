@@ -21,9 +21,8 @@
 import { Socket } from 'phoenix'
 import { LiveSocket } from 'phoenix_live_view'
 
-// Leaflet for maps
-import * as L from 'leaflet'
-import 'leaflet-rotatedmarker'
+// MapLibreGL for maps
+import { Map, Popup } from 'maplibre-gl'
 import polyline from '@mapbox/polyline'
 
 // Core Web Vitals analytics
@@ -102,119 +101,151 @@ const csrfToken = document
   .getAttribute('content')
 
 function initializeMap (el) {
-  const locationIcon = L.icon({
-    iconUrl: document.getElementById('location-icon').src,
-    iconAnchor: [15, 15],
-    iconSize: [30, 30]
+  const destination = JSON.parse(el.dataset.destination)
+
+  const map = new Map({
+    style: 'https://tiles.openfreemap.org/styles/liberty',
+    center: [destination.lon, destination.lat],
+    zoom: 15,
+    container: el.id
   })
 
-  const vehicleIcon = L.icon({
-    iconUrl: document.getElementById('vehicle-icon').src,
-    iconAnchor: [20, 20],
-    iconSize: [40, 40]
-  })
+  map.addImage('location-icon', document.getElementById('location-icon'))
+  map.addImage('vehicle-icon', document.getElementById('vehicle-icon'))
 
-  const { lat, lon, alt } = JSON.parse(el.dataset.destination)
+  // new Marker({
+  //   element: locationIcon
+  // }).setLngLat([lon, lat]).addTo(map)
+  //
 
-  const destination = L.marker([lat, lon], {
-    icon: locationIcon,
-    alt,
-    interactive: false,
-    keyboard: false
-  })
-
-  const tileLayer = L.tileLayer('https://cdn.mbta.com/osm_tiles/{z}/{x}/{y}.png', {
-    maxZoom: 18,
-    minZoom: 9,
-    attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-  })
-
-  const map = L.map(el, {
-    layers: [
-      tileLayer,
-      destination
-    ]
-  })
-
-  let vehicleLayer, polylineLayer, popupElement
-
-  function callback () {
-    if (el.dataset.polyline) {
-      const decoded = polyline.decode(el.dataset.polyline)
-      const location = decoded[0]
-
-      if (vehicleLayer) {
-        vehicleLayer.setLatLng(location).setRotationAngle(parseInt(el.dataset.vehicleHeading))
-        vehicleLayer.getIcon().alt = el.dataset.vehicle
-      } else {
-        vehicleLayer = L.marker(location, {
-          icon: vehicleIcon,
-          alt: el.dataset.vehicle,
-          rotationOrigin: 'center center',
-          rotationAngle: parseInt(el.dataset.vehicleHeading),
-          interactive: false,
-          keyboard: false
-        }).addTo(map)
-      }
-
-      if (polylineLayer) {
-        polylineLayer.setLatLngs(decoded)
-      } else {
-        polylineLayer = L.polyline(decoded, {
-          color: 'blue',
-          interactive: false
-        }).addTo(map)
-      }
-    } else {
-      if (vehicleLayer) {
-        map.removeLayer(vehicleLayer)
-      }
-      if (polylineLayer) {
-        map.removeLayer(polylineLayer)
-      }
-      vehicleLayer = polylineLayer = null
-    }
-
-    // fitBounds/setView needs to happen before we can show the popup. not sure why -ps
-    if (el.dataset.bbox) {
-      map.fitBounds(JSON.parse(el.dataset.bbox), { padding: [48, 48] })
-    } else {
-      map.setView(destination.getLatLng(), 17)
-    }
-
-    if (el.dataset.popup) {
-      const element = document.createElement('span')
-      element.innerText = el.dataset.popup
-      if (popupElement) {
-        popupElement.setPopupContent(element)
-      } else {
-        popupElement = destination.bindPopup(element, {
-          offset: [0, -10],
-          maxWidth: 250,
-          closeButton: false,
-          autoClose: false,
-          closeOnEscapeKey: false,
-          closeOnClick: false,
-          interactive: false,
-          className: 'destination-popup'
-        }).openPopup()
-      }
-    } else {
-      if (popupElement) {
-        destination.closePopup()
-      }
-      popupElement = null
+  const vehicleData = {
+    type: 'Feature',
+    properties: {
+      visibility: 'none',
+      vehicleHeading: 0,
+      alt: ''
+    },
+    geometry: {
+      type: 'Point',
+      coordinates: [destination.lon, destination.lat]
     }
     map.invalidateSize()
   }
 
-  callback()
+  const polylineData = {
+    type: 'Feature',
+    properties: {
+      visibility: 'none'
+    },
+    geometry: {
+      type: 'LineString',
+      coordinates: [[destination.lon, destination.lat]]
+    }
+  }
 
-  /* global MutationObserver */
-  const observer = new MutationObserver(callback)
-  observer.observe(el, {
-    attributeFilter: ['data-vehicle', 'data-vehicle-heading', 'data-bbox', 'data-polyline', 'data-popup']
+  const popup = new Popup({
+    className: 'destination-popup',
+    offset: [0, -20],
+    maxWidth: 250,
+    closeButton: false,
+    closeOnClick: false,
+    closeOnMove: false
+  })
+
+  function callback () {
+    if (el.dataset.polyline) {
+      const decoded = polyline.toGeoJSON(el.dataset.polyline)
+      const location = decoded.coordinates[0]
+
+      polylineData.properties.visibility = 'visible'
+      polylineData.geometry = decoded
+
+      vehicleData.geometry.coordinates = location
+      vehicleData.properties.visibility = 'visible'
+      vehicleData.properties.vehicleHeading = parseInt(el.dataset.vehicleHeading)
+      vehicleData.properties.alt = el.dataset.vehicle
+    } else {
+      vehicleData.properties.visibility = 'none'
+      polylineData.properties.visibility = 'none'
+    }
+
+    map.getSource('polyline').setData(polylineData)
+    map.getSource('vehicle').setData(vehicleData)
+    map.setLayoutProperty('polyline', 'visibility', polylineData.properties.visibility)
+    map.setLayoutProperty('vehicle', 'visibility', vehicleData.properties.visibility)
+
+    // fitBounds/setView needs to happen before we can show the popup. not sure why -ps
+    if (el.dataset.bbox) {
+      map.fitBounds(JSON.parse(el.dataset.bbox), { padding: 48 })
+    } else {
+      map.flyTo({ center: [destination.lon, destination.lat], zoom: 15 })
+    }
+
+    if (el.dataset.popup) {
+      popup.setText(el.dataset.popup).setLngLat([destination.lon, destination.lat]).addTo(map)
+    } else {
+      popup.remove()
+    }
+  }
+
+  map.on('load', () => {
+    map.addSource('destination', {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [destination.lon, destination.lat]
+        }
+      }
+    })
+      .addSource('vehicle', {
+        type: 'geojson',
+        data: vehicleData
+      })
+      .addSource('polyline', {
+        type: 'geojson',
+        data: polylineData
+      })
+      .addLayer({
+        id: 'polyline',
+        type: 'line',
+        source: 'polyline',
+        layout: {
+          visibility: 'none'
+        },
+        paint: {
+          'line-color': 'blue',
+          'line-width': 3,
+          'line-opacity': 0.8
+        }
+      })
+      .addLayer({
+        id: 'destination',
+        type: 'symbol',
+        source: 'destination',
+        layout: {
+          'icon-image': 'location-icon'
+        }
+      })
+      .addLayer({
+        id: 'vehicle',
+        type: 'symbol',
+        source: 'vehicle',
+        layout: {
+          visibility: 'none',
+          'icon-image': 'vehicle-icon',
+          'icon-rotate': ['get', 'vehicleHeading']
+        }
+      })
+
+    callback()
+
+    /* global MutationObserver */
+    const observer = new MutationObserver(callback)
+    observer.observe(el, {
+      attributeFilter: ['data-vehicle', 'data-vehicle-heading', 'data-bbox', 'data-polyline', 'data-popup']
+    })
   })
 }
 

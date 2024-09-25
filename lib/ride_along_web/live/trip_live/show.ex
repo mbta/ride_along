@@ -302,8 +302,10 @@ defmodule RideAlongWeb.TripLive.Show do
   end
 
   defp assign_route(%{assigns: %{status: :enroute, route: route}} = socket) when route != nil do
+    [[lat1, lon1], [lat2, lon2]] = route.bbox
+
     socket
-    |> assign(:bbox, Jason.encode!(route.bbox))
+    |> assign(:bbox, Jason.encode!([[lon1, lat1], [lon2, lat2]]))
     |> assign(:polyline, route.polyline)
   end
 

@@ -1,7 +1,7 @@
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
-@import "leaflet/dist/leaflet.css";
+@import "maplibre-gl/dist/maplibre-gl.css";
 
 /* This file is for your main application CSS */
 @font-face {
@@ -45,12 +45,12 @@ html {
   height: 844px;
 }
 
-.destination-popup .leaflet-popup-content-wrapper {
+.destination-popup .maplibregl-popup-content {
   @apply shadow-none bg-yellow-300 text-slate-600 text-lg p-4
 }
 
-.destination-popup .leaflet-popup-tip {
-  @apply shadow-none bg-yellow-300
+.destination-popup .maplibregl-popup-tip {
+  @apply shadow-none border-t-yellow-300
 }
 
 main.flash-visible {
