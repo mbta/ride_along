@@ -7,7 +7,7 @@ defmodule RideAlongWeb.AdminLive.Index do
   def mount(_params, session, socket) do
     if connected?(socket) do
       RideAlong.PubSub.subscribe("trips:updated")
-      RideAlong.PubSub.subscribe("vehicles:all")
+      RideAlong.PubSub.subscribe("vehicle:all")
     end
 
     {:ok,
@@ -61,16 +61,24 @@ defmodule RideAlongWeb.AdminLive.Index do
   end
 
   def handle_info({:vehicle_updated, vehicle}, socket) do
+    now = DateTime.utc_now()
+
     socket =
       vehicle.route_id
       |> Adept.get_trips_by_route()
       |> Enum.reduce(socket, fn trip, socket ->
-        stream_insert(socket, :trips, {trip, vehicle})
+        case RideAlong.Adept.Trip.status(trip, vehicle, now) do
+          :closed ->
+            stream_delete(socket, :trips, {trip, vehicle})
+
+          _other ->
+            stream_insert(socket, :trips, {trip, vehicle})
+        end
       end)
 
     {:noreply,
      socket
-     |> assign(:now, DateTime.utc_now())}
+     |> assign(:now, now)}
   end
 
   defp assign_iframe(socket) do

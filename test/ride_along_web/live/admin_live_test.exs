@@ -21,6 +21,37 @@ defmodule RideAlongWeb.AdminLiveTest do
       {:ok, document} = Floki.parse_document(html)
       assert [_] = Floki.find(document, "iframe")
     end
+
+    test "updating a trip updates the status", %{conn: conn, trip: trip, vehicle: vehicle} do
+      {:ok, view, html} = live(conn, ~p"/admin")
+      {:ok, document} = Floki.parse_document(html)
+      elements = Floki.find(document, "#trips-#{trip.trip_id} td")
+      assert Floki.text(elements) =~ "enroute"
+
+      Adept.set_vehicles([
+        %{vehicle | timestamp: DateTime.utc_now(), last_arrived_trips: [trip.trip_id]}
+      ])
+
+      assert_receive {:vehicle_updated, _}
+
+      html = render(view)
+      {:ok, document} = Floki.parse_document(html)
+      elements = Floki.find(document, "#trips-#{trip.trip_id} td")
+      assert Floki.text(elements) =~ "arrived"
+    end
+
+    test "closing a trip removes it from the page", %{conn: conn, trip: trip, vehicle: vehicle} do
+      {:ok, view, html} = live(conn, ~p"/admin")
+      {:ok, document} = Floki.parse_document(html)
+      assert [_] = Floki.find(document, "#trips-#{trip.trip_id}")
+
+      Adept.set_vehicles([%{vehicle | timestamp: DateTime.utc_now(), last_pick: 100}])
+      assert_receive {:vehicle_updated, _}
+
+      html = render(view)
+      {:ok, document} = Floki.parse_document(html)
+      assert [] = Floki.find(document, "#trips-#{trip.trip_id}")
+    end
   end
 
   def login(%{conn: conn}) do
@@ -36,14 +67,16 @@ defmodule RideAlongWeb.AdminLiveTest do
 
   def adept(_) do
     trip = Fixtures.trip_fixture()
+    vehicle = Fixtures.vehicle_fixture()
     Adept.set_trips([trip])
-    Adept.set_vehicles([Fixtures.vehicle_fixture()])
+    Adept.set_vehicles([vehicle])
+    RideAlong.PubSub.subscribe("vehicle:all")
 
     on_exit(fn ->
       Adept.set_trips([])
       Adept.set_vehicles([])
     end)
 
-    {:ok, trip: trip}
+    {:ok, trip: trip, vehicle: vehicle}
   end
 end
