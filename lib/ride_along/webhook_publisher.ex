@@ -29,7 +29,18 @@ defmodule RideAlong.WebhookPublisher do
   def init(opts) do
     state = struct(__MODULE__, opts)
     RideAlong.PubSub.subscribe("notification:trip")
-    {:ok, state}
+    {:ok, state, {:continue, :initial_send}}
+  end
+
+  @impl GenServer
+  def handle_continue(:initial_send, state) do
+    for {webhook_url, {result, error}} <- send_data_to_webhooks(state, "{}") do
+      Logger.info(
+        "#{__MODULE__} initial_send webhook_url=#{inspect(webhook_url)} result=#{result} error=#{error}"
+      )
+    end
+
+    {:noreply, state}
   end
 
   @impl GenServer
@@ -97,12 +108,20 @@ defmodule RideAlong.WebhookPublisher do
         notificationId: notification_id
       })
 
+    for {webhook_url, {result, error}} <- send_data_to_webhooks(state, data) do
+      Logger.info(
+        "#{__MODULE__} post webhook_url=#{inspect(webhook_url)} trip_id=#{trip.trip_id} notification_id=#{notification_id} result=#{result} error=#{error}"
+      )
+    end
+  end
+
+  def send_data_to_webhooks(%__MODULE__{} = state, data) do
     for {webhook_url, webhook_secret} <- state.webhooks do
       request = webhook_request(webhook_url, webhook_secret, data)
       Logger.debug(inspect(request))
       {_, response} = Req.run(request)
 
-      {result, error} =
+      result =
         case response do
           %{status: two_xx} when two_xx >= 200 and two_xx < 300 ->
             {:ok, nil}
@@ -111,9 +130,7 @@ defmodule RideAlong.WebhookPublisher do
             {:error, inspect(response)}
         end
 
-      Logger.info(
-        "#{__MODULE__} post trip_id=#{trip.trip_id} notification_id=#{notification_id} result=#{result} error=#{error}"
-      )
+      {webhook_url, result}
     end
   end
 

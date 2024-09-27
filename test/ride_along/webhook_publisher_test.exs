@@ -40,13 +40,16 @@ defmodule RideAlong.WebhookPublisherTest do
 
       Lasso.expect(lasso, "POST", "/webhook", fn conn ->
         {:ok, body, conn} = Conn.read_body(conn)
-        signature = Conn.get_req_header(conn, "x-signature-256")
 
-        Agent.cast(pid, fn _ ->
-          %{body: body, signature: signature}
-        end)
+        if body != "{}" do
+          signature = Conn.get_req_header(conn, "x-signature-256")
 
-        send(parent, ref)
+          Agent.cast(pid, fn _ ->
+            %{body: body, signature: signature}
+          end)
+
+          send(parent, ref)
+        end
 
         Plug.Conn.send_resp(conn, :created, "")
       end)
