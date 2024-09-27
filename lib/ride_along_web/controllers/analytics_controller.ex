@@ -1,7 +1,11 @@
 defmodule RideAlongWeb.AnalyticsController do
   use RideAlongWeb, :controller
 
+  plug :fetch_session
+
   def create(conn, _params) do
+    Logger.metadata(uid: get_session(conn, :uid))
+
     conn =
       with {:ok, body, conn} <- read_body(conn),
            {:ok, decoded} <- Jason.decode(body) do

@@ -12,26 +12,29 @@ defmodule RideAlongWeb.TripLive.Show do
   import RideAlongWeb.TripComponents
 
   @impl true
-  def mount(%{"token" => token} = params, _session, socket) do
+  def mount(%{"token" => token} = params, session, socket) do
     trip = LinkShortener.get_trip(token)
-    mount_trip(trip, params, socket)
+    mount_trip(trip, params, session, socket)
   end
 
-  def mount(%{"trip" => trip_id} = params, _session, socket) do
+  def mount(%{"trip" => trip_id} = params, session, socket) do
     trip = Adept.get_trip(String.to_integer(trip_id))
-    mount_trip(trip, params, socket)
+    mount_trip(trip, params, session, socket)
   end
 
-  defp mount_trip(trip, params, socket) do
-    with trip = %Trip{} <- trip,
-         vehicle = %Vehicle{} <- Adept.get_vehicle_by_route(trip.route_id) do
-      Logger.metadata(
-        token: params["token"],
-        trip_id: trip.trip_id,
-        route_id: trip.route_id,
-        client_id: trip.client_id
-      )
+  defp mount_trip(trip, params, session, socket) do
+    Logger.metadata(
+      token: params["token"],
+      uid: session["uid"]
+    )
 
+    with trip = %Trip{} <- trip,
+         Logger.metadata(
+           trip_id: trip.trip_id,
+           route_id: trip.route_id,
+           client_id: trip.client_id
+         ),
+         vehicle = %Vehicle{} <- Adept.get_vehicle_by_route(trip.route_id) do
       trip =
         if is_nil(params["demo"]) do
           trip

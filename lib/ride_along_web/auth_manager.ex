@@ -11,6 +11,8 @@ defmodule RideAlongWeb.AuthManager do
   def call(conn, opts) do
     required_roles = Keyword.get(opts, :roles, [])
 
+    Logger.metadata(uid: get_session(conn, :uid))
+
     if authenticated?(conn) and Enum.all?(required_roles, &has_role?(conn, &1)) do
       conn
     else
