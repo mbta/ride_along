@@ -26,6 +26,9 @@ config :ride_along, RideAlongWeb.Endpoint,
 config :ride_along, RideAlongWeb.PageController,
   redirect_to: "https://www.mbta.com/accessibility/the-ride"
 
+config :ride_along, RideAlongWeb.TripLive.Show,
+  feedback_url: "https://www.mbta.com/customer-support"
+
 config :ride_along, RideAlongWeb.Api, api_keys: %{}
 
 config :ride_along, RideAlong.MqttConnection,

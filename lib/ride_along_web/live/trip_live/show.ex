@@ -52,6 +52,7 @@ defmodule RideAlongWeb.TripLive.Show do
 
       socket =
         socket
+        |> assign(:feedback_url, Application.get_env(:ride_along, __MODULE__)[:feedback_url])
         |> assign(:now, DateTime.utc_now())
         |> assign(:page_title, gettext("Track your Trip"))
         |> assign(:trip, trip)
