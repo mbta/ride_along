@@ -1,5 +1,4 @@
 import Config
-
 # config/runtime.exs is executed for all environments, including
 # during releases. It is executed after compilation and before the
 # system starts, so it is typically used to load production configuration
@@ -143,6 +142,7 @@ end
 
 with <<client_ids_json::binary>> <- System.get_env("RIDER_NOTIFIER_CLIENT_IDS"),
      {:ok, client_ids} when is_list(client_ids) <- Jason.decode(client_ids_json) do
+  IO.puts("Only sending notifications to: #{inspect(client_ids)}")
   config :ride_along, RideAlong.RiderNotifier, client_ids: client_ids
 end
 
