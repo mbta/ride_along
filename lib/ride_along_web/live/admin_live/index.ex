@@ -10,14 +10,17 @@ defmodule RideAlongWeb.AdminLive.Index do
       RideAlong.PubSub.subscribe("vehicle:all")
     end
 
+    trips = open_trips()
+
     {:ok,
      socket
      |> assign(:page_title, "Admin - RideAlong")
      |> assign(:uid, session["uid"])
      |> assign(:now, DateTime.utc_now())
      |> assign(:demo?, false)
+     |> assign(:trips, trips)
      |> stream_configure(:trips, dom_id: &"trips-#{elem(&1, 0).trip_id}")
-     |> stream(:trips, open_trips())}
+     |> stream(:trips, trips)}
   end
 
   @impl true
@@ -54,31 +57,24 @@ defmodule RideAlongWeb.AdminLive.Index do
 
   @impl true
   def handle_info(:trips_updated, socket) do
+    trips = open_trips()
+
     {:noreply,
      socket
      |> assign(:now, DateTime.utc_now())
-     |> stream(:trips, open_trips(), reset: true)}
+     |> assign(:trips, trips)
+     |> stream(:trips, trips, reset: true)}
   end
 
   def handle_info({:vehicle_updated, vehicle}, socket) do
-    now = DateTime.utc_now()
+    socket = assign(socket, :now, DateTime.utc_now())
 
     socket =
       vehicle.route_id
       |> Adept.get_trips_by_route()
-      |> Enum.reduce(socket, fn trip, socket ->
-        case RideAlong.Adept.Trip.status(trip, vehicle, now) do
-          :closed ->
-            stream_delete(socket, :trips, {trip, vehicle})
+      |> Enum.reduce(socket, &reduce_vehicle_update(vehicle, &1, &2))
 
-          _other ->
-            stream_insert(socket, :trips, {trip, vehicle})
-        end
-      end)
-
-    {:noreply,
-     socket
-     |> assign(:now, now)}
+    {:noreply, socket}
   end
 
   defp assign_iframe(socket) do
@@ -98,6 +94,20 @@ defmodule RideAlongWeb.AdminLive.Index do
     assign(socket, :iframe_url, iframe_url)
   end
 
+  defp reduce_vehicle_update(vehicle, trip, socket) do
+    case RideAlong.Adept.Trip.status(trip, vehicle, socket.assigns.now) do
+      :closed ->
+        stream_delete(socket, :trips, {trip, vehicle})
+
+      _other ->
+        if Enum.any?(socket.assigns.trips, &(elem(&1, 0).trip_id == trip.trip_id)) do
+          stream_insert(socket, :trips, {trip, vehicle})
+        else
+          socket
+        end
+    end
+  end
+
   def open_trips do
     now = DateTime.utc_now()
     earliest = DateTime.add(now, -5, :minute)
@@ -105,10 +115,10 @@ defmodule RideAlongWeb.AdminLive.Index do
     trips =
       for trip <- Enum.sort(Adept.all_trips(), Adept.Trip),
           trip.promise_time != nil,
-          DateTime.compare(earliest, trip.promise_time) == :lt,
           vehicle = Adept.get_vehicle_by_route(trip.route_id),
           status = Adept.Trip.status(trip, vehicle, now),
-          status != :closed do
+          status != :closed,
+          status != :picked_up or DateTime.compare(earliest, trip.promise_time) == :lt do
         {trip, vehicle}
       end
 

@@ -25,7 +25,7 @@ defmodule RideAlongWeb.AdminLiveTest do
     test "updating a trip updates the status", %{conn: conn, trip: trip, vehicle: vehicle} do
       {:ok, view, html} = live(conn, ~p"/admin")
       {:ok, document} = Floki.parse_document(html)
-      elements = Floki.find(document, "#trips-#{trip.trip_id} td")
+      assert [_] = elements = Floki.find(document, "#trips-#{trip.trip_id}")
       assert Floki.text(elements) =~ "enroute"
 
       Adept.set_vehicles([
@@ -36,7 +36,7 @@ defmodule RideAlongWeb.AdminLiveTest do
 
       html = render(view)
       {:ok, document} = Floki.parse_document(html)
-      elements = Floki.find(document, "#trips-#{trip.trip_id} td")
+      assert [_] = elements = Floki.find(document, "#trips-#{trip.trip_id}")
       assert Floki.text(elements) =~ "arrived"
     end
 
@@ -51,6 +51,32 @@ defmodule RideAlongWeb.AdminLiveTest do
       html = render(view)
       {:ok, document} = Floki.parse_document(html)
       assert [] = Floki.find(document, "#trips-#{trip.trip_id}")
+    end
+
+    test "updating a future trip doesn't add it back to the page", %{
+      conn: conn,
+      trip: trip,
+      vehicle: vehicle
+    } do
+      Adept.set_trips([
+        %{
+          trip
+          | trip_id: trip.trip_id + 1,
+            promise_time: nil
+        },
+        trip
+      ])
+
+      {:ok, view, html} = live(conn, ~p"/admin")
+      {:ok, document} = Floki.parse_document(html)
+      assert [_] = Floki.find(document, "#trips tr")
+
+      Adept.set_vehicles([%{vehicle | timestamp: DateTime.utc_now()}])
+      assert_receive {:vehicle_updated, _}
+
+      html = render(view)
+      {:ok, document} = Floki.parse_document(html)
+      assert [_] = Floki.find(document, "#trips tr")
     end
   end
 
