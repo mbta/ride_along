@@ -24,7 +24,7 @@ import { LiveSocket } from 'phoenix_live_view'
 // Leaflet for maps
 import * as L from 'leaflet'
 import 'leaflet-rotatedmarker'
-import polyline from 'polyline-encoded'
+import polyline from '@mapbox/polyline'
 
 // Core Web Vitals analytics
 import { onCLS, onINP, onLCP } from 'web-vitals'
