@@ -1,0 +1,25 @@
+config:
+  target: https://localhost:4001/
+  engines:
+    playwright:
+      launchOptions:
+        args: ['--ignore-certificate-errors']
+  phases:
+    - duration: 20
+      arrivalRate: 1
+      rampTo: 2
+      name: Warm up phase
+    - duration: 20
+      arrivalRate: 2
+      rampTo: 4
+      name: Ramp up load
+    - duration: 10
+      arrivalRate: 4
+      rampTo: 16
+      name: Spike phase
+  plugins:
+    metrics-by-endpoint: {}
+  processor: './flows.js'
+scenarios:
+  - engine: playwright
+    testFunction: 'loadAndWaitFlow'
