@@ -109,8 +109,16 @@ defmodule RideAlong.WebhookPublisher do
       })
 
     for {webhook_url, {result, error}} <- send_data_to_webhooks(state, data) do
-      Logger.info(
-        "#{__MODULE__} post webhook_url=#{inspect(webhook_url)} trip_id=#{trip.trip_id} notification_id=#{notification_id} result=#{result} error=#{error}"
+      Logster.info(
+        module: __MODULE__,
+        action: :post,
+        webhook_url: inspect(webhook_url),
+        trip_id: trip.trip_id,
+        client_id: trip.client_id,
+        client_notification_preference: inspect(trip.client_notification_preference),
+        notification_id: notification_id,
+        result: result,
+        error: if(error, do: inspect(error))
       )
     end
   end
