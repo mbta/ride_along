@@ -160,6 +160,7 @@ function initializeMap (el) {
       }
       popupElement = null
     }
+    map.invalidateSize()
   }
 
   callback()
