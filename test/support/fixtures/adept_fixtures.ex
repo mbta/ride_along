@@ -48,6 +48,7 @@ defmodule RideAlong.AdeptFixtures do
         %{
           route_id: @route_id,
           vehicle_id: @vehicle_id,
+          heading: Decimal.new("90"),
           lat: Decimal.new("42.35167"),
           lon: Decimal.new("-71.06694"),
           timestamp: local_timestamp(-1, :second),

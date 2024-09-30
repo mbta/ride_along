@@ -9,7 +9,7 @@ defmodule RideAlong.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       test_coverage: [
-        summary: [threshold: 56]
+        summary: [threshold: 57]
       ],
       aliases: aliases(),
       preferred_cli_env: ["checks.test": :test],
@@ -70,6 +70,7 @@ defmodule RideAlong.MixProject do
       {:logster, "~> 2.0-rc"},
       {:exgboost, "~> 0.5"},
       {:explorer, "~> 0.9"},
+      {:polyline, "~> 1.4"},
       {:stream_data, "~> 1.0", only: :test},
       {:lasso, "~> 0.1", only: :test},
       {:credo, "~> 1.7.7-rc", only: :dev, runtime: false},

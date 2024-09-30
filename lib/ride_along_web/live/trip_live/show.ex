@@ -279,6 +279,36 @@ defmodule RideAlongWeb.TripLive.Show do
     |> assign(:popup, nil)
   end
 
+  defp push_route(
+         %{
+           assigns: %{
+             status: :enroute,
+             vehicle: %{lat: %Decimal{}, lon: %Decimal{}},
+             route: nil
+           }
+         } =
+           socket
+       ) do
+    vehicle_lat = Decimal.to_float(socket.assigns.vehicle.lat)
+    vehicle_lon = Decimal.to_float(socket.assigns.vehicle.lon)
+
+    bbox =
+      Jason.encode!([
+        [vehicle_lat, vehicle_lon],
+        [socket.assigns.trip.lat, socket.assigns.trip.lon]
+      ])
+
+    polyline =
+      Polyline.encode([
+        {vehicle_lon, vehicle_lat}
+      ])
+
+    socket
+    |> assign(:bbox, bbox)
+    |> assign(:polyline, polyline)
+    |> assign(:popup, nil)
+  end
+
   defp push_route(socket) do
     popup =
       case socket.assigns.status do

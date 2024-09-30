@@ -11,7 +11,10 @@ defmodule RideAlongWeb.TripLiveTest do
     test "displays trip", %{conn: conn, token: token} do
       {:ok, _show_live, html} = live(conn, ~p"/t/#{token}")
       {:ok, document} = Floki.parse_document(html)
-      assert Floki.get_by_id(document, "map") != nil
+      map = Floki.get_by_id(document, "map")
+      assert map != nil
+      assert [_bbox] = Floki.attribute(map, "data-bbox")
+      assert [_polyline] = Floki.attribute(map, "data-polyline")
     end
 
     test "ETA is in an aria-live region", %{conn: conn, token: token} do
