@@ -25,7 +25,7 @@
       <%= gettext("You have been picked up!") %>
     </span>
   </div>
-  <div class="flex flex-col-reverse h-dvh">
+  <div class="flex flex-col-reverse h-dvh-when-tall">
     <section class="p-4 rounded-t-xl basis-24 bg-slate-600 text-white">
       <h2 class="sr-only"><%= gettext("Trip Information") %></h2>
       <div class="pb-4">
@@ -109,7 +109,7 @@
       <h2 class="sr-only"><%= gettext("Map") %></h2>
       <div
         id="map"
-        class="h-full"
+        class="h-full min-h-80"
         phx-update="ignore"
         data-vehicle={gettext("Vehicle number %{vehicle_id}", vehicle_id: @vehicle.vehicle_id)}
         data-vehicle-heading={if @vehicle && @polyline, do: Decimal.to_float(@vehicle.heading)}
@@ -135,7 +135,7 @@
   </div>
   <div
     :if={Application.get_env(:ride_along, :dev_routes)}
-    class="w-96 h-96 absolute top-0 right-0"
+    class="w-96 h-96 absolute top-0 right-0 hidden lg:block"
     aria-hidden="true"
   >
     <.labeled_field title={gettext("Status")} value={inspect(@status)} />

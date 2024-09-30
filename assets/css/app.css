@@ -56,3 +56,9 @@ html {
 main.flash-visible {
   @apply bg-yellow-300
 }
+
+@media (min-height: 40rem) {
+  .h-dvh-when-tall {
+    @apply h-dvh
+  }
+}
