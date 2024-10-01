@@ -171,20 +171,24 @@ defmodule RideAlong.EtaMonitor do
       time: location_timestamp || now,
       location: location_timestamp,
       load_time: trip.load_time,
+      pickup_performed?: trip.pickup_performed?,
+      dropoff_performed?: trip.dropoff_performed?,
       pickup_arrival: trip.pickup_arrival_time
     ]
 
     vehicle_metadata =
-      with true <- status in [:enroute, :waiting],
-           %{} <- vehicle do
+      if is_map(vehicle) do
         [
           vehicle_lat: vehicle.lat,
           vehicle_lon: vehicle.lon,
           vehicle_heading: vehicle.heading,
-          vehicle_speed: vehicle.speed
+          vehicle_speed: vehicle.speed,
+          last_pick: vehicle.last_pick,
+          last_drop: vehicle.last_drop,
+          last_arrived: inspect(vehicle.last_arrived_trips)
         ]
       else
-        _ -> []
+        []
       end
 
     route =
