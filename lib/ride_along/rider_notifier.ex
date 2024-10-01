@@ -19,19 +19,22 @@ defmodule RideAlong.RiderNotifier do
 
   def start_link(opts) do
     if opts[:start] do
-      name = Keyword.get(opts, :name, @default_name)
-      GenServer.start_link(__MODULE__, opts, name: name)
+      opts = Keyword.put_new(opts, :name, @default_name)
+      GenServer.start_link(__MODULE__, opts, name: opts[:name])
     else
       :ignore
     end
   end
 
-  defstruct notified_trips: MapSet.new(), client_ids: :all
+  defstruct [:name, notified_trips: MapSet.new(), client_ids: :all]
   @impl GenServer
   def init(opts) do
     state = struct(__MODULE__, opts)
     RideAlong.PubSub.subscribe("trips:updated")
     RideAlong.PubSub.subscribe("vehicle:all")
+
+    :net_kernel.monitor_nodes(true)
+
     {:ok, state}
   end
 
@@ -50,6 +53,32 @@ defmodule RideAlong.RiderNotifier do
   def handle_info({:vehicle_updated, v}, state) do
     trips = RideAlong.Adept.get_trips_by_route(v.route_id)
     state = update_trips(state, trips)
+    {:noreply, state}
+  end
+
+  def handle_info({:nodeup, node}, state) do
+    Process.send({state.name, node}, {:request_state, self()}, [:noconnect])
+
+    {:noreply, state}
+  end
+
+  def handle_info({:nodedown, _node}, state) do
+    {:noreply, state}
+  end
+
+  def handle_info({:request_state, pid}, state) do
+    Process.send(pid, {:state_response, {self(), node()}, state}, [])
+
+    {:noreply, state}
+  end
+
+  def handle_info({:state_response, from, remote_state}, state) do
+    state = %{
+      state
+      | notified_trips: MapSet.union(remote_state.notified_trips, state.notified_trips)
+    }
+
+    Logger.info("#{__MODULE__} received state update from #{inspect(from)}")
     {:noreply, state}
   end
 
