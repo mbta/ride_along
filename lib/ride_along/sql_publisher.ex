@@ -191,7 +191,7 @@ defmodule RideAlong.SqlPublisher do
                  WHERE RouteId = l.RouteId AND LocationDate >= @service_date AND EventType='StopArrive'
                  ORDER BY LocationDate DESC) AS LastArrivedTrip,
                (SELECT TOP 1 t.Id FROM dbo.TRIP t
-                 WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.Status = 'S'
+                 WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.Status = 'S' AND APtime1 != '00:00'
                  ORDER BY t.APtime1 DESC) AS LastDispatchArrivedTrip
                   FROM dbo.MDCVEHICLELOCATION l
                   WHERE LocationDate >= DATEADD(HOUR, -2, CURRENT_TIMESTAMP) AND
