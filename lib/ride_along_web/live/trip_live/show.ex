@@ -13,82 +13,96 @@ defmodule RideAlongWeb.TripLive.Show do
 
   @impl true
   def mount(%{"token" => token} = params, session, socket) do
-    trip = LinkShortener.get_trip(token)
-    mount_trip(trip, params, session, socket)
-  end
-
-  def mount(%{"trip" => trip_id} = params, session, socket) do
-    trip = Adept.get_trip(String.to_integer(trip_id))
-    mount_trip(trip, params, session, socket)
-  end
-
-  defp mount_trip(trip, params, session, socket) do
     Logger.metadata(
-      token: params["token"],
+      token: token,
       uid: session["uid"]
     )
 
-    with trip = %Trip{} <- trip,
-         Logger.metadata(
-           trip_id: trip.trip_id,
-           route_id: trip.route_id,
-           client_id: trip.client_id
-         ),
-         vehicle = %Vehicle{} <- Adept.get_vehicle_by_route(trip.route_id) do
-      trip =
-        if is_nil(params["demo"]) do
+    trip = LinkShortener.get_trip(token)
+    mount_trip(trip, params, socket)
+  end
+
+  def mount(%{"trip" => trip_id} = params, session, socket) do
+    Logger.metadata(
+      trip_id: trip_id,
+      uid: session["uid"]
+    )
+
+    trip = Adept.get_trip(String.to_integer(trip_id))
+    mount_trip(trip, params, socket)
+  end
+
+  defp mount_trip(%Trip{} = trip, params, socket) do
+    Logger.metadata(
+      trip_id: trip.trip_id,
+      route_id: trip.route_id,
+      client_id: trip.client_id
+    )
+
+    trip =
+      if is_nil(params["demo"]) do
+        trip
+      else
+        %{
           trip
-        else
-          %{
-            trip
-            | house_number: FakeAddress.building_number(),
-              address1: FakeAddress.street_name(),
-              address2: FakeAddress.secondary_address(),
-              city: FakeAddress.city(),
-              state: FakeAddress.state_abbr(),
-              zip: FakeAddress.zip()
-          }
-        end
+          | house_number: FakeAddress.building_number(),
+            address1: FakeAddress.street_name(),
+            address2: FakeAddress.secondary_address(),
+            city: FakeAddress.city(),
+            state: FakeAddress.state_abbr(),
+            zip: FakeAddress.zip()
+        }
+      end
 
-      socket =
-        socket
-        |> assign(:feedback_url, Application.get_env(:ride_along, __MODULE__)[:feedback_url])
-        |> assign(:now, DateTime.utc_now())
-        |> assign(:page_title, gettext("Track your Trip"))
-        |> assign(:trip, trip)
-        |> assign(:vehicle, vehicle)
-        |> assign(:route, nil)
-        |> assign_status()
-        |> assign_eta()
-        |> request_route(false)
-        |> push_route()
+    socket =
+      socket
+      |> assign(:feedback_url, Application.get_env(:ride_along, __MODULE__)[:feedback_url])
+      |> assign(:now, DateTime.utc_now())
+      |> assign(:page_title, gettext("Track your Trip"))
+      |> assign(:trip, trip)
+      |> assign(:route, nil)
 
-      socket =
-        cond do
-          socket.assigns.status == :closed ->
-            redirect(socket, to: "/not-found")
+    socket =
+      case Adept.get_vehicle_by_route(trip.route_id) do
+        %Vehicle{} = vehicle ->
+          socket
+          |> assign(:vehicle, vehicle)
+          |> assign_status()
+          |> assign_eta()
+          |> request_route(false)
+          |> push_route()
 
-          connected?(socket) ->
-            Logger.info("mounted controller=#{__MODULE__} params=#{inspect(params)}")
+        nil ->
+          socket
+          |> assign(:status, :closed)
+      end
 
-            if socket.assigns.status != :picked_up do
-              {:ok, ref} = :timer.send_interval(1_000, :countdown)
-              RideAlong.PubSub.subscribe("vehicle:#{socket.assigns.vehicle.vehicle_id}")
-              RideAlong.PubSub.subscribe("trips:updated")
-              assign(socket, :countdown_ref, ref)
-            else
-              socket
-            end
+    socket =
+      cond do
+        socket.assigns.status == :closed ->
+          redirect(socket, to: "/not-found")
 
-          true ->
+        connected?(socket) ->
+          Logger.info("mounted controller=#{__MODULE__} params=#{inspect(params)}")
+
+          if socket.assigns.status != :picked_up do
+            {:ok, ref} = :timer.send_interval(1_000, :countdown)
+            RideAlong.PubSub.subscribe("vehicle:#{socket.assigns.vehicle.vehicle_id}")
+            RideAlong.PubSub.subscribe("trips:updated")
+            assign(socket, :countdown_ref, ref)
+          else
             socket
-        end
+          end
 
-      {:ok, socket, layout: false}
-    else
-      _ ->
-        {:ok, redirect(socket, to: "/not-found")}
-    end
+        true ->
+          socket
+      end
+
+    {:ok, socket, layout: false}
+  end
+
+  defp mount_trip(nil, _params, socket) do
+    {:ok, redirect(socket, to: "/not-found")}
   end
 
   @impl true
