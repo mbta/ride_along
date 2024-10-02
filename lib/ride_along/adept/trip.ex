@@ -103,6 +103,10 @@ defmodule RideAlong.Adept.Trip do
   @spec status(t(), Vehicle.t() | nil, DateTime.t()) :: status()
   def status(trip, vehicle, now \\ DateTime.utc_now())
 
+  def status(%__MODULE__{dropoff_performed?: true}, _vehicle, _now) do
+    :closed
+  end
+
   def status(
         %__MODULE__{} = trip,
         %Vehicle{} = vehicle,
@@ -111,13 +115,13 @@ defmodule RideAlong.Adept.Trip do
     minutes_remaining = minutes_until(trip, now)
 
     cond do
-      trip.dropoff_performed? ->
+      minutes_remaining > {:ok, 59} ->
         :closed
+
+      trip.pick_order == 0 ->
+        :enqueued
 
       max(vehicle.last_pick, vehicle.last_drop) >= trip.drop_order ->
-        :closed
-
-      minutes_remaining > {:ok, 59} ->
         :closed
 
       trip.pickup_performed? ->
@@ -139,9 +143,6 @@ defmodule RideAlong.Adept.Trip do
 
   def status(%__MODULE__{} = trip, nil, %DateTime{} = now) do
     cond do
-      trip.dropoff_performed? ->
-        :closed
-
       minutes_until(trip, now) > {:ok, 59} ->
         :closed
 

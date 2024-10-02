@@ -148,6 +148,13 @@ defmodule RideAlong.Adept.TripTest do
       assert Trip.status(trip, vehicle, now) == :enqueued
     end
 
+    test "is :enqueued if the pick_order is 0", %{trip: trip, vehicle: vehicle, now: now} do
+      trip = %{trip | pick_order: 0, drop_order: 0}
+
+      assert Trip.status(trip, nil, now) == :enqueued
+      assert Trip.status(trip, vehicle, now) == :enqueued
+    end
+
     test "is :enroute if there is exactly one pickup/dropoff before our pickup", %{
       trip: trip,
       now: now
