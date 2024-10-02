@@ -34,6 +34,8 @@
         <th class="p-1">Trip ID</th>
         <th class="p-1">Promise Time</th>
         <th class="p-1">Trip Status</th>
+        <th class="p-1">Route ID</th>
+        <th class="p-1">Vehicle</th>
       </thead>
       <tbody id="trips" phx-update="stream" class="pt-2">
         <tr :for={{dom_id, {trip, vehicle}} <- @streams.trips} id={dom_id}>
@@ -47,6 +49,8 @@
           </td>
           <td class="p-1"><%= Calendar.strftime(trip.promise_time, "%I:%M %p") %></td>
           <td class="p-1"><%= RideAlong.Adept.Trip.status(trip, vehicle, @now) %></td>
+          <td class="p-1"><%= trip.route_id %></td>
+          <td class="p-1"><span :if={vehicle}><%= vehicle.vehicle_id %></span></td>
         </tr>
       </tbody>
     </table>
