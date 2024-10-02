@@ -30,9 +30,8 @@ defmodule RideAlongWeb.TripLiveTest do
     end
 
     @tag :capture_log
-    test "closed trip redirects to not-found", %{conn: conn, vehicle: vehicle, token: token} do
-      vehicle = %{vehicle | last_drop: 10}
-      RideAlong.Adept.set_vehicles([vehicle])
+    test "closed trip redirects to not-found", %{conn: conn, trip: trip, token: token} do
+      RideAlong.Adept.set_trips([%{trip | dropoff_performed?: true}])
       assert {:error, {:redirect, %{to: "/not-found"}}} = live(conn, ~p"/t/#{token}")
     end
 

@@ -124,7 +124,11 @@ defmodule RideAlong.FakePublisher do
 
   def data(:picked_up, now) do
     result = %{
-      trips: [trip(now, %{})],
+      trips: [
+        trip(now, %{
+          "PerformPickup" => 2
+        })
+      ],
       locations: [
         location(now, %{
           "LastArrivedTrip" => @trip_id,

@@ -45,7 +45,14 @@ defmodule RideAlongWeb.AdminLiveTest do
       {:ok, document} = Floki.parse_document(html)
       assert [_] = Floki.find(document, "#trips-#{trip.trip_id}")
 
-      Adept.set_vehicles([%{vehicle | timestamp: DateTime.utc_now(), last_pick: 100}])
+      Adept.set_trips([
+        %{trip | dropoff_performed?: true}
+      ])
+
+      Adept.set_vehicles([
+        %{vehicle | timestamp: DateTime.utc_now()}
+      ])
+
       assert_receive {:vehicle_updated, _}
 
       html = render(view)

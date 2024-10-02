@@ -107,6 +107,10 @@ defmodule RideAlong.Adept.Trip do
     :closed
   end
 
+  def status(%__MODULE__{pickup_performed?: true}, _vehicle, _now) do
+    :picked_up
+  end
+
   def status(
         %__MODULE__{} = trip,
         %Vehicle{} = vehicle,
@@ -121,19 +125,10 @@ defmodule RideAlong.Adept.Trip do
       trip.pick_order == 0 ->
         :enqueued
 
-      max(vehicle.last_pick, vehicle.last_drop) >= trip.drop_order ->
-        :closed
-
-      trip.pickup_performed? ->
-        :picked_up
-
-      max(vehicle.last_pick, vehicle.last_drop) >= trip.pick_order ->
-        :picked_up
-
       trip.trip_id in vehicle.last_arrived_trips ->
         :arrived
 
-      trip.pick_order - max(vehicle.last_pick, vehicle.last_drop) == 1 ->
+      trip.pick_order - max(vehicle.last_pick, vehicle.last_drop) <= 1 ->
         enroute_or_waiting_status(trip, vehicle, minutes_remaining)
 
       true ->
@@ -142,15 +137,10 @@ defmodule RideAlong.Adept.Trip do
   end
 
   def status(%__MODULE__{} = trip, nil, %DateTime{} = now) do
-    cond do
-      minutes_until(trip, now) > {:ok, 59} ->
-        :closed
-
-      trip.pickup_performed? ->
-        :picked_up
-
-      true ->
-        :enqueued
+    if minutes_until(trip, now) > {:ok, 59} do
+      :closed
+    else
+      :enqueued
     end
   end
 

@@ -84,19 +84,6 @@ defmodule RideAlong.Adept.TripTest do
       assert Trip.status(trip, vehicle, now) == :closed
     end
 
-    test "is :closed if the vehicle has performed something after the dropoff", %{
-      trip: trip,
-      now: now
-    } do
-      vehicle = Fixtures.vehicle_fixture(%{last_pick: trip.drop_order + 2})
-
-      assert Trip.status(trip, vehicle, now) == :closed
-
-      vehicle = Fixtures.vehicle_fixture(%{last_drop: trip.drop_order + 1})
-
-      assert Trip.status(trip, vehicle, now) == :closed
-    end
-
     test "is :closed if the trip is more than an hour in the future", %{
       trip: trip,
       vehicle: vehicle,
@@ -113,17 +100,14 @@ defmodule RideAlong.Adept.TripTest do
       assert Trip.status(trip, vehicle, now) == :picked_up
     end
 
-    test "is :picked_up if the vehicle has performed something after the pickup", %{
-      trip: trip,
-      now: now
-    } do
-      vehicle = Fixtures.vehicle_fixture(%{last_pick: trip.pick_order})
-
-      assert Trip.status(trip, vehicle, now) == :picked_up
-
+    test "is not :picked_up if the vehicle has performed a later drop off, but not this pickup index",
+         %{
+           trip: trip,
+           now: now
+         } do
       vehicle = Fixtures.vehicle_fixture(%{last_drop: trip.pick_order + 1})
 
-      assert Trip.status(trip, vehicle, now) == :picked_up
+      refute Trip.status(trip, vehicle, now) == :picked_up
     end
 
     test "is :arrived if the current trip is the last arrived trip", %{
