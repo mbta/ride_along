@@ -2,8 +2,8 @@ defmodule RideAlong.Singleton do
   @moduledoc """
   Some functionality we only want to run on a single server.
 
-  This server uses a globally registered name to decide whether it or another
-  server is responsible for those singleton functionalities.
+  Each time a node joins/exits the cluster, we randomly sort the nodes and pick
+  the smallest one.
   """
   use GenServer
   require Logger
@@ -12,64 +12,42 @@ defmodule RideAlong.Singleton do
 
   def start_link(opts) do
     opts = Keyword.put_new(opts, :name, @default_name)
+    set_singleton(opts[:name])
     GenServer.start_link(__MODULE__, opts)
   end
 
   def singleton?(name \\ @default_name) do
-    case :global.whereis_name(name) do
-      pid when is_pid(pid) ->
-        node(pid) == node()
-
-      :undefined ->
-        true
-    end
+    :persistent_term.get(name, true)
   end
 
   @impl GenServer
   def init(opts) do
     name = opts[:name]
 
-    {:ok, name, check_registration(name)}
+    :net_kernel.monitor_nodes(true)
+
+    {:ok, name, :hibernate}
   end
 
   @impl GenServer
-  def handle_continue(:register, name) do
-    result =
-      case :global.register_name(name, self(), &:global.random_notify_name/3) do
-        :yes ->
-          log_singleton(true)
-          :hibernate
+  def handle_info({:nodeup, _node}, name) do
+    set_singleton(name)
 
-        :no ->
-          check_registration(name)
-      end
-
-    {:noreply, name, result}
+    {:noreply, name, :hibernate}
   end
 
-  @impl GenServer
-  def handle_info({:global_name_conflict, _name}, name) do
-    {:noreply, name, check_registration(name)}
+  def handle_info({:nodedown, _node}, name) do
+    set_singleton(name)
+
+    {:noreply, name, :hibernate}
   end
 
-  def handle_info({:DOWN, _, :process, _, _}, name) do
-    {:noreply, name, check_registration(name)}
-  end
+  def set_singleton(name) do
+    singleton_node = Enum.min_by([node() | Node.list()], &:erlang.phash2({name, &1}))
+    singleton? = singleton_node == node()
 
-  defp check_registration(name) do
-    case :global.whereis_name(name) do
-      :undefined ->
-        {:continue, :register}
-
-      pid when pid == self() ->
-        log_singleton(true)
-        :hibernate
-
-      pid ->
-        Process.monitor(pid)
-        log_singleton(node(pid))
-        :hibernate
-    end
+    :persistent_term.put(name, singleton?)
+    log_singleton(singleton?)
   end
 
   defp log_singleton(value) do
