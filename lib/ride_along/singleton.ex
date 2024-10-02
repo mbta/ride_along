@@ -48,10 +48,8 @@ defmodule RideAlong.Singleton do
   end
 
   @impl GenServer
-  def handle_info({:global_name_conflict, other}, name) do
-    Process.monitor(other)
-    log_singleton(false)
-    {:noreply, name, :hibernate}
+  def handle_info({:global_name_conflict, _name}, name) do
+    {:noreply, name, check_registration(name)}
   end
 
   def handle_info({:DOWN, _, :process, _, _}, name) do
@@ -69,12 +67,14 @@ defmodule RideAlong.Singleton do
 
       pid ->
         Process.monitor(pid)
-        log_singleton(false)
+        log_singleton(node(pid))
         :hibernate
     end
   end
 
   defp log_singleton(value) do
-    Logger.info("#{__MODULE__} node=#{inspect(node())} singleton=#{value}")
+    Logger.info(
+      "#{__MODULE__} node=#{inspect(node())} others=#{inspect(Node.list())} singleton=#{inspect(value)}"
+    )
   end
 end
