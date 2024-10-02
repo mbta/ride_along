@@ -29,19 +29,30 @@ import polyline from '@mapbox/polyline'
 // Core Web Vitals analytics
 import { onCLS, onINP, onLCP } from 'web-vitals'
 
-const sendBeacon = (blob) => {
+const postBlob = (blob) => {
   const path = window.location.pathname
-  const body = JSON.stringify({ ...blob, path });
-  // trailing ; is necessary above to avoid JS getting confused -ps
-  (navigator.sendBeacon && navigator.sendBeacon('/analytics', body)) ||
-      fetch('/analytics', { body, method: 'POST', keepalive: true })
+  const body = JSON.stringify({ ...blob, path })
+  fetch('/analytics', { body, method: 'POST', keepalive: true })
 }
 
-window.onerror = (event, source, lineno, colno, error) => {
-  const name = error.name
-  const message = error.message
-  sendBeacon({ source, lineno, colno, name, message })
+let sendBeacon = postBlob
+
+if (navigator.sendBeacon) {
+  sendBeacon = (blob) => {
+    const path = window.location.pathname
+    const body = JSON.stringify({ ...blob, path })
+    navigator.sendBeacon('/analytics', body)
+  }
 }
+
+window.addEventListener('error', (event) => {
+  const source = event.filename
+  const lineno = event.lineno
+  const colno = event.colno
+  const name = event.error
+  const message = event.message
+  postBlob({ source, lineno, colno, name, message })
+})
 
 function sendToAnalytics ({ name, value, id }) {
   sendBeacon({ name, value, id })
