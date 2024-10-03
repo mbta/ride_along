@@ -18,6 +18,8 @@ defmodule RideAlong.Adept.Vehicle do
     last_arrived_trips: []
   ]
 
+  require Logger
+
   @type t :: %__MODULE__{}
 
   @spec from_sql_map(%{binary() => term()}) :: t()
@@ -35,6 +37,10 @@ defmodule RideAlong.Adept.Vehicle do
       "LastArrivedTrip" => last_arrived_trip,
       "LastDispatchArrivedTrip" => last_dispatch_arrived_trip
     } = map
+
+    if is_nil(last_pick) or is_nil(last_drop) do
+      Logger.error("#{__MODULE__} nil last pick map=#{inspect(map, limit: :infinity)}")
+    end
 
     %__MODULE__{
       route_id: route_id,
