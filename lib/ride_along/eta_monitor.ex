@@ -41,24 +41,14 @@ defmodule RideAlong.EtaMonitor do
 
   @impl GenServer
   def handle_info(:trips_updated, state) do
-    state =
-      if RideAlong.Singleton.singleton?() do
-        update_trips(state)
-      else
-        state
-      end
+    state = update_trips(state)
 
     {:noreply, state}
   end
 
   def handle_info({:vehicle_updated, v}, state) do
-    state =
-      if RideAlong.Singleton.singleton?() do
-        trips = Adept.get_trips_by_route(v.route_id)
-        update_trips(state, trips)
-      else
-        state
-      end
+    trips = Adept.get_trips_by_route(v.route_id)
+    state = update_trips(state, trips)
 
     {:noreply, state}
   end
@@ -86,19 +76,20 @@ defmodule RideAlong.EtaMonitor do
   end
 
   def handle_info({:state_response, from, remote_state}, state) do
-    state = %{
-      state
-      | trip_date_to_key:
-          Map.merge(Map.get(remote_state, :trip_date_to_key, %{}), state.trip_date_to_key),
-        trip_predictions:
-          Map.merge(
-            Map.get(remote_state, :trip_predictions, %{}),
-            state.trip_predictions,
-            fn _key, l1, l2 ->
-              Enum.uniq(l1 ++ l2)
-            end
-          )
-    }
+    state =
+      clean_state(%{
+        state
+        | trip_date_to_key:
+            Map.merge(Map.get(remote_state, :trip_date_to_key, %{}), state.trip_date_to_key),
+          trip_predictions:
+            Map.merge(
+              Map.get(remote_state, :trip_predictions, %{}),
+              state.trip_predictions,
+              fn _key, l1, l2 ->
+                Enum.uniq(l1 ++ l2)
+              end
+            )
+      })
 
     Logger.info("#{__MODULE__} received state update from #{inspect(from)}")
     {:noreply, state}
@@ -131,21 +122,33 @@ defmodule RideAlong.EtaMonitor do
     trip_date = {trip.trip_id, trip.date}
 
     new_key = {trip.route_id, trip.pick_time, status}
-    old_key = Map.get(state.trip_date_to_key, trip_date, new_key)
 
-    state = put_in(state.trip_date_to_key[trip_date], new_key)
+    {old_key, state} =
+      get_and_update_in(state.trip_date_to_key[trip_date], fn old_key ->
+        {old_key, new_key}
+      end)
 
     changed? = new_key != old_key
 
-    state =
-      if status != :closed and (changed? or status in [:enroute, :waiting]) do
+    cond do
+      status == :closed ->
+        remove_trip_date_from_state(state, trip_date)
+
+      changed? or status in [:enroute, :waiting] ->
         log = log_trip_status_change(trip, vehicle, status, now)
         update_accuracy_metrics(state, trip_date, log)
-      else
-        state
-      end
 
-    state
+      true ->
+        state
+    end
+  end
+
+  defp remove_trip_date_from_state(state, trip_date) do
+    %{
+      state
+      | trip_date_to_key: Map.delete(state.trip_date_to_key, trip_date),
+        trip_predictions: Map.delete(state.trip_predictions, trip_date)
+    }
   end
 
   def log_trip_status_change(trip, vehicle, status, now) do
@@ -236,7 +239,9 @@ defmodule RideAlong.EtaMonitor do
 
     log = basic_metadata ++ vehicle_metadata ++ route_metadata ++ calculated_metadata
 
-    Logster.info(log)
+    if RideAlong.Singleton.singleton?() do
+      Logster.info(log)
+    end
 
     log
   end
@@ -267,7 +272,7 @@ defmodule RideAlong.EtaMonitor do
               }
             end
 
-          if predictions != [] do
+          if RideAlong.Singleton.singleton?() and predictions != [] do
             predictions
             |> DF.new()
             |> grouped_accuracy_rows()

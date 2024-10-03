@@ -43,7 +43,4 @@ defmodule RideAlong.MqttConnection do
       start: {__MODULE__, :start_link, [opts]}
     }
   end
-
-  # this can be removed once :emqtt_failover 0.4.0 is released
-  @dialyzer {:nowarn_function, start_link: 1}
 end
