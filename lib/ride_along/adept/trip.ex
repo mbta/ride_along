@@ -144,6 +144,8 @@ defmodule RideAlong.Adept.Trip do
     end
   end
 
+  @max_waiting_speed Decimal.new("5.0")
+
   defp enroute_or_waiting_status(trip, vehicle, minutes_remaining) do
     distance =
       :vincenty.distance(
@@ -151,7 +153,8 @@ defmodule RideAlong.Adept.Trip do
         {Decimal.to_float(trip.lat), Decimal.to_float(trip.lon)}
       )
 
-    if distance < 0.5 and minutes_remaining > {:ok, 5} do
+    if distance < 0.5 and not Decimal.gt?(vehicle.speed, @max_waiting_speed) and
+         minutes_remaining > {:ok, 5} do
       :waiting
     else
       :enroute
