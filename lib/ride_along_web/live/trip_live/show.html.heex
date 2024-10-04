@@ -6,15 +6,15 @@
   <div id="status" class="sr-only" aria-live="assertive" aria-atomic="true">
     <h2 class="sr-only"><%= gettext("Status") %></h2>
     <%= @popup %>
-    <span :if={@eta && @status in [:enroute, :waiting]}>
-      <%= gettext("Estimated time of pick-up:") %> <%= @eta_text %>
-    </span>
     <span :if={@status == :enqueued}>
       <%= ngettext(
         "There is one stop ahead of you.",
         "There are %{count} stops ahead of you.",
         @trip.pick_order - max(@vehicle.last_pick, @vehicle.last_drop) - 1
       ) %>
+    </span>
+    <span :if={@eta && @status in [:enqueued, :enroute, :waiting]}>
+      <%= gettext("Estimated time of pick-up:") %> <%= @eta_text %>
     </span>
     <span :if={@status == :arrived}>
       <%= gettext("The driver will go to your door and wait for up to five minutes.") %>
@@ -32,12 +32,6 @@
         <div class="text-center w-full">
           <div class="text-xl pb-2 font-bold">
             <%= gettext("Vehicle #%{vehicle}", %{vehicle: @vehicle.vehicle_id}) %>
-          </div>
-          <div :if={@status in [:enroute, :waiting]}>
-            <%= gettext("Estimated time of pick-up:") %>
-            <time class="block text-2xl font-bold" datetime={@eta}>
-              <%= @eta_text %>
-            </time>
           </div>
           <div class="text-xl font-bold">
             <span :if={@status == :enqueued}>
@@ -60,6 +54,12 @@
             <span :if={@status in [:picked_up, :closed]}>
               <%= gettext("You have been picked up!") %>
             </span>
+          </div>
+          <div :if={@status in [:enqueued, :enroute, :waiting]}>
+            <%= gettext("Estimated time of pick-up:") %>
+            <time class="block text-2xl font-bold" datetime={@eta}>
+              <%= @eta_text %>
+            </time>
           </div>
           <time
             :if={@trip.promise_time && @status in [:enqueued, :enroute, :waiting]}
