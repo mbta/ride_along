@@ -24,6 +24,23 @@ defmodule RideAlongWeb.TripLiveTest do
       assert Floki.text(elements) =~ "Estimated time of pick-up"
     end
 
+    test "shows a vehicle when the trip has arrived", %{
+      conn: conn,
+      trip: trip,
+      vehicle: vehicle,
+      token: token
+    } do
+      vehicle = %{vehicle | last_arrived_trips: [trip.trip_id], timestamp: DateTime.utc_now()}
+      RideAlong.Adept.set_vehicles([vehicle])
+
+      {:ok, _show_live, html} = live(conn, ~p"/t/#{token}")
+      {:ok, document} = Floki.parse_document(html)
+      map = Floki.get_by_id(document, "map")
+      assert [_bbox] = Floki.attribute(map, "data-bbox")
+      assert [_polyline] = Floki.attribute(map, "data-polyline")
+      assert [_heading] = Floki.attribute(map, "data-vehicle-heading")
+    end
+
     @tag :capture_log
     test "unknown trip redirects to not-found", %{conn: conn} do
       assert {:error, {:redirect, %{to: "/not-found"}}} = live(conn, ~p"/t/missing")
