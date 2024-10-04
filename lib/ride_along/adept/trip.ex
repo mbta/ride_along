@@ -151,7 +151,7 @@ defmodule RideAlong.Adept.Trip do
         {Decimal.to_float(trip.lat), Decimal.to_float(trip.lon)}
       )
 
-    if distance < 0.5 and minutes_remaining > {:ok, -10} do
+    if distance < 0.5 and minutes_remaining > {:ok, 5} do
       :waiting
     else
       :enroute
