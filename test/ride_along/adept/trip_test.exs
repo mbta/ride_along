@@ -121,6 +121,16 @@ defmodule RideAlong.Adept.TripTest do
       assert Trip.status(trip, vehicle, now) == :arrived
     end
 
+    test "is :arrived if the current trip has a pickup_arrival_time", %{
+      trip: trip,
+      vehicle: vehicle,
+      now: now
+    } do
+      trip = %{trip | pickup_arrival_time: DateTime.utc_now()}
+
+      assert Trip.status(trip, vehicle, now) == :arrived
+    end
+
     test "is :enqueued if there is more than one pickup/dropoff before our pickup", %{
       trip: trip,
       now: now

@@ -118,6 +118,10 @@ defmodule RideAlong.Adept.Trip do
     :picked_up
   end
 
+  def status(%__MODULE__{pickup_arrival_time: %DateTime{}}, _vehicle, _now) do
+    :arrived
+  end
+
   def status(
         %__MODULE__{} = trip,
         %Vehicle{} = vehicle,
