@@ -70,7 +70,8 @@ defmodule RideAlongWeb.TripLive.Show do
           |> assign_status()
           |> assign_eta()
           |> request_route(false)
-          |> push_route()
+          |> assign_route()
+          |> assign_popup()
 
         nil ->
           socket
@@ -151,7 +152,8 @@ defmodule RideAlongWeb.TripLive.Show do
      |> assign_status()
      |> assign_eta()
      |> request_route()
-     |> push_route()}
+     |> assign_route()
+     |> assign_popup()}
   end
 
   @impl true
@@ -160,7 +162,8 @@ defmodule RideAlongWeb.TripLive.Show do
       socket
       |> assign(:route, route)
       |> assign_eta()
-      |> push_route()
+      |> assign_route()
+      |> assign_popup()
 
     {:noreply, socket}
   end
@@ -170,7 +173,8 @@ defmodule RideAlongWeb.TripLive.Show do
      socket
      |> assign(:route, nil)
      |> assign_eta()
-     |> push_route()}
+     |> assign_route()
+     |> assign_popup()}
   end
 
   def handle_async(:route, {:ok, {:error, reason}}, socket) do
@@ -286,30 +290,30 @@ defmodule RideAlongWeb.TripLive.Show do
     end
   end
 
-  defp push_route(%{assigns: %{status: :enroute, route: route}} = socket) when route != nil do
+  defp assign_route(%{assigns: %{status: :enroute, route: route}} = socket) when route != nil do
     socket
     |> assign(:bbox, Jason.encode!(route.bbox))
     |> assign(:polyline, route.polyline)
-    |> assign(:popup, nil)
   end
 
-  defp push_route(
+  defp assign_route(
          %{
            assigns: %{
-             status: :enroute,
+             status: status,
              vehicle: %{lat: %Decimal{}, lon: %Decimal{}},
              route: nil
            }
          } =
            socket
-       ) do
+       )
+       when status in [:enroute, :arrived] do
     vehicle_lat = Decimal.to_float(socket.assigns.vehicle.lat)
     vehicle_lon = Decimal.to_float(socket.assigns.vehicle.lon)
 
     bbox =
       Jason.encode!([
         [vehicle_lat, vehicle_lon],
-        [socket.assigns.trip.lat, socket.assigns.trip.lon]
+        [Decimal.to_float(socket.assigns.trip.lat), Decimal.to_float(socket.assigns.trip.lon)]
       ])
 
     polyline =
@@ -320,26 +324,20 @@ defmodule RideAlongWeb.TripLive.Show do
     socket
     |> assign(:bbox, bbox)
     |> assign(:polyline, polyline)
-    |> assign(:popup, nil)
   end
 
-  defp push_route(socket) do
-    popup =
-      case socket.assigns.status do
-        :waiting ->
-          gettext("Your RIDE is nearby and will pick you up shortly.")
-
-        :arrived ->
-          gettext("Your RIDE is here!")
-
-        _ ->
-          nil
-      end
-
+  defp assign_route(socket) do
     socket
     |> assign(:bbox, nil)
     |> assign(:polyline, nil)
-    |> assign(:popup, popup)
+  end
+
+  defp assign_popup(%{assigns: %{status: :waiting}} = socket) do
+    assign(socket, :popup, gettext("Your RIDE is nearby and will pick you up shortly."))
+  end
+
+  defp assign_popup(socket) do
+    assign(socket, :popup, nil)
   end
 
   def status(assigns) do
