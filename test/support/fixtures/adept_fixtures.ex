@@ -51,6 +51,7 @@ defmodule RideAlong.AdeptFixtures do
           heading: Decimal.new("90"),
           lat: Decimal.new("42.35167"),
           lon: Decimal.new("-71.06694"),
+          speed: Decimal.new("5.00"),
           timestamp: local_timestamp(-1, :second),
           last_pick: 4,
           last_drop: 2,
