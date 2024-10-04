@@ -149,6 +149,7 @@ defmodule RideAlong.FakePublisher do
         "ClientId" => 70_000,
         "ClientTripIndex" => 1,
         "ClientNotificationPreference" => "TEXT ONLY",
+        "Status" => "S",
         "PickTime" => Calendar.strftime(DateTime.add(now, 30, :minute), "%H:%M"),
         "PromiseTime" => "#{now.hour}:#{now.minute}",
         "PickHouseNumber" => FakeAddress.building_number(),
