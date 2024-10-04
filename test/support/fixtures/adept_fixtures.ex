@@ -20,6 +20,7 @@ defmodule RideAlong.AdeptFixtures do
           client_trip_index: 0,
           client_notification_preference: "TEXT ONLY",
           date: DateTime.to_date(local_timestamp(0, :second)),
+          status: "S",
           pick_time: local_timestamp(30, :minute),
           promise_time: local_timestamp(35, :minute),
           lat: Decimal.new("42.3434"),

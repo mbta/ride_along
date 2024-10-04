@@ -13,6 +13,7 @@ defmodule RideAlong.Adept.Trip do
     :route_id,
     :client_id,
     :date,
+    :status,
     :pick_time,
     :promise_time,
     :pickup_arrival_time,
@@ -51,6 +52,7 @@ defmodule RideAlong.Adept.Trip do
       "RouteId" => route_id,
       "ClientId" => client_id,
       "ClientTripIndex" => client_trip_index,
+      "Status" => status,
       "PickTime" => pick_time,
       "PromiseTime" => promise_time,
       "PickHouseNumber" => house_number,
@@ -80,6 +82,7 @@ defmodule RideAlong.Adept.Trip do
       # can move this to the pattern match once the MQTT data has updated. -ps
       client_notification_preference: map["ClientNotificationPreference"],
       date: trip_date,
+      status: status,
       pick_time: relative_time(pick_time, trip_date),
       promise_time: relative_time(promise_time, trip_date),
       pickup_arrival_time: relative_time(pickup_arrival_time, trip_date),
@@ -102,6 +105,10 @@ defmodule RideAlong.Adept.Trip do
 
   @spec status(t(), Vehicle.t() | nil, DateTime.t()) :: status()
   def status(trip, vehicle, now \\ DateTime.utc_now())
+
+  def status(%__MODULE__{status: status}, _vehicle, _now) when status != "S" do
+    :closed
+  end
 
   def status(%__MODULE__{dropoff_performed?: true}, _vehicle, _now) do
     :closed
