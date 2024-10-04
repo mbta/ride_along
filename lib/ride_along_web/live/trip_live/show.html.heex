@@ -66,7 +66,7 @@
             class="block text-sm"
             datetime={@trip.promise_time}
           >
-            <%= gettext("Original promise time: %{time}", %{time: format_eta(@trip.promise_time)}) %>
+            <%= gettext("Original promise time: %{time}", %{time: format_time(@trip.promise_time)}) %>
           </time>
         </div>
       </div>

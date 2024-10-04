@@ -245,7 +245,7 @@ defmodule RideAlongWeb.TripLive.Show do
     if eta = calculate_eta(socket.assigns) do
       socket
       |> assign(:eta, DateTime.to_iso8601(eta))
-      |> assign(:eta_text, format_eta(eta))
+      |> assign(:eta_text, format_eta(eta, socket.assigns.now))
     else
       socket
       |> assign(:eta, nil)
@@ -359,7 +359,17 @@ defmodule RideAlongWeb.TripLive.Show do
     )
   end
 
-  def format_eta(dt) do
+  def format_eta(dt, now) do
+    minutes = round(max(DateTime.diff(dt, now, :second), 60) / 60)
+
+    if minutes > 10 do
+      format_time(dt)
+    else
+      ngettext("1 minute", "%{count} minutes", minutes)
+    end
+  end
+
+  def format_time(dt) do
     dt
     |> Calendar.Strftime.strftime!("%l:%M %p")
     |> String.trim_leading()
