@@ -161,7 +161,7 @@ defmodule RideAlong.SqlPublisher do
       trips: %{
         sql: ~s[WITH Trips AS (
               SELECT *,
-              ROW_NUMBER() OVER (PARTITION BY ClientId ORDER BY ClientId, TripDate) AS ClientTripIndex
+              ROW_NUMBER() OVER (PARTITION BY ClientId ORDER BY TripDate, PromiseTime) AS ClientTripIndex
               FROM dbo.TRIP
              )
              SELECT t.Id AS Id, TripDate, RouteId,
