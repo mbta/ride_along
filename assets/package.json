@@ -4,6 +4,7 @@
   },
   "dependencies": {
     "@mapbox/polyline": "^1.2.1",
+    "@sentry/browser": "^8.33.1",
     "leaflet": "^1.9.4",
     "leaflet-rotatedmarker": "^0.2.0",
     "web-vitals": "^4.2.3"

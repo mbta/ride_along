@@ -86,13 +86,20 @@ defmodule RideAlong.MixProject do
   #
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
+    sentry_dsn_define =
+      if (sentry_dsn = System.get_env("SENTRY_DSN", "")) != "" do
+        "--define:SENTRY_DSN='\"#{sentry_dsn}\"'"
+      else
+        "--define:SENTRY_DSN=false"
+      end
+
     [
       setup: ["deps.get", "assets.setup", "assets.build", "phx.gen.cert"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["tailwind ride_along", "esbuild ride_along"],
+      "assets.build": ["tailwind ride_along", "esbuild ride_along #{sentry_dsn_define}"],
       "assets.deploy": [
         "tailwind ride_along --minify",
-        "esbuild ride_along --minify",
+        "esbuild ride_along --minify #{sentry_dsn_define}",
         "phx.digest"
       ],
       "checks.dev": [

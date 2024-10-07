@@ -14,7 +14,7 @@ defmodule RideAlongWeb.Router do
 
     plug :put_secure_browser_headers_runtime, %{
       "content-security-policy" =>
-        "default-src 'self'; img-src https://cdn.mbta.com data: 'self'; connect-src 'self' wss://$HOST"
+        "default-src 'self'; img-src https://cdn.mbta.com data: 'self'; connect-src 'self' wss://$HOST https://*.ingest.us.sentry.io; worker-src 'self' blob:"
     }
   end
 

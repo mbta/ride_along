@@ -45,6 +45,7 @@ COPY --from=elixir-builder /app/deps deps
 RUN npm ci --prefix assets
 
 FROM elixir-builder AS app-builder
+ARG SENTRY_DSN=""
 COPY lib lib
 COPY priv priv
 COPY --from=assets-builder /app/assets assets

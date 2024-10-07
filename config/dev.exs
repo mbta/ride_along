@@ -13,6 +13,13 @@ port =
     p -> String.to_integer(p)
   end
 
+sentry_dsn_define =
+  if (sentry_dsn = System.get_env("SENTRY_DSN", "")) != "" do
+    "--define:SENTRY_DSN='#{sentry_dsn}'"
+  else
+    "--define:SENTRY_DSN=false"
+  end
+
 config :ride_along, RideAlongWeb.Endpoint,
   https: [
     ip: {127, 0, 0, 1},
@@ -26,7 +33,9 @@ config :ride_along, RideAlongWeb.Endpoint,
   debug_errors: true,
   secret_key_base: "UHZ0Lf/EGdIYNHWwTKoowoRJt+HFsrP8iwKPp/2XthQYE2BhRhjtfGJDLU0b70HI",
   watchers: [
-    esbuild: {Esbuild, :install_and_run, [:ride_along, ~w(--sourcemap=inline --watch)]},
+    esbuild:
+      {Esbuild, :install_and_run,
+       [:ride_along, ~w(--sourcemap=inline --watch #{sentry_dsn_define})]},
     tailwind: {Tailwind, :install_and_run, [:ride_along, ~w(--watch)]}
   ]
 

@@ -29,6 +29,9 @@ import polyline from '@mapbox/polyline'
 // Core Web Vitals analytics
 import { onCLS, onINP, onLCP } from 'web-vitals'
 
+// Sentry
+import { replayIntegration, init as sentryInit } from '@sentry/browser'
+
 const postBlob = (blob) => {
   const path = window.location.pathname
   const body = JSON.stringify({ ...blob, path })
@@ -45,14 +48,32 @@ if (navigator.sendBeacon) {
   }
 }
 
-window.addEventListener('error', (event) => {
-  const source = event.filename
-  const lineno = event.lineno
-  const colno = event.colno
-  const name = event.error
-  const message = event.message
-  postBlob({ source, lineno, colno, name, message })
-})
+(() => {
+/* global SENTRY_DSN */
+  if (SENTRY_DSN) {
+    sentryInit({
+      dsn: SENTRY_DSN,
+      integrations: [
+        replayIntegration({
+          maskAllText: false,
+          blockAllMedia: false
+        })
+      ],
+      // Session Replay
+      replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
+      replaysOnErrorSampleRate: 1.0 // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
+    })
+  } else {
+    window.addEventListener('error', (event) => {
+      const source = event.filename
+      const lineno = event.lineno
+      const colno = event.colno
+      const name = event.error
+      const message = event.message
+      postBlob({ source, lineno, colno, name, message })
+    })
+  }
+})()
 
 function sendToAnalytics ({ name, value, id }) {
   sendBeacon({ name, value, id })
