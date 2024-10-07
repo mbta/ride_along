@@ -14,7 +14,10 @@
       ) %>
     </span>
     <span :if={@eta && @status in [:enqueued, :enroute, :waiting]}>
-      <%= gettext("Estimated time of pick-up:") %> <%= @eta_text %>
+      <%= case @eta_text do
+        {:countdown, text} -> [gettext("Your vehicle will be arriving in:"), " ", text]
+        {:time, text} -> [gettext("Estimated time of pick-up:"), " ", text]
+      end %>
     </span>
     <span :if={@status == :arrived}>
       <%= gettext("The driver will go to your door and wait for up to five minutes.") %>
@@ -55,11 +58,19 @@
               <%= gettext("You have been picked up!") %>
             </span>
           </div>
-          <div :if={@status in [:enqueued, :enroute, :waiting]}>
-            <%= gettext("Estimated time of pick-up:") %>
-            <time class="block text-2xl font-bold" datetime={@eta}>
-              <%= @eta_text %>
-            </time>
+          <div :if={@eta && @status in [:enqueued, :enroute, :waiting]}>
+            <%= case @eta_text do %>
+              <% {:time, text} -> %>
+                <%= gettext("Estimated time of pick-up:") %>
+                <time class="block text-2xl font-bold" datetime={@eta}>
+                  <%= text %>
+                </time>
+              <% {:countdown, text} -> %>
+                <%= gettext("Your vehicle will be arriving in:") %>
+                <time class="block text-2xl font-bold" datetime={@eta}>
+                  <%= text %>
+                </time>
+            <% end %>
           </div>
           <time
             :if={@trip.promise_time && @status in [:enqueued, :enroute, :waiting]}

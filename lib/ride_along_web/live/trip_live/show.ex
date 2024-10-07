@@ -363,9 +363,9 @@ defmodule RideAlongWeb.TripLive.Show do
     minutes = round(max(DateTime.diff(dt, now, :second), 60) / 60)
 
     if minutes > 10 do
-      format_time(dt)
+      {:time, format_time(dt)}
     else
-      ngettext("1 minute", "%{count} minutes", minutes)
+      {:countdown, ngettext("1 minute", "%{count} minutes", minutes)}
     end
   end
 
