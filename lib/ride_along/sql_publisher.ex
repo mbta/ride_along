@@ -183,10 +183,10 @@ defmodule RideAlong.SqlPublisher do
       },
       locations: %{
         sql: ~s[SELECT RouteId, VehicleId, Latitude, Longitude, Speed, Heading, LocationDate,
-               COALESCE((SELECT MAX(PickOrder) FROM dbo.TRIP t
-                 WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.PerformPickup != 0), 1) AS LastPick,
-               COALESCE((SELECT MAX(DropOrder) FROM dbo.TRIP t
-                 WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.PerformDropoff != 0), 1) AS LastDrop,
+               (SELECT MAX(PickOrder) FROM dbo.TRIP t
+                 WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.PerformPickup != 0) AS LastPick,
+               (SELECT MAX(DropOrder) FROM dbo.TRIP t
+                 WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.PerformDropoff != 0) AS LastDrop,
                (SELECT TOP 1 TripId FROM dbo.MDCVEHICLELOCATION
                  WHERE RouteId = l.RouteId AND LocationDate >= @service_date AND EventType='StopArrive'
                  ORDER BY LocationDate DESC) AS LastArrivedTrip,

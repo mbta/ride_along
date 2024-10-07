@@ -44,8 +44,8 @@ defmodule RideAlong.Adept.Vehicle do
       lat: lat,
       lon: lon,
       timestamp: RideAlong.SqlParser.local_timestamp(location_timestamp),
-      last_pick: last_pick,
-      last_drop: last_drop,
+      last_pick: last_pick || 1,
+      last_drop: last_drop || 1,
       last_arrived_trips: last_arrived_trips(last_arrived_trip, last_dispatch_arrived_trip)
     }
   end
