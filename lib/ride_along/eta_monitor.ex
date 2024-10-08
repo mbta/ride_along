@@ -165,6 +165,7 @@ defmodule RideAlong.EtaMonitor do
       trip_id: trip.trip_id,
       route: trip.route_id,
       status: status,
+      trip_status: trip.status,
       promise: trip.promise_time,
       pick: trip.pick_time,
       pick_order: trip.pick_order,
