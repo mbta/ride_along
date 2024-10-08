@@ -6,6 +6,8 @@ defmodule RideAlong.Adept do
   """
   use GenServer
 
+  alias __MODULE__.Vehicle
+
   @default_name __MODULE__
 
   def start_link(opts \\ []) do
@@ -112,7 +114,7 @@ defmodule RideAlong.Adept do
   defp update_vehicle(state, v) do
     if old = get_vehicle_by_route(state.name, v.route_id) do
       if DateTime.compare(v.timestamp, old.timestamp) == :gt or
-           max(v.last_pick, v.last_drop) > max(old.last_pick, old.last_drop) do
+           Vehicle.last_stop(v) > Vehicle.last_stop(old) do
         publish_update(v)
       else
         []

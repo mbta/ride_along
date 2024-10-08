@@ -50,6 +50,10 @@ defmodule RideAlong.Adept.Vehicle do
     }
   end
 
+  def last_stop(%__MODULE__{} = v) do
+    max(v.last_pick, v.last_drop)
+  end
+
   defp last_arrived_trips(nil, nil), do: []
   defp last_arrived_trips(trip_id, nil), do: [trip_id]
   defp last_arrived_trips(nil, trip_id), do: [trip_id]

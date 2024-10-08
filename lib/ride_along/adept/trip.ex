@@ -139,7 +139,7 @@ defmodule RideAlong.Adept.Trip do
       trip.trip_id in vehicle.last_arrived_trips ->
         :arrived
 
-      trip.pick_order - max(vehicle.last_pick, vehicle.last_drop) <= 1 ->
+      trip.pick_order - Vehicle.last_stop(vehicle) <= 1 ->
         enroute_or_waiting_status(trip, vehicle, minutes_remaining)
 
       true ->

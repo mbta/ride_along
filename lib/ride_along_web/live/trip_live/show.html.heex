@@ -10,7 +10,7 @@
       <%= ngettext(
         "There is one stop ahead of you.",
         "There are %{count} stops ahead of you.",
-        @trip.pick_order - max(@vehicle.last_pick, @vehicle.last_drop) - 1
+        @trip.pick_order - RideAlong.Adept.Vehicle.last_stop(@vehicle) - 1
       ) %>
     </span>
     <span :if={@eta && @status in [:enqueued, :enroute, :waiting]}>
@@ -41,7 +41,7 @@
               <%= ngettext(
                 "There is one stop ahead of you.",
                 "There are %{count} stops ahead of you.",
-                @trip.pick_order - max(@vehicle.last_pick, @vehicle.last_drop) - 1
+                @trip.pick_order - RideAlong.Adept.Vehicle.last_stop(@vehicle) - 1
               ) %>
             </span>
             <span :if={@status == :arrived}>
