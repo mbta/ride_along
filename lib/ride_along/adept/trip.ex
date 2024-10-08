@@ -155,6 +155,25 @@ defmodule RideAlong.Adept.Trip do
     end
   end
 
+  @doc """
+  The driver will wait until the later of:
+  - 5 minutes after the departure time
+  - 5 minutes after the promise time
+  """
+  @spec departure_time(t()) :: DateTime.t() | nil
+  def departure_time(%__MODULE__{
+        pickup_arrival_time: %DateTime{} = pickup,
+        promise_time: %DateTime{} = promise
+      }) do
+    [pickup, promise]
+    |> Enum.max(DateTime)
+    |> DateTime.add(5, :minute)
+  end
+
+  def departure_time(%__MODULE__{}) do
+    nil
+  end
+
   @max_waiting_speed Decimal.new("5.0")
 
   defp enroute_or_waiting_status(trip, vehicle, minutes_remaining) do

@@ -255,9 +255,10 @@ defmodule RideAlongWeb.TripLive.Show do
 
   defp assign_status(socket) do
     new_status = status(socket.assigns)
+    socket = assign(socket, :status, new_status)
 
-    socket =
-      if new_status in [:picked_up, :closed] do
+    cond do
+      new_status in [:picked_up, :closed] ->
         if socket.assigns[:countdown_ref] do
           :timer.cancel(socket.assigns.countdown_ref)
         end
@@ -266,11 +267,20 @@ defmodule RideAlongWeb.TripLive.Show do
         RideAlong.PubSub.unsubscribe("trips:updated")
 
         assign(socket, :countdown_ref, nil)
-      else
-        socket
-      end
 
-    assign(socket, :status, new_status)
+      new_status == :arrived ->
+        departure_text =
+          if departure_time = Trip.departure_time(socket.assigns.trip) do
+            gettext("until %{time}", %{time: format_time(departure_time)})
+          else
+            gettext("for up to five minutes")
+          end
+
+        assign(socket, :departure_text, departure_text)
+
+      true ->
+        socket
+    end
   end
 
   def put_schedule_change_flash(socket, old_trip) do

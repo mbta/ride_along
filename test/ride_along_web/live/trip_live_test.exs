@@ -24,7 +24,7 @@ defmodule RideAlongWeb.TripLiveTest do
       assert Floki.text(elements) =~ "Estimated time of pick-up"
     end
 
-    test "shows a vehicle when the trip has arrived", %{
+    test "shows a vehicle and the 5 minute departure when the trip has arrived", %{
       conn: conn,
       trip: trip,
       vehicle: vehicle,
@@ -35,10 +35,37 @@ defmodule RideAlongWeb.TripLiveTest do
 
       {:ok, _show_live, html} = live(conn, ~p"/t/#{token}")
       {:ok, document} = Floki.parse_document(html)
+
       map = Floki.get_by_id(document, "map")
       assert [_bbox] = Floki.attribute(map, "data-bbox")
       assert [_polyline] = Floki.attribute(map, "data-polyline")
       assert [_heading] = Floki.attribute(map, "data-vehicle-heading")
+
+      status = Floki.get_by_id(document, "status")
+
+      assert Floki.text(status) =~
+               "The driver will go to your door and wait for up to five minutes."
+    end
+
+    test "shows the time 5 minutes after the promise time if the driver arrives early", %{
+      conn: conn,
+      trip: trip,
+      token: token
+    } do
+      promise_time = DateTime.from_naive!(~N[2024-10-08T12:28:00], "America/New_York")
+
+      trip = %{
+        trip
+        | promise_time: promise_time,
+          pickup_arrival_time: DateTime.add(promise_time, -10, :minute)
+      }
+
+      RideAlong.Adept.set_trips([trip])
+      {:ok, _show_live, html} = live(conn, ~p"/t/#{token}")
+      {:ok, document} = Floki.parse_document(html)
+
+      status = Floki.get_by_id(document, "status")
+      assert Floki.text(status) =~ "The driver will go to your door and wait until 12:33 PM."
     end
 
     @tag :capture_log

@@ -179,7 +179,7 @@ defmodule RideAlong.SqlPublisher do
                ClientId > 0 AND
                (RouteId < 400000 OR RouteId >= 800000)],
         parameters: %{service_date: service_date},
-        interval: 300_000
+        interval: 60_000
       },
       locations: %{
         sql: ~s[SELECT RouteId, VehicleId, Latitude, Longitude, Speed, Heading, LocationDate,

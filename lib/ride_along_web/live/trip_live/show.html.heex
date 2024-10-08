@@ -20,7 +20,7 @@
       end %>
     </span>
     <span :if={@status == :arrived}>
-      <%= gettext("The driver will go to your door and wait for up to five minutes.") %>
+      <%= gettext("The driver will go to your door and wait %{time}.", %{time: @departure_text}) %>
       <%= if @trip.client_trip_index != 0,
         do: gettext("If you are going to be late, call TRAC as soon as possible at 844-427-7433.") %>
     </span>
@@ -51,7 +51,9 @@
               />
               <%= gettext("Your RIDE is here!") %>
               <span class="block text-sm px-4 font-normal">
-                <%= gettext("The driver will go to your door and wait for up to five minutes.") %>
+                <%= gettext("The driver will go to your door and wait %{time}.", %{
+                  time: @departure_text
+                }) %>
               </span>
             </span>
             <span :if={@status in [:picked_up, :closed]}>
