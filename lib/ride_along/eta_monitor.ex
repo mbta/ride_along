@@ -164,6 +164,7 @@ defmodule RideAlong.EtaMonitor do
       log: :monitor,
       trip_id: trip.trip_id,
       route: trip.route_id,
+      client_id: trip.client_id,
       status: status,
       trip_status: trip.status,
       promise: trip.promise_time,
