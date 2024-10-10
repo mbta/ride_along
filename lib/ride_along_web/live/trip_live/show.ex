@@ -131,29 +131,36 @@ defmodule RideAlongWeb.TripLive.Show do
 
   def handle_info(:trips_updated, socket) do
     old_trip = socket.assigns.trip
-    new_trip = Adept.get_trip(old_trip.trip_id)
 
-    # keep the old address if we're in demo mode
-    trip = %{
-      new_trip
-      | house_number: old_trip.house_number,
-        address1: old_trip.address1,
-        address2: old_trip.address2,
-        city: old_trip.city,
-        state: old_trip.state,
-        zip: old_trip.zip
-    }
+    socket =
+      case Adept.get_trip(old_trip.trip_id) do
+        %Trip{} = new_trip ->
+          # keep the old address if we're in demo mode
+          trip = %{
+            new_trip
+            | house_number: old_trip.house_number,
+              address1: old_trip.address1,
+              address2: old_trip.address2,
+              city: old_trip.city,
+              state: old_trip.state,
+              zip: old_trip.zip
+          }
 
-    {:noreply,
-     socket
-     |> assign(:trip, trip)
-     |> assign_vehicle(old_trip)
-     |> put_schedule_change_flash(old_trip)
-     |> assign_status()
-     |> assign_eta()
-     |> request_route()
-     |> assign_route()
-     |> assign_popup()}
+          socket
+          |> assign(:trip, trip)
+          |> assign_vehicle(old_trip)
+          |> put_schedule_change_flash(old_trip)
+          |> assign_status()
+          |> assign_eta()
+          |> request_route()
+          |> assign_route()
+          |> assign_popup()
+
+        nil ->
+          redirect(socket, to: "/not-found")
+      end
+
+    {:noreply, socket}
   end
 
   @impl true
