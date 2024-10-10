@@ -45,6 +45,7 @@ defmodule RideAlong.Adept.TripTest do
         date: ~D[2024-05-30],
         status: "CX",
         client_trip_index: 1,
+        client_notification_preference: "NONE",
         pick_time: DateTime.new!(~D[2024-05-30], ~T[03:33:00], time_zone),
         promise_time: DateTime.new!(~D[2024-05-31], ~T[00:50:00], time_zone),
         pickup_arrival_time: nil,

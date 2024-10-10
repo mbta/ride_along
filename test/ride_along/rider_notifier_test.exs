@@ -25,6 +25,18 @@ defmodule RideAlong.RiderNotifierTest do
     :ok
   end
 
+  test "does not triggers a notification when the rider does not have TEXT configured" do
+    trip_id = :erlang.unique_integer()
+
+    Adept.set_vehicles([AdeptFixtures.vehicle_fixture()])
+
+    Adept.set_trips([
+      AdeptFixtures.trip_fixture(%{trip_id: trip_id, client_notification_preference: "PHONE ONLY"})
+    ])
+
+    refute_receive {:trip_notification, _}
+  end
+
   test "triggers a notification when the trip is the next pickup" do
     trip_id = :erlang.unique_integer()
 

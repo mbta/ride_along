@@ -96,6 +96,7 @@ defmodule RideAlong.RiderNotifier do
         trip.promise_time != nil,
         trip.route_id > 0,
         not trip.pickup_performed?,
+        String.contains?(trip.client_notification_preference, "TEXT"),
         diff = DateTime.diff(trip.promise_time, now),
         # we use a loop here to ensure we always set vehicle, even when it's nil
         vehicle <- [RideAlong.Adept.get_vehicle_by_route(trip.route_id)],

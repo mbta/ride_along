@@ -80,7 +80,7 @@ defmodule RideAlong.Adept.Trip do
       client_id: client_id,
       client_trip_index: client_trip_index - 1,
       # can move this to the pattern match once the MQTT data has updated. -ps
-      client_notification_preference: map["ClientNotificationPreference"],
+      client_notification_preference: map["ClientNotificationPreference"] || "NONE",
       date: trip_date,
       status: status,
       pick_time: relative_time(pick_time, trip_date),
