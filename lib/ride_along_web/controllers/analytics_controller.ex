@@ -30,8 +30,15 @@ defmodule RideAlongWeb.AnalyticsController do
     |> halt()
   end
 
-  defp log_decoded(%{"name" => metric, "value" => value, "path" => path}) do
-    {:info, [metric: metric, value: value, path: path]}
+  defp log_decoded(%{"name" => metric, "value" => value, "path" => path} = params) do
+    delta = params["delta"]
+
+    debug_target =
+      if debug_target = params["debug_target"] do
+        inspect(debug_target)
+      end
+
+    {:info, [metric: metric, value: value, path: path, delta: delta, debug_target: debug_target]}
   end
 
   defp log_decoded(%{

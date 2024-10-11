@@ -27,7 +27,7 @@ import 'leaflet-rotatedmarker'
 import polyline from '@mapbox/polyline'
 
 // Core Web Vitals analytics
-import { onCLS, onINP, onLCP } from 'web-vitals'
+import { onCLS, onINP, onLCP } from 'web-vitals/attribution'
 
 // Sentry
 import { replayIntegration, init as sentryInit } from '@sentry/browser'
@@ -75,8 +75,22 @@ if (navigator.sendBeacon) {
   }
 })()
 
-function sendToAnalytics ({ name, value, id }) {
-  sendBeacon({ name, value, id })
+function sendToAnalytics ({ name, value, id, delta, attribution }) {
+  const eventParams = { name, value, id, delta }
+
+  switch (name) {
+    case 'CLS':
+      eventParams.debug_target = attribution.largestShiftTarget
+      break
+    case 'INP':
+      eventParams.debug_target = attribution.interactionTarget
+      break
+    case 'LCP':
+      eventParams.debug_target = attribution.element
+      break
+  }
+
+  sendBeacon(eventParams)
 }
 
 onCLS(sendToAnalytics)
