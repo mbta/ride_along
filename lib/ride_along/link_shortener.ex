@@ -34,7 +34,10 @@ defmodule RideAlong.LinkShortener do
   end
 
   def get_trip(name \\ @default_name, token) when is_binary(token) do
-    GenServer.call(name, {:get_trip, token})
+    case GenServer.call(name, {:get_trip, token}) do
+      nil -> nil
+      trip_id -> RideAlong.Adept.get_trip(trip_id)
+    end
   end
 
   defstruct [:token_map, :trip_id_map]
@@ -64,7 +67,7 @@ defmodule RideAlong.LinkShortener do
 
   def update_token_maps do
     token_map = generate_token_map(RideAlong.Adept.all_trips())
-    trip_id_map = Map.new(token_map, fn {token, trip} -> {trip.trip_id, token} end)
+    trip_id_map = Map.new(token_map, fn {token, trip_id} -> {trip_id, token} end)
 
     %__MODULE__{
       token_map: token_map,
@@ -93,7 +96,7 @@ defmodule RideAlong.LinkShortener do
         hash_trip(trip, link_map, index + 1)
 
       _ ->
-        Map.put(link_map, short_b64, trip)
+        Map.put(link_map, short_b64, trip.trip_id)
     end
   end
 
