@@ -82,7 +82,7 @@ defmodule RideAlong.EtaCalculator.Model do
     original_prediction = Nx.max(tensor[[.., 0]], 0)
 
     model
-    |> EXGBoost.predict(tensor, Keyword.merge(opts, feature_name: @feature_names))
+    |> EXGBoost.inplace_predict(tensor, opts)
     |> Nx.max(0)
     |> Nx.add(original_prediction)
     |> Nx.squeeze()

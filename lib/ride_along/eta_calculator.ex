@@ -33,14 +33,18 @@ defmodule RideAlong.EtaCalculator do
               "#{__MODULE__} error calculating trip_id=#{trip.trip_id} route=#{trip.route_id} promise=#{trip.promise_time} pick=#{trip.pick_time} error=#{inspect(e)}"
             )
 
-            trip.pick_time
+            future_time(trip.pick_time, now)
         end
 
       :enqueued ->
-        Enum.max([trip.pick_time, now], DateTime)
+        future_time(trip.pick_time, now)
 
       _ ->
-        trip.pick_time
+        future_time(trip.pick_time, now)
     end
   end
+
+  defp future_time(dt, now)
+  defp future_time(nil, %DateTime{} = now), do: now
+  defp future_time(%DateTime{} = dt, %DateTime{} = now), do: Enum.max([dt, now], DateTime)
 end
