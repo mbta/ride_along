@@ -45,7 +45,8 @@ defmodule RideAlong.EtaCalculator.Model do
           -1
       end
 
-    noon = %{now | hour: 12, minute: 0, second: 0, microsecond: {0, 0}}
+    noon = DateTime.new!(trip.date, ~T[12:00:00], Application.get_env(:ride_along, :time_zone))
+
     promise_duration = DateTime.diff(trip.promise_time, now, :second)
     pick_duration = DateTime.diff(trip.pick_time, now, :second)
     pick_offset = pick_duration - promise_duration
