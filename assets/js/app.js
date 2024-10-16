@@ -180,7 +180,7 @@ function initializeMap (el) {
     if (el.dataset.bbox) {
       map.fitBounds(JSON.parse(el.dataset.bbox), { padding: [48, 48] })
     } else {
-      map.setView(destination.getLatLng(), 15)
+      map.setView(destination.getLatLng(), 17)
     }
 
     if (el.dataset.popup) {
