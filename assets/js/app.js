@@ -224,8 +224,26 @@ if (mapEl) {
 }
 
 window.setTimeout(() => {
+  let sessionStore, localStore
+
+  try {
+    sessionStore = window.sessionStorage
+    localStore = window.localStorage
+  } catch (_e) {
+    class InMemoryStorage {
+      constructor () { this.storage = {} }
+      getItem (keyName) { return this.storage[keyName] || null }
+      removeItem (keyName) { delete this.storage[keyName] }
+      setItem (keyName, keyValue) { this.storage[keyName] = keyValue }
+    }
+    sessionStore = new InMemoryStorage()
+    localStore = new InMemoryStorage()
+  }
+
   const liveSocket = new LiveSocket('/live', Socket, {
     longPollFallbackMs: 10000,
+    sessionStorage: sessionStore,
+    localStorage: localStore,
     params: { _csrf_token: csrfToken }
   })
 
