@@ -231,8 +231,8 @@ defmodule RideAlong.EtaMonitor do
            ors_eta: ors_eta
          ]}
 
-      {:error, _reason} ->
-        {nil, []}
+      {:error, reason} ->
+        {nil, [ors_error: inspect(reason)]}
     end
   end
 
