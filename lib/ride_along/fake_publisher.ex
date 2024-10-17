@@ -5,7 +5,6 @@ defmodule RideAlong.FakePublisher do
   use GenServer
 
   alias EmqttFailover.Message
-  alias Faker.Address, as: FakeAddress
   alias RideAlong.MqttConnection
 
   @default_name __MODULE__
@@ -13,6 +12,8 @@ defmodule RideAlong.FakePublisher do
   @trip_id 1234
   @route_id 2345
   @vehicle_id "5678"
+  @destination_lat 42.351331
+  @destination_lon -71.066925
 
   def start_link(opts) do
     if opts[:start] do
@@ -70,7 +71,7 @@ defmodule RideAlong.FakePublisher do
       locations: [location(now, %{})]
     }
 
-    next_state = Enum.random([:waiting, :waiting, :arrived, :arrived, :switch_vehicle])
+    next_state = Enum.random([:waiting, :waiting, :enroute, :arrived, :switch_vehicle])
 
     {results, next_state}
   end
@@ -80,8 +81,10 @@ defmodule RideAlong.FakePublisher do
       trips: [trip(now, %{})],
       locations: [
         location(now, %{
-          "Latitude" => Decimal.new("42.3434"),
-          "Longitude" => Decimal.new("-71.06166")
+          "Heading" => Decimal.new("0.0"),
+          "Speed" => Decimal.new("0.0"),
+          "Longitude" => Decimal.new("#{@destination_lon}"),
+          "Latitude" => Decimal.new("#{@destination_lat}")
         })
       ]
     }
@@ -94,6 +97,10 @@ defmodule RideAlong.FakePublisher do
       trips: [trip(now, %{})],
       locations: [
         location(now, %{
+          "Heading" => Decimal.new("0.0"),
+          "Speed" => Decimal.new("0.0"),
+          "Longitude" => Decimal.new("#{@destination_lon}"),
+          "Latitude" => Decimal.new("#{@destination_lat}"),
           "LastArrivedTrip" => @trip_id
         })
       ]
@@ -151,15 +158,15 @@ defmodule RideAlong.FakePublisher do
         "ClientNotificationPreference" => "TEXT ONLY",
         "Status" => "S",
         "PickTime" => Calendar.strftime(DateTime.add(now, 30, :minute), "%H:%M"),
-        "PromiseTime" => "#{now.hour}:#{now.minute}",
-        "PickHouseNumber" => FakeAddress.building_number(),
-        "PickAddress1" => FakeAddress.street_name(),
-        "PickAddress2" => FakeAddress.secondary_address(),
-        "PickCity" => FakeAddress.city(),
-        "PickSt" => FakeAddress.state_abbr(),
-        "PickZip" => FakeAddress.zip(),
-        "PickGridX" => "-7106166",
-        "PickGridY" => "4234340",
+        "PromiseTime" => Calendar.strftime(DateTime.add(now, 25, :minute), "%H:%M"),
+        "PickHouseNumber" => "10",
+        "PickAddress1" => "Park Plaza",
+        "PickAddress2" => "",
+        "PickCity" => "Boston",
+        "PickSt" => "MA",
+        "PickZip" => "02116",
+        "PickGridX" => "#{trunc(@destination_lon * 100_000)}",
+        "PickGridY" => "#{trunc(@destination_lat * 100_000)}",
         "Anchor" => "P",
         "PickOrder" => 2,
         "DropOrder" => 3,
@@ -177,10 +184,12 @@ defmodule RideAlong.FakePublisher do
       %{
         "RouteId" => @route_id,
         "VehicleId" => @vehicle_id,
-        "Heading" => Decimal.new("90"),
+        "Heading" => Decimal.new("180"),
         "Speed" => Decimal.new("15"),
-        "Latitude" => Decimal.new("42.346"),
-        "Longitude" => Decimal.new("-71.071"),
+        # "Latitude" => Decimal.new("42.346"),
+        # "Longitude" => Decimal.new("-71.071"),
+        "Longitude" => Decimal.new("-71.0126100"),
+        "Latitude" => Decimal.new("42.4035100"),
         "LocationDate" => erl_dt(now),
         "LastPick" => 1,
         "LastDrop" => 1,
