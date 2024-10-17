@@ -13,7 +13,7 @@ defmodule RideAlong.OpenRouteService do
 
     Mostly so that clients don't need to remember the order of latitude/longitude.
     """
-    defstruct [:lat, :lon]
+    defstruct [:lat, :lon, :heading]
   end
 
   defmodule Route do
@@ -54,6 +54,13 @@ defmodule RideAlong.OpenRouteService do
           [destination.lon, destination.lat]
         ]
       }
+
+    query =
+      if source.heading do
+        Map.put(query, :bearings, [[source.heading, 45]])
+      else
+        query
+      end
 
     case Req.post(req(), url: "/ors/v2/directions/driving-hgv", json: query) do
       {:ok, %{status: 200, body: body}} ->
