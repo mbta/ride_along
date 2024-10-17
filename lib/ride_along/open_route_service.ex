@@ -130,8 +130,12 @@ defmodule RideAlong.OpenRouteService do
     }
   end
 
-  defp parse_error_response(%{"error" => %{"code" => 2009}}) do
-    :route_not_found
+  defp parse_error_response(%{"error" => %{"code" => 2009, "message" => message}}) do
+    {:route_not_found, message}
+  end
+
+  defp parse_error_response(%{"error" => %{"code" => 2010, "message" => message}}) do
+    {:no_routable_point, message}
   end
 
   defp parse_error_response(error) do

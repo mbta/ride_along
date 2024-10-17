@@ -40,7 +40,7 @@ defmodule RideAlong.OpenRouteServiceTest do
 
       destination = %Location{lat: 42.3516728, lon: -71.0718109}
       source = %Location{lat: 42.3516768, lon: -71.0695149}
-      assert {:error, :route_not_found} = OpenRouteService.directions(source, destination)
+      assert {:error, {:route_not_found, _}} = OpenRouteService.directions(source, destination)
     end
   end
 end
