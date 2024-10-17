@@ -145,7 +145,3 @@ with <<client_ids_json::binary>> <- System.get_env("RIDER_NOTIFIER_CLIENT_IDS"),
   IO.puts("Only sending notifications to: #{inspect(client_ids)}")
   config :ride_along, RideAlong.RiderNotifier, client_ids: client_ids
 end
-
-if feedback_url = System.get_env("FEEDBACK_URL") do
-  config :ride_along, RideAlongWeb.TripLive.Show, feedback_url: feedback_url
-end

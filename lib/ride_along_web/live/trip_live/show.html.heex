@@ -132,7 +132,7 @@
         data-popup={@popup}
       />
     </section>
-    <section class="p-2 bg-blue-900 text-white">
+    <section :if={@feedback_url} class="p-2 bg-blue-900 text-white">
       <span class="float-left border-2 p-1 border-blue-900">
         <%= gettext("This site is in beta.") %>
       </span>
