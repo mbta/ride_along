@@ -226,7 +226,7 @@ defmodule RideAlong.EtaMonitor do
         {route,
          [
            ors_duration: route.duration,
-           ors_heading: route.bearing,
+           ors_heading: route.heading,
            ors_distance: route.distance,
            ors_eta: ors_eta
          ]}

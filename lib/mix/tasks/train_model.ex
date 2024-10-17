@@ -211,7 +211,7 @@ defmodule Mix.Tasks.TrainModel do
                {:ok, route} <- RideAlong.OpenRouteService.directions(source, destination) do
             %{
               ors_duration: route.duration,
-              ors_heading: route.bearing,
+              ors_heading: route.heading,
               ors_distance: route.distance
             }
           else

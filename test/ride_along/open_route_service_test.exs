@@ -12,7 +12,7 @@ defmodule RideAlong.OpenRouteServiceTest do
       destination = %Location{lat: 42.3516728, lon: -71.0718109}
       source = %Location{lat: 42.3516768, lon: -71.0695149}
       assert {:ok, %Route{} = route} = OpenRouteService.directions(source, destination)
-      assert route.bearing == 255
+      assert route.heading == 255
     end
 
     test "handles a summary without a distance" do

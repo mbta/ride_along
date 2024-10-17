@@ -26,7 +26,7 @@ defmodule RideAlong.OpenRouteService do
       :source,
       :destination,
       :polyline,
-      :bearing,
+      :heading,
       :distance,
       :duration
     ]
@@ -116,7 +116,7 @@ defmodule RideAlong.OpenRouteService do
       bbox: [[bbox_lat1, bbox_lon1], [bbox_lat2, bbox_lon2]],
       source: %__MODULE__.Location{lat: source_lat, lon: source_lon},
       destination: %__MODULE__.Location{lat: destination_lat, lon: destination_lon},
-      bearing: bearing,
+      heading: bearing,
       polyline: polyline,
       distance: distance,
       duration: duration * Application.get_env(:ride_along, __MODULE__)[:duration_scale]
