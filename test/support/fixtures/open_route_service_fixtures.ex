@@ -54,9 +54,11 @@ defmodule RideAlong.OpenRouteServiceFixtures do
     }
   end
 
-  def stub(body) do
+  def stub(status \\ :ok, body) do
     Req.Test.stub(RideAlong.OpenRouteService, fn conn ->
-      Req.Test.json(conn, body)
+      conn
+      |> Plug.Conn.put_status(status)
+      |> Req.Test.json(body)
     end)
 
     :ok

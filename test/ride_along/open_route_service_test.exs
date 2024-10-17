@@ -26,5 +26,21 @@ defmodule RideAlong.OpenRouteServiceTest do
       source = %Location{lat: 42.3516768, lon: -71.0695149}
       assert {:ok, %Route{}} = OpenRouteService.directions(source, destination)
     end
+
+    test "handles a route not found error" do
+      body = %{
+        "error" => %{
+          "code" => 2009,
+          "message" =>
+            "Route could not be found - Unable to find a route between points 1 (XXX XXX) and 2 (XXX XXX)."
+        }
+      }
+
+      Fixtures.stub(404, body)
+
+      destination = %Location{lat: 42.3516728, lon: -71.0718109}
+      source = %Location{lat: 42.3516768, lon: -71.0695149}
+      assert {:error, :route_not_found} = OpenRouteService.directions(source, destination)
+    end
   end
 end

@@ -59,6 +59,9 @@ defmodule RideAlong.OpenRouteService do
       {:ok, %{status: 200, body: body}} ->
         {:ok, parse_response(body)}
 
+      {:ok, %{body: %{} = body}} ->
+        {:error, parse_error_response(body)}
+
       {:ok, response} ->
         {:error, response}
 
@@ -118,5 +121,13 @@ defmodule RideAlong.OpenRouteService do
       distance: distance,
       duration: duration * Application.get_env(:ride_along, __MODULE__)[:duration_scale]
     }
+  end
+
+  defp parse_error_response(%{"error" => %{"code" => 2009}}) do
+    :route_not_found
+  end
+
+  defp parse_error_response(error) do
+    error
   end
 end
