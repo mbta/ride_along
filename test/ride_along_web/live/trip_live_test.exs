@@ -4,6 +4,7 @@ defmodule RideAlongWeb.TripLiveTest do
   import Phoenix.LiveViewTest
 
   alias RideAlong.AdeptFixtures, as: Fixtures
+  alias RideAlong.OpenRouteServiceFixtures, as: ORSFixtures
 
   describe "Show" do
     setup [:ors, :adept]
@@ -97,13 +98,7 @@ defmodule RideAlongWeb.TripLiveTest do
   end
 
   def ors(_) do
-    Req.Test.stub(RideAlong.OpenRouteService, fn conn ->
-      conn
-      |> put_status(500)
-      |> Req.Test.json(%{})
-    end)
-
-    :ok
+    ORSFixtures.stub(ORSFixtures.fixture())
   end
 
   def adept(_) do
