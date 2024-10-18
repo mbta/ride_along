@@ -203,7 +203,12 @@ defmodule Mix.Tasks.TrainModel do
       |> DF.to_rows()
       |> Task.async_stream(
         fn row ->
-          source = %{lat: row["vehicle_lat"], lon: row["vehicle_lon"]}
+          source = %{
+            lat: row["vehicle_lat"],
+            lon: row["vehicle_lon"],
+            heading: row["vehicle_heading"]
+          }
+
           destination = %{lat: row["pick_lat"], lon: row["pick_lon"]}
 
           with true <- source != empty,
@@ -219,7 +224,7 @@ defmodule Mix.Tasks.TrainModel do
               %{ors_duration: -1, ors_heading: -1, ors_distance: -1}
           end
         end,
-        max_concurrency: System.schedulers_online() * 4,
+        max_concurrency: System.schedulers_online(),
         ordered: true
       )
       |> Enum.map(fn {:ok, val} -> val end)
