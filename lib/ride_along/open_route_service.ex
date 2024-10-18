@@ -46,8 +46,7 @@ defmodule RideAlong.OpenRouteService do
         continue_straight: true,
         units: "mi",
         options: %{
-          avoid_features: [:ferries],
-          vehicle_type: :bus
+          avoid_features: [:ferries]
         },
         coordinates: [
           [source.lon, source.lat],
@@ -62,7 +61,7 @@ defmodule RideAlong.OpenRouteService do
         query
       end
 
-    case Req.post(req(), url: "/ors/v2/directions/driving-hgv", json: query) do
+    case Req.post(req(), url: "/ors/v2/directions/driving-car", json: query) do
       {:ok, %{status: 200, body: body}} ->
         {:ok, parse_response(body)}
 
