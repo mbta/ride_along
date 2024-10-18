@@ -184,12 +184,6 @@ defmodule RideAlongWeb.TripLive.Show do
      |> assign_popup()}
   end
 
-  def handle_async(:route, {:ok, {:error, reason}}, socket) do
-    Logger.warning("error calculating route reason=#{inspect(reason)}")
-
-    {:noreply, socket}
-  end
-
   def handle_async(:route, _, socket) do
     # ignore for now
     {:noreply, socket}
