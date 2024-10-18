@@ -1,6 +1,6 @@
 <!-- livebook:{"file_entries":[{"file":{"file_system_id":"local","file_system_type":"local","path":"/Users/pswartz/Dropbox/0-Inbox/data-2024-09-09.csv"},"name":"data.csv","type":"file"}]} -->
 
-# RideAlong Prediction Accuracy pt2
+# Ride Along Prediction Accuracy pt2
 
 ```elixir
 Mix.install(

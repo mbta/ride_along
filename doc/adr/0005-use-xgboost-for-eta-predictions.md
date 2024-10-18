@@ -32,7 +32,7 @@ As of this ADR, the accuracy (calculated using the buckets used by Prediction An
 
 If the model becomes bigger, it may become challenging to include it in the Git repository, requiring a switch to Git-LFS (Large File Storage) for the trained model, or storing it outside the repository entirely (S3).
 
-The RideAlong ETAs will likely be different from the ETAs received via text messages, as well as the values seen in ADEPT. We are working on providing access to RideAlong to the TRAC staff so that they can look up the RideAlong ETA (as well as the vehicle location) if riders call in.
+The Ride Along ETAs will likely be different from the ETAs received via text messages, as well as the values seen in ADEPT. We are working on providing access to Ride Along to the TRAC staff so that they can look up the Ride Along ETA (as well as the vehicle location) if riders call in.
 
 In the future, we may be able to include additional data in the model as well.
 

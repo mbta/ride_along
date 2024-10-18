@@ -1,6 +1,6 @@
 defmodule RideAlong.PubSub do
   @moduledoc """
-  Pub/sub wrapper for internal RideAlong use.
+  Pub/sub wrapper for internal Ride Along use.
   """
 
   def subscribe(topic, filters \\ :all) do

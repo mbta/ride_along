@@ -8,7 +8,7 @@ Accepted
 
 ## Context
 
-The two halves of RideAlong (on-prem and cloud) need to communicate data. 
+The two halves of Ride Along (on-prem and cloud) need to communicate data. 
 
 ## Decision
 

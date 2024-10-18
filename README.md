@@ -1,4 +1,4 @@
-# RideAlong
+# Ride Along
 
 A small pair of apps to enable paratransit riders to see the location and ETA of their app.
 

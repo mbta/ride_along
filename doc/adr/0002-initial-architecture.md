@@ -8,11 +8,11 @@ Accepted
 
 ## Context
 
-To guide the project, RideAlong needs an initial architecture.
+To guide the project, Ride Along needs an initial architecture.
 
 ## Decision
 
-RideAlong will be two applications, built and released from the same source
+Ride Along will be two applications, built and released from the same source
 repository (this one). One application will be deployed as a container on-prem,
 in order to connect to the ADEPT database. The other will be a web application
 in AWS ECS Fargate.

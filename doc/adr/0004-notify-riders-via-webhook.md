@@ -8,12 +8,12 @@ Accepted
 
 ## Context
 
-RideAlong needs to send a text message to riders when their secure link is valid.
+Ride Along needs to send a text message to riders when their secure link is valid.
 
 ## Decision
 
 The existing text messages are handled by a vendor, who has agreed to accept a
-webhook when RideAlong wants to send a message. The body of the webhook is:
+webhook when Ride Along wants to send a message. The body of the webhook is:
 
 - time of notification (RFC3339 timestamp in local time)
 - trip ID (int)
@@ -52,4 +52,4 @@ After receiving the webhook, the vendor will:
 This allows us to notify riders with the same number and process that they're
 used to. In the future, the vendor may be able to use our own internally
 generated ETAs by storing the values received in the webhook, or by making an
-API call (authenticated separately) to RideAlong.
+API call (authenticated separately) to Ride Along.

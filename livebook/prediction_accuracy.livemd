@@ -1,6 +1,6 @@
 <!-- livebook:{"file_entries":[{"file":{"file_system_id":"local","file_system_type":"local","path":"/Users/paulswartz/Dropbox/0-Inbox/1724681672_12143814.csv"},"name":"data-2024-08-26.csv","type":"file"},{"file":{"file_system_id":"local","file_system_type":"local","path":"/Users/paulswartz/Dropbox/0-Inbox/1724443622_11300235.csv"},"name":"data.csv","type":"file"}]} -->
 
-# RideAlong Prediction Accuracy
+# Ride Along Prediction Accuracy
 
 ```elixir
 Mix.install([

@@ -14,7 +14,7 @@ defmodule RideAlongWeb.AdminLive.Index do
 
     {:ok,
      socket
-     |> assign(:page_title, "Admin - RideAlong")
+     |> assign(:page_title, "Admin - Ride Along")
      |> assign(:uid, session["uid"])
      |> assign(:now, DateTime.utc_now())
      |> assign(:demo?, false)
