@@ -24,10 +24,10 @@ defmodule RideAlong.Adept.VehicleTest do
       assert Vehicle.from_sql_map(@map) == %Vehicle{
                route_id: @route_id,
                vehicle_id: @vehicle_id,
-               heading: Decimal.new("90"),
-               speed: Decimal.new("15"),
-               lat: Decimal.new("42.346"),
-               lon: Decimal.new("-71.071"),
+               heading: 90.0,
+               speed: 15.0,
+               lat: 42.346,
+               lon: -71.071,
                timestamp: DateTime.from_naive!(~N[2024-10-08T11:06:30.000], "America/New_York"),
                last_pick: 1,
                last_drop: 1

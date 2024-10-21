@@ -49,8 +49,8 @@ defmodule RideAlong.Adept.TripTest do
         pick_time: DateTime.new!(~D[2024-05-30], ~T[03:33:00], time_zone),
         promise_time: DateTime.new!(~D[2024-05-31], ~T[00:50:00], time_zone),
         pickup_arrival_time: nil,
-        lat: Decimal.new("42.3434"),
-        lon: Decimal.new("-71.06166"),
+        lat: 42.3434,
+        lon: -71.06166,
         house_number: "144",
         address1: "LUETTGEN VILLAGE",
         address2: "APT 152",
@@ -180,7 +180,7 @@ defmodule RideAlong.Adept.TripTest do
       now: now
     } do
       vehicle =
-        Fixtures.vehicle_fixture(%{lat: trip.lat, lon: trip.lon, speed: Decimal.new("10.0")})
+        Fixtures.vehicle_fixture(%{lat: trip.lat, lon: trip.lon, speed: 10.0})
 
       assert Trip.status(trip, vehicle, now) == :enroute
     end

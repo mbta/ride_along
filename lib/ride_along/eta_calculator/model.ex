@@ -37,12 +37,10 @@ defmodule RideAlong.EtaCalculator.Model do
       end
 
     vehicle_speed =
-      case vehicle do
-        %{speed: %Decimal{} = speed} ->
-          Decimal.to_float(speed)
-
-        _ ->
-          -1
+      if vehicle.speed do
+        vehicle.speed
+      else
+        -1
       end
 
     noon = DateTime.new!(trip.date, ~T[12:00:00], Application.get_env(:ride_along, :time_zone))
@@ -61,8 +59,8 @@ defmodule RideAlong.EtaCalculator.Model do
           pick_offset,
           DateTime.diff(now, noon, :second),
           Date.day_of_week(noon, :monday),
-          Decimal.to_float(trip.lat),
-          Decimal.to_float(trip.lon),
+          trip.lat,
+          trip.lon,
           trip.pick_order,
           vehicle_speed,
           ors_distance

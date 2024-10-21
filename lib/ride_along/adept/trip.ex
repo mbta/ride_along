@@ -86,8 +86,8 @@ defmodule RideAlong.Adept.Trip do
       pick_time: relative_time(pick_time, trip_date),
       promise_time: relative_time(promise_time, trip_date),
       pickup_arrival_time: relative_time(pickup_arrival_time, trip_date),
-      lat: grid_to_decimal(grid_lat),
-      lon: grid_to_decimal(grid_lon),
+      lat: grid_to_float(grid_lat),
+      lon: grid_to_float(grid_lon),
       house_number: house_number,
       address1: address1,
       address2: address2,
@@ -174,16 +174,16 @@ defmodule RideAlong.Adept.Trip do
     nil
   end
 
-  @max_waiting_speed Decimal.new("5.0")
+  @max_waiting_speed 5.0
 
   defp enroute_or_waiting_status(trip, vehicle, minutes_remaining) do
     distance =
       :vincenty.distance(
-        {Decimal.to_float(vehicle.lat), Decimal.to_float(vehicle.lon)},
-        {Decimal.to_float(trip.lat), Decimal.to_float(trip.lon)}
+        {vehicle.lat, vehicle.lon},
+        {trip.lat, trip.lon}
       )
 
-    if distance < 0.5 and not Decimal.gt?(vehicle.speed, @max_waiting_speed) and
+    if distance < 0.5 and vehicle.speed <= @max_waiting_speed and
          minutes_remaining > {:ok, 5} do
       :waiting
     else
@@ -231,11 +231,8 @@ defmodule RideAlong.Adept.Trip do
     end
   end
 
-  @one_hundred_thousand Decimal.new(100_000)
-  defp grid_to_decimal(integer) do
-    integer
-    |> Decimal.new()
-    |> Decimal.div(@one_hundred_thousand)
+  defp grid_to_float(integer) do
+    integer / 100_000
   end
 
   defp relative_time("", _date_time) do

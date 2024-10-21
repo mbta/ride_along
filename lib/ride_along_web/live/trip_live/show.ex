@@ -311,20 +311,17 @@ defmodule RideAlongWeb.TripLive.Show do
          %{
            assigns: %{
              status: status,
-             vehicle: %{lat: %Decimal{}, lon: %Decimal{}},
+             vehicle: %{lat: vehicle_lat, lon: vehicle_lon},
              route: nil
            }
          } =
            socket
        )
-       when status in [:enroute, :arrived] do
-    vehicle_lat = Decimal.to_float(socket.assigns.vehicle.lat)
-    vehicle_lon = Decimal.to_float(socket.assigns.vehicle.lon)
-
+       when status in [:enroute, :arrived] and is_float(vehicle_lat) and is_float(vehicle_lon) do
     bbox =
       Jason.encode!([
         [vehicle_lat, vehicle_lon],
-        [Decimal.to_float(socket.assigns.trip.lat), Decimal.to_float(socket.assigns.trip.lon)]
+        [socket.assigns.trip.lat, socket.assigns.trip.lon]
       ])
 
     polyline =
