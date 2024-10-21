@@ -214,7 +214,7 @@ defmodule RideAlong.EtaMonitor do
   end
 
   defp route_metadata(status, trip, %{} = vehicle) when status in [:enroute, :waiting] do
-    case RideAlong.OpenRouteService.directions(vehicle, trip) do
+    case RideAlong.RouteCache.directions(vehicle, trip) do
       {:ok, route} ->
         ors_eta =
           if vehicle.timestamp do

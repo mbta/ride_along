@@ -33,6 +33,10 @@ defmodule Mix.Tasks.TrainModel do
         ]
       )
 
+    Application.ensure_all_started(:req)
+    Application.ensure_all_started(:cachex)
+    RideAlong.RouteCache.start_link()
+
     training_fields = Model.feature_names()
 
     df =
@@ -51,7 +55,6 @@ defmodule Mix.Tasks.TrainModel do
 
         df =
           if parsed[:replan] do
-            Application.ensure_all_started(:req)
             df = recalculate_eta(df)
             IO.puts("Replanned; writing data back to #{file_name}...")
             DF.to_csv!(df, file_name)
@@ -213,7 +216,7 @@ defmodule Mix.Tasks.TrainModel do
 
           with true <- source != empty,
                true <- destination != empty,
-               {:ok, route} <- RideAlong.OpenRouteService.directions(source, destination) do
+               {:ok, route} <- RideAlong.RouteCache.directions(source, destination) do
             %{
               ors_duration: route.duration,
               ors_heading: route.heading,

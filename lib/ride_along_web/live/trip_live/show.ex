@@ -7,8 +7,8 @@ defmodule RideAlongWeb.TripLive.Show do
   alias RideAlong.Adept.{Trip, Vehicle}
   alias RideAlong.EtaCalculator
   alias RideAlong.LinkShortener
-  alias RideAlong.OpenRouteService
   alias RideAlong.OpenRouteService.Route
+  alias RideAlong.RouteCache
   import RideAlongWeb.TripComponents
 
   @impl true
@@ -206,7 +206,7 @@ defmodule RideAlongWeb.TripLive.Show do
           fn -> nil end
 
         Map.take(source, [:lat, :lon]) != Map.take(old_source, [:lat, :lon]) ->
-          fn -> OpenRouteService.directions(source, destination) end
+          fn -> RouteCache.directions(source, destination) end
 
         true ->
           nil
