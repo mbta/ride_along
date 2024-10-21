@@ -16,6 +16,7 @@ defmodule RideAlong.Application do
       RideAlong.Singleton,
       {RideAlong.EtaCalculator.Model,
        Application.get_env(:ride_along, RideAlong.EtaCalculator.Model)},
+      RideAlong.RouteCache,
       RideAlong.Adept,
       RideAlong.LinkShortener,
       RideAlong.MqttConnection,

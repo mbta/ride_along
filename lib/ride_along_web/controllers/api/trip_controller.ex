@@ -19,7 +19,7 @@ defmodule RideAlongWeb.Api.TripController do
 
       route =
         if vehicle do
-          case RideAlong.OpenRouteService.directions(vehicle, trip) do
+          case RideAlong.RouteCache.directions(vehicle, trip) do
             {:ok, route} -> route
             {:error, _} -> nil
           end

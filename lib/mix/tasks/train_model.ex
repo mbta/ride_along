@@ -33,6 +33,10 @@ defmodule Mix.Tasks.TrainModel do
         ]
       )
 
+    Application.ensure_all_started(:req)
+    Application.ensure_all_started(:cachex)
+    RideAlong.RouteCache.start_link()
+
     training_fields = Model.feature_names()
 
     df =
@@ -46,12 +50,12 @@ defmodule Mix.Tasks.TrainModel do
             dtypes: %{status: :category, vehicle_speed: {:f, 32}}
           )
           |> DF.filter(route > 0)
+          |> DF.sort_by(asc: trip_id, asc: time)
 
         IO.puts("Loaded #{file_name}.")
 
         df =
           if parsed[:replan] do
-            Application.ensure_all_started(:req)
             df = recalculate_eta(df)
             IO.puts("Replanned; writing data back to #{file_name}...")
             DF.to_csv!(df, file_name)
@@ -195,32 +199,38 @@ defmodule Mix.Tasks.TrainModel do
   end
 
   defp recalculate_eta(df) do
-    empty = %{lat: nil, lon: nil}
-
     new_cols =
       df
-      |> DF.select([:pick_lat, :pick_lon, :vehicle_lat, :vehicle_lon])
+      |> DF.select([:trip_id, :pick_lat, :pick_lon, :vehicle_lat, :vehicle_lon, :vehicle_heading])
       |> DF.to_rows()
       |> Task.async_stream(
         fn row ->
-          source = %{
-            lat: row["vehicle_lat"],
-            lon: row["vehicle_lon"],
-            heading: row["vehicle_heading"]
-          }
+          source =
+            %{
+              # it doesn't need to be the real vehicle ID; we only need a way to link the different vehicle locations together
+              vehicle_id: row["trip_id"],
+              lat: row["vehicle_lat"],
+              lon: row["vehicle_lon"],
+              heading: row["vehicle_heading"]
+            }
 
           destination = %{lat: row["pick_lat"], lon: row["pick_lon"]}
 
-          with true <- source != empty,
-               true <- destination != empty,
-               {:ok, route} <- RideAlong.OpenRouteService.directions(source, destination) do
+          with %{lat: lat, lon: lon} when is_float(lat) and is_float(lon) <- source,
+               %{lat: lat, lon: lon} when is_float(lat) and is_float(lon) <- destination,
+               {:ok, route} <- RideAlong.RouteCache.directions(source, destination) do
             %{
               ors_duration: route.duration,
               ors_heading: route.heading,
               ors_distance: route.distance
             }
           else
-            _ ->
+            e ->
+              case e do
+                {:error, _} -> IO.inspect(e)
+                _ -> :ok
+              end
+
               %{ors_duration: -1, ors_heading: -1, ors_distance: -1}
           end
         end,

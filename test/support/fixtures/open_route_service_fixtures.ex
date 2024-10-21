@@ -61,6 +61,8 @@ defmodule RideAlong.OpenRouteServiceFixtures do
       |> Req.Test.json(body)
     end)
 
+    Req.Test.set_req_test_to_shared(RideAlong.OpenRouteService)
+
     :ok
   end
 end
