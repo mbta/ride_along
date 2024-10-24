@@ -43,7 +43,6 @@ defmodule RideAlong.OpenRouteService do
     query =
       %{
         maneuvers: true,
-        continue_straight: true,
         units: :mi,
         options: %{
           avoid_features: [:ferries]
