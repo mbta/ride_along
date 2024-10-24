@@ -227,8 +227,13 @@ defmodule Mix.Tasks.TrainModel do
           else
             e ->
               case e do
-                {:error, _} -> IO.inspect(e)
-                _ -> :ok
+                {:error, _} ->
+                  IO.puts(
+                    "Error calculating path from #{source.lon},#{source.lat} to #{destination.lon},#{destination.lat}: #{inspect(e)}"
+                  )
+
+                _ ->
+                  :ok
               end
 
               %{ors_duration: -1, ors_heading: -1, ors_distance: -1}

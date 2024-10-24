@@ -44,10 +44,11 @@ defmodule RideAlong.OpenRouteService do
       %{
         maneuvers: true,
         continue_straight: true,
-        units: "mi",
+        units: :mi,
         options: %{
           avoid_features: [:ferries]
         },
+        preference: :shortest,
         coordinates: [
           [source.lon, source.lat],
           [destination.lon, destination.lat]
