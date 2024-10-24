@@ -207,7 +207,8 @@ defmodule Mix.Tasks.TrainModel do
         fn row ->
           source =
             %{
-              # it doesn't need to be the real vehicle ID; we only need a way to link the different vehicle locations together
+              # it doesn't need to be the real vehicle ID; we only need a way to
+              # link the different vehicle locations together
               vehicle_id: row["trip_id"],
               lat: row["vehicle_lat"],
               lon: row["vehicle_lon"],
