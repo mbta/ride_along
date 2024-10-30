@@ -1,0 +1,49 @@
+name: Report Elixir Coverage
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: write
+
+jobs:
+  report-coverage:
+    if: ${{ github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: echo Fetching artifacts for ${{ github.event.workflow_run.id }}, event name ${{ github.event_name }}, triggered by ${{ github.event.workflow_run.event }}
+      - name: Download artifact
+        id: artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: elixir-lcov
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+          path: ${{ runner.temp }}/cover
+      - working-directory: ${{ steps.artifact.outputs.download-path }}
+        run: |
+          ls -lR
+          echo "PR_SHA=$(cat PR_SHA)" >> $GITHUB_ENV
+          echo "PR_NUMBER=$(cat PR_NUMBER)" >> $GITHUB_ENV
+      - name: Setup LCOV
+        uses: hrishikesh-kadam/setup-lcov@v1
+      - uses: actions/checkout@v4 # UNTRUSTED CODE - do not run scripts from it
+        with:
+          ref: ${{ env.PR_SHA }}
+      - run: |
+           echo MIN_COVERAGE=$(jq .coverage_options.minimum_coverage < coveralls.json) >> $GITHUB_ENV
+      - name: Upload coverage artifact and post comment
+        uses: mbta/github-actions-report-lcov@v4
+        with:
+          minimum-coverage: ${{ env.MIN_COVERAGE }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          coverage-files: ${{ steps.artifact.outputs.download-path }}/lcov*.info
+          artifact-name: elixir-code-coverage
+          update-comment: true

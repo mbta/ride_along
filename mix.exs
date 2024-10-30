@@ -9,10 +9,14 @@ defmodule RideAlong.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       test_coverage: [
-        summary: [threshold: 59]
+        tool: ExCoveralls
       ],
       aliases: aliases(),
-      preferred_cli_env: ["checks.test": :test],
+      preferred_cli_env: [
+        "checks.test": :test,
+        "coveralls.github": :test,
+        "coveralls.lcov": :test
+      ],
       deps: deps()
     ]
   end
@@ -45,6 +49,7 @@ defmodule RideAlong.MixProject do
       {:ehmon, github: "paulswartz/ehmon"},
       {:emqtt_failover, "~> 0.3.0"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
+      {:excoveralls, "~> 0.18.3", only: :test},
       {:exgboost, "~> 0.5"},
       {:explorer, "~> 0.9"},
       {:faker, "~> 0.18"},
