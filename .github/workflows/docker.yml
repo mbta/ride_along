@@ -2,6 +2,9 @@ name: Docker
 
 on:
   push:
+    branches: [main]
+  merge_group:
+  pull_request:
   schedule:
     - cron: '0 5 * * 1'
 
