@@ -183,7 +183,7 @@ defmodule RideAlong.SqlPublisher do
         interval: 60_000
       },
       locations: %{
-        sql: ~s[SELECT RouteId, VehicleId, Latitude, Longitude, Speed, Heading, LocationDate,
+        sql: ~s[SELECT l.RouteId, VehicleId, Latitude, Longitude, Speed, Heading, l.LocationDate,
                (SELECT MAX(PickOrder) FROM dbo.TRIP t
                  WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.PerformPickup != 0) AS LastPick,
                (SELECT MAX(DropOrder) FROM dbo.TRIP t
@@ -195,8 +195,8 @@ defmodule RideAlong.SqlPublisher do
                  WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.Status = 'S' AND APtime1 != '00:00'
                  ORDER BY t.APtime1 DESC) AS LastDispatchArrivedTrip
                   FROM dbo.MDCVEHICLELOCATION l
-                  WHERE LocationDate >= DATEADD(HOUR, -2, CURRENT_TIMESTAMP) AND
-                  LocationDate = (SELECT max(l1.LocationDate) from dbo.MDCVEHICLELOCATION l1 where l1.RouteId = l.RouteId)
+                  INNER JOIN (SELECT RouteId, MAX(LocationDate) AS LocationDate FROM dbo.MDCVEHICLELOCATION GROUP BY RouteId) md
+                              ON l.RouteId = md.RouteId AND l.LocationDate = md.LocationDate
                   ORDER BY l.LocationDate DESC],
         parameters: %{service_date: service_date},
         interval: 5_000
