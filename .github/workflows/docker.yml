@@ -42,3 +42,6 @@ jobs:
         with:
           image-ref: ride_along
           trivy-config: trivy.yml
+        env:
+          TRIVY_SKIP_DB_UPDATE: true
+          TRIVY_SKIP_JAVA_DB_UPDATE: true
