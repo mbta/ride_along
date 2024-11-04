@@ -185,8 +185,8 @@ defmodule RideAlong.EtaMonitor do
       promise: trip.promise_time,
       pick: trip.pick_time,
       pick_order: trip.pick_order,
-      pick_lat: trip.lat,
-      pick_lon: trip.lon,
+      pick_lat: log_float(trip.lat),
+      pick_lon: log_float(trip.lon),
       client_trip_index: trip.client_trip_index,
       time: location_timestamp || now,
       location: location_timestamp,
@@ -199,8 +199,8 @@ defmodule RideAlong.EtaMonitor do
 
   defp vehicle_metadata(%{} = vehicle) do
     [
-      vehicle_lat: vehicle.lat,
-      vehicle_lon: vehicle.lon,
+      vehicle_lat: log_float(vehicle.lat),
+      vehicle_lon: log_float(vehicle.lon),
       vehicle_heading: vehicle.heading,
       vehicle_speed: vehicle.speed,
       last_pick: vehicle.last_pick,
@@ -256,6 +256,10 @@ defmodule RideAlong.EtaMonitor do
   defp calculated_metadata(_status, _trip, _vehicle, _route, _now) do
     []
   end
+
+  # Logster only logs 3 decimal points of location, but we want all of them
+  defp log_float(f) when is_float(f), do: Float.to_string(f)
+  defp log_float(other), do: other
 
   def update_accuracy_metrics(state, trip_date, log) do
     trip_predictions = state.trip_predictions
