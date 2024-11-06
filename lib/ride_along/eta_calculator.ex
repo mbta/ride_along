@@ -24,7 +24,7 @@ defmodule RideAlong.EtaCalculator do
     case Trip.status(trip, vehicle, now) do
       status when status in [:enroute, :waiting] ->
         try do
-          predicted = __MODULE__.Model.predict(trip, vehicle, route, now)
+          predicted = __MODULE__.Model.predict(trip, vehicle, route, vehicle.timestamp)
 
           DateTime.shift_zone!(predicted, trip.promise_time.time_zone)
         rescue
