@@ -84,27 +84,44 @@ defmodule RideAlong.Adept do
         {{:trip, trip.trip_id, trip.route_id}, trip}
       end
 
-    :ets.insert(state.table, Map.to_list(inserted_trips))
+    trip_keys =
+      :ets.select(state.table, [
+        {
+          {{:trip, :"$1", :"$2"}, :_},
+          [],
+          [{{:trip, :"$1", :"$2"}}]
+        }
+      ])
 
-    for trip <- all_trips(state.name),
-        key = {:trip, trip.trip_id, trip.route_id},
+    for key <- trip_keys,
         not Map.has_key?(inserted_trips, key) do
       :ets.delete(state.table, key)
     end
+
+    :ets.insert(state.table, Map.to_list(inserted_trips))
 
     RideAlong.PubSub.publish("trips:updated", :trips_updated)
     {:reply, :ok, state}
   end
 
   def handle_call({:set_vehicles, vehicles}, _from, state) do
-    case vehicles do
-      [_ | _] ->
-        :ets.insert(state.table, Enum.flat_map(vehicles, &update_vehicle(state, &1)))
+    inserts = Map.new(vehicles, &update_vehicle(state, &1))
 
-      [] ->
-        # special case the empty list to unset all vehicles
-        :ets.match_delete(state.table, {{:vehicle, :_}, :_})
+    vehicle_keys =
+      :ets.select(state.table, [
+        {
+          {{:vehicle, :"$1"}, :_},
+          [],
+          [{{:vehicle, :"$1"}}]
+        }
+      ])
+
+    for key <- vehicle_keys,
+        not Map.has_key?(inserts, key) do
+      :ets.delete(state.table, key)
     end
+
+    :ets.insert(state.table, Map.to_list(inserts))
 
     RideAlong.PubSub.publish("vehicles:updated", :vehicles_updated)
 
@@ -117,7 +134,7 @@ defmodule RideAlong.Adept do
            Vehicle.last_stop(v) > Vehicle.last_stop(old) do
         publish_update(v)
       else
-        []
+        {{:vehicle, old.route_id}, old}
       end
     else
       publish_update(v)
@@ -132,6 +149,6 @@ defmodule RideAlong.Adept do
 
     RideAlong.PubSub.publish("vehicle:all", {:vehicle_updated, v})
 
-    [{{:vehicle, v.route_id}, v}]
+    {{:vehicle, v.route_id}, v}
   end
 end
