@@ -89,7 +89,7 @@ defmodule RideAlongWeb.TripLive.Show do
 
           if socket.assigns.status != :picked_up do
             {:ok, ref} = :timer.send_interval(1_000, :countdown)
-            RideAlong.PubSub.subscribe("vehicle:#{socket.assigns.vehicle.vehicle_id}")
+            RideAlong.PubSub.subscribe("vehicle:#{socket.assigns.vehicle.route_id}")
             RideAlong.PubSub.subscribe("trips:updated")
             assign(socket, :countdown_ref, ref)
           else
@@ -123,17 +123,23 @@ defmodule RideAlongWeb.TripLive.Show do
   end
 
   def handle_info({:vehicle_updated, v}, socket) do
+    old_vehicle = socket.assigns.vehicle
+
     {:noreply,
      socket
      |> assign(:vehicle, v)
+     |> put_schedule_change_flash(socket.assigns.trip, old_vehicle)
      |> assign_status()
      |> assign_eta()
      |> assign_stale()
-     |> request_route()}
+     |> request_route()
+     |> assign_route()
+     |> assign_popup()}
   end
 
   def handle_info(:trips_updated, socket) do
     old_trip = socket.assigns.trip
+    old_vehicle = socket.assigns.vehicle
 
     socket =
       case Adept.get_trip(old_trip.trip_id) do
@@ -152,7 +158,7 @@ defmodule RideAlongWeb.TripLive.Show do
           socket
           |> assign(:trip, trip)
           |> assign_vehicle(old_trip)
-          |> put_schedule_change_flash(old_trip)
+          |> put_schedule_change_flash(old_trip, old_vehicle)
           |> assign_status()
           |> assign_eta()
           |> assign_stale()
@@ -233,11 +239,11 @@ defmodule RideAlongWeb.TripLive.Show do
     if socket.assigns.trip.route_id == old_trip.route_id do
       socket
     else
-      RideAlong.PubSub.unsubscribe("vehicle:#{socket.assigns.vehicle.vehicle_id}")
+      RideAlong.PubSub.unsubscribe("vehicle:#{socket.assigns.vehicle.route_id}")
 
       case Adept.get_vehicle_by_route(socket.assigns.trip.route_id) do
         %Vehicle{} = vehicle ->
-          RideAlong.PubSub.subscribe("vehicle:#{vehicle.vehicle_id}")
+          RideAlong.PubSub.subscribe("vehicle:#{vehicle.route_id}")
           assign(socket, :vehicle, vehicle)
 
         _ ->
@@ -268,7 +274,7 @@ defmodule RideAlongWeb.TripLive.Show do
           :timer.cancel(socket.assigns.countdown_ref)
         end
 
-        RideAlong.PubSub.unsubscribe("vehicle:#{socket.assigns.vehicle.vehicle_id}")
+        RideAlong.PubSub.unsubscribe("vehicle:#{socket.assigns.vehicle.route_id}")
         RideAlong.PubSub.unsubscribe("trips:updated")
 
         assign(socket, :countdown_ref, nil)
@@ -302,9 +308,10 @@ defmodule RideAlongWeb.TripLive.Show do
     assign(socket, :stale, stale)
   end
 
-  def put_schedule_change_flash(socket, old_trip) do
+  def put_schedule_change_flash(socket, old_trip, old_vehicle) do
     cond do
-      socket.assigns.trip.route_id != old_trip.route_id ->
+      socket.assigns.trip.route_id != old_trip.route_id or
+          socket.assigns.vehicle.vehicle_id != old_vehicle.vehicle_id ->
         put_flash(
           socket,
           :warning,

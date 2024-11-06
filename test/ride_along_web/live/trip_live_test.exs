@@ -88,6 +88,29 @@ defmodule RideAlongWeb.TripLiveTest do
       assert Floki.text(document) =~ "Updated 5 minutes ago"
     end
 
+    test "shows a flash message if the vehicle changes but the route is the same", %{
+      conn: conn,
+      vehicle: vehicle,
+      token: token
+    } do
+      vehicle =
+        %{vehicle | timestamp: DateTime.add(vehicle.timestamp, 1, :second), vehicle_id: "new"}
+
+      {:ok, show_live, _html} = live(conn, ~p"/t/#{token}")
+
+      RideAlong.Adept.set_vehicles([vehicle])
+
+      # receive do
+      #   x -> IO.inspect(x)
+      # end
+
+      html = render_async(show_live)
+
+      {:ok, document} = Floki.parse_document(html)
+      flash = Floki.find(document, "[role=alert]:not([hidden])")
+      assert Floki.text(flash) =~ "vehicle have changed"
+    end
+
     @tag :capture_log
     test "unknown trip redirects to not-found", %{conn: conn} do
       assert {:error, {:redirect, %{to: "/not-found"}}} = live(conn, ~p"/t/missing")
