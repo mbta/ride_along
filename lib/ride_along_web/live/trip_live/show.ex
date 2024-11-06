@@ -69,6 +69,7 @@ defmodule RideAlongWeb.TripLive.Show do
           |> assign(:vehicle, vehicle)
           |> assign_status()
           |> assign_eta()
+          |> assign_stale()
           |> request_route(false)
           |> assign_route()
           |> assign_popup()
@@ -117,7 +118,8 @@ defmodule RideAlongWeb.TripLive.Show do
      socket
      |> assign(:now, DateTime.utc_now())
      |> assign_status()
-     |> assign_eta()}
+     |> assign_eta()
+     |> assign_stale()}
   end
 
   def handle_info({:vehicle_updated, v}, socket) do
@@ -126,6 +128,7 @@ defmodule RideAlongWeb.TripLive.Show do
      |> assign(:vehicle, v)
      |> assign_status()
      |> assign_eta()
+     |> assign_stale()
      |> request_route()}
   end
 
@@ -152,6 +155,7 @@ defmodule RideAlongWeb.TripLive.Show do
           |> put_schedule_change_flash(old_trip)
           |> assign_status()
           |> assign_eta()
+          |> assign_stale()
           |> request_route()
           |> assign_route()
           |> assign_popup()
@@ -282,6 +286,20 @@ defmodule RideAlongWeb.TripLive.Show do
       true ->
         socket
     end
+  end
+
+  def assign_stale(socket) do
+    diff =
+      DateTime.diff(socket.assigns.now, socket.assigns.vehicle.timestamp, :minute)
+
+    stale =
+      if diff >= 2 do
+        diff
+      else
+        nil
+      end
+
+    assign(socket, :stale, stale)
   end
 
   def put_schedule_change_flash(socket, old_trip) do

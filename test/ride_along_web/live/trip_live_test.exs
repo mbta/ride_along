@@ -69,6 +69,25 @@ defmodule RideAlongWeb.TripLiveTest do
       assert Floki.text(status) =~ "The driver will go to your door and wait until 12:33 PM."
     end
 
+    test "shows an Update X minutes ago message if the location is stale", %{
+      conn: conn,
+      vehicle: vehicle,
+      token: token
+    } do
+      vehicle =
+        %{vehicle | timestamp: DateTime.add(vehicle.timestamp, -5, :minute)}
+
+      # need to reset the vehicles, because otherwise we can't go back in time
+      # with the vehicle timestamp
+      RideAlong.Adept.set_vehicles([])
+      RideAlong.Adept.set_vehicles([vehicle])
+
+      {:ok, _show_live, html} = live(conn, ~p"/t/#{token}")
+      {:ok, document} = Floki.parse_document(html)
+
+      assert Floki.text(document) =~ "Updated 5 minutes ago"
+    end
+
     @tag :capture_log
     test "unknown trip redirects to not-found", %{conn: conn} do
       assert {:error, {:redirect, %{to: "/not-found"}}} = live(conn, ~p"/t/missing")

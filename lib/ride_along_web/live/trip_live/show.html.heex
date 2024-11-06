@@ -74,6 +74,9 @@
                 </time>
             <% end %>
           </div>
+          <time :if={@stale} class="block text-sm italic" datetime={@vehicle.timestamp}>
+            <%= gettext("Updated %{minutes} minutes ago", %{minutes: @stale}) %>
+          </time>
           <time
             :if={@trip.promise_time && @status in [:enqueued, :enroute, :waiting]}
             class="block text-sm"
