@@ -195,9 +195,10 @@ defmodule RideAlong.SqlPublisher do
                  WHERE t.RouteId = l.RouteId AND t.TripDate = @service_date AND t.Status = 'S' AND APtime1 != '00:00'
                  ORDER BY t.APtime1 DESC) AS LastDispatchArrivedTrip
                   FROM dbo.MDCVEHICLELOCATION l
-                  INNER JOIN (SELECT RouteId, MAX(LocationDate) AS LocationDate FROM dbo.MDCVEHICLELOCATION GROUP BY RouteId) md
-                              ON l.RouteId = md.RouteId AND l.LocationDate = md.LocationDate
-                  ORDER BY l.LocationDate DESC],
+                  INNER JOIN (SELECT RouteId, MAX(LocationDate) AS LocationDate FROM dbo.MDCVEHICLELOCATION
+                              WHERE LocationDate >= DATEADD(HOUR, 2, CAST(@service_date AS datetime))
+                              GROUP BY RouteId) md
+                              ON l.RouteId = md.RouteId AND l.LocationDate = md.LocationDate],
         parameters: %{service_date: service_date},
         interval: 5_000
       }
