@@ -2,8 +2,9 @@ defmodule RideAlongWeb.Api do
   @moduledoc """
   Plug for validating incoming API requests.
   """
-  import Plug.Conn
   @behaviour Plug
+
+  import Plug.Conn
 
   @impl Plug
   def init([]), do: []

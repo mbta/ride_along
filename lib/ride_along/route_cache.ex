@@ -8,6 +8,7 @@ defmodule RideAlong.RouteCache do
   for a slightly incorrect GPS ping to result in a very different routing.
   """
   import Cachex.Spec
+
   alias RideAlong.OpenRouteService
   alias RideAlong.OpenRouteService.Location
 

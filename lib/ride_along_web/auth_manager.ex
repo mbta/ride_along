@@ -4,6 +4,7 @@ defmodule RideAlongWeb.AuthManager do
   """
   # this isn't really a controller, but it gives us some functions we want to use
   use RideAlongWeb, :controller
+
   require Logger
 
   def init(opts), do: opts

@@ -5,10 +5,11 @@ defmodule RideAlong.EtaCalculator do
   - vehicle (optional)
   - OpenRouteService.Route (optional)
   """
-  require Logger
-
-  alias RideAlong.Adept.{Trip, Vehicle}
+  alias RideAlong.Adept.Trip
+  alias RideAlong.Adept.Vehicle
   alias RideAlong.OpenRouteService.Route
+
+  require Logger
 
   @doc """
   Currently, we use a machine-learning model if the status is "enroute" or
@@ -19,8 +20,7 @@ defmodule RideAlong.EtaCalculator do
   def calculate(trip, vehicle, route, now)
 
   def calculate(%Trip{} = trip, vehicle, route, %DateTime{} = now)
-      when (is_nil(vehicle) or is_struct(vehicle, Vehicle)) and
-             (is_nil(route) or is_struct(route, Route)) do
+      when (is_nil(vehicle) or is_struct(vehicle, Vehicle)) and (is_nil(route) or is_struct(route, Route)) do
     case Trip.status(trip, vehicle, now) do
       status when status in [:enroute, :waiting] ->
         try do

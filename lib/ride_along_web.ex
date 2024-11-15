@@ -23,10 +23,11 @@ defmodule RideAlongWeb do
     quote do
       use Phoenix.Router, helpers: false
 
-      # Import common connection and controller functions to use in pipelines
-      import Plug.Conn
       import Phoenix.Controller
       import Phoenix.LiveView.Router
+
+      # Import common connection and controller functions to use in pipelines
+      import Plug.Conn
     end
   end
 
@@ -42,8 +43,9 @@ defmodule RideAlongWeb do
         formats: [:html, :json],
         layouts: [html: RideAlongWeb.Layouts]
 
-      import Plug.Conn
       use Gettext, backend: RideAlongWeb.Gettext
+
+      import Plug.Conn
 
       unquote(verified_routes())
     end
@@ -81,11 +83,11 @@ defmodule RideAlongWeb do
 
   defp html_helpers do
     quote do
+      use Gettext, backend: RideAlongWeb.Gettext
       # HTML escaping functionality
       import Phoenix.HTML
       # Core UI components and translation
       import RideAlongWeb.CoreComponents
-      use Gettext, backend: RideAlongWeb.Gettext
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS

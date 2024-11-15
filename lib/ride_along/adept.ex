@@ -130,7 +130,7 @@ defmodule RideAlong.Adept do
 
   defp update_vehicle(state, v) do
     if old = get_vehicle_by_route(state.name, v.route_id) do
-      if DateTime.compare(v.timestamp, old.timestamp) == :gt or
+      if DateTime.after?(v.timestamp, old.timestamp) or
            Vehicle.last_stop(v) > Vehicle.last_stop(old) or
            v.vehicle_id != old.vehicle_id do
         publish_update(v)

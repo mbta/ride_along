@@ -122,11 +122,7 @@ defmodule RideAlong.Adept.Trip do
     :arrived
   end
 
-  def status(
-        %__MODULE__{} = trip,
-        %Vehicle{} = vehicle,
-        %DateTime{} = now
-      ) do
+  def status(%__MODULE__{} = trip, %Vehicle{} = vehicle, %DateTime{} = now) do
     minutes_remaining = minutes_until(trip, now)
 
     cond do
@@ -161,10 +157,7 @@ defmodule RideAlong.Adept.Trip do
   - 5 minutes after the promise time
   """
   @spec departure_time(t()) :: DateTime.t() | nil
-  def departure_time(%__MODULE__{
-        pickup_arrival_time: %DateTime{} = pickup,
-        promise_time: %DateTime{} = promise
-      }) do
+  def departure_time(%__MODULE__{pickup_arrival_time: %DateTime{} = pickup, promise_time: %DateTime{} = promise}) do
     [pickup, promise]
     |> Enum.max(DateTime)
     |> DateTime.add(5, :minute)
@@ -261,6 +254,5 @@ defmodule RideAlong.Adept.Trip do
   @spec minutes_until(t(), DateTime.t()) :: {:ok, integer()} | :unknown
   def minutes_until(%__MODULE__{promise_time: nil}, _now), do: :unknown
 
-  def minutes_until(%__MODULE__{promise_time: time}, now),
-    do: {:ok, DateTime.diff(time, now, :minute)}
+  def minutes_until(%__MODULE__{promise_time: time}, now), do: {:ok, DateTime.diff(time, now, :minute)}
 end

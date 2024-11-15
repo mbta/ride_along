@@ -1,7 +1,9 @@
 defmodule RideAlongWeb.AuthController do
   use RideAlongWeb, :controller
-  require Logger
+
   alias RideAlongWeb.AuthManager
+
+  require Logger
 
   plug Ueberauth
 

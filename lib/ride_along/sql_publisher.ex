@@ -3,10 +3,11 @@ defmodule RideAlong.SqlPublisher do
   Periodically runs SQL queries (via Tds) and sends the output to MQTT topics.
   """
   use GenServer
-  require Logger
 
   alias EmqttFailover.Message
   alias RideAlong.MqttConnection
+
+  require Logger
 
   @default_name __MODULE__
   def start_link(opts) do
@@ -60,9 +61,7 @@ defmodule RideAlong.SqlPublisher do
 
     case tds_query(state.tds, sql, parameters) do
       {:ok, results, duration} ->
-        Logger.info(
-          "#{__MODULE__} query success name=#{name} results=#{length(results)} duration=#{duration}"
-        )
+        Logger.info("#{__MODULE__} query success name=#{name} results=#{length(results)} duration=#{duration}")
 
         Logger.debug("#{__MODULE__} query result name=#{name} results=#{inspect(results)}")
         state = put_in(state.results[name], results)
@@ -125,9 +124,7 @@ defmodule RideAlong.SqlPublisher do
 
       e in DBConnection.ConnectionError ->
         if retry_count < 6 do
-          Logger.info(
-            "#{__MODULE__} retrying due to connection error query=#{inspect(sql)} reason=#{inspect(e)}"
-          )
+          Logger.info("#{__MODULE__} retrying due to connection error query=#{inspect(sql)} reason=#{inspect(e)}")
 
           Process.sleep(500)
           tds_query(tds, sql, parameters, retry_count + 1)
@@ -231,14 +228,10 @@ defmodule RideAlong.SqlPublisher do
            :millisecond
          ) do
       {msec, :ok} ->
-        Logger.info(
-          "#{__MODULE__} publish success name=#{name} id=#{id} size=#{byte_size(payload)} duration=#{msec}"
-        )
+        Logger.info("#{__MODULE__} publish success name=#{name} id=#{id} size=#{byte_size(payload)} duration=#{msec}")
 
       {msec, {:error, reason}} ->
-        Logger.warning(
-          "#{__MODULE__} publish failed name=#{name} id=#{id} reason=#{inspect(reason)} duration=#{msec}"
-        )
+        Logger.warning("#{__MODULE__} publish failed name=#{name} id=#{id} reason=#{inspect(reason)} duration=#{msec}")
     end
   end
 

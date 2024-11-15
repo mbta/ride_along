@@ -2,7 +2,8 @@ defmodule RideAlong.RouteCacheTest do
   @moduledoc false
   use ExUnit.Case
 
-  alias RideAlong.OpenRouteService.{Location, Route}
+  alias RideAlong.OpenRouteService.Location
+  alias RideAlong.OpenRouteService.Route
   alias RideAlong.OpenRouteServiceFixtures, as: ORSFixtures
   alias RideAlong.RouteCache
 

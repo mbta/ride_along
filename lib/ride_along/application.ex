@@ -5,17 +5,17 @@ defmodule RideAlong.Application do
 
   use Application
 
+  alias RideAlong.EtaCalculator.Model
+
   @impl true
   def start(_type, _args) do
     children = [
       RideAlongWeb.Telemetry,
       {Phoenix.PubSub, name: RideAlong.PubSub},
-      {Registry,
-       name: RideAlong.Registry, keys: :duplicate, partitions: System.schedulers_online()},
+      {Registry, name: RideAlong.Registry, keys: :duplicate, partitions: System.schedulers_online()},
       {DNSCluster, query: Application.get_env(:ride_along, :dns_cluster_query) || :ignore},
       RideAlong.Singleton,
-      {RideAlong.EtaCalculator.Model,
-       Application.get_env(:ride_along, RideAlong.EtaCalculator.Model)},
+      {Model, Application.get_env(:ride_along, Model)},
       RideAlong.RouteCache,
       RideAlong.Adept,
       RideAlong.LinkShortener,

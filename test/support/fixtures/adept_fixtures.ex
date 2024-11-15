@@ -3,7 +3,8 @@ defmodule RideAlong.AdeptFixtures do
   Test helpers for creating resources in the RideAlong.Adept context.
   """
 
-  alias RideAlong.Adept.{Trip, Vehicle}
+  alias RideAlong.Adept.Trip
+  alias RideAlong.Adept.Vehicle
 
   @trip_id 1234
   @route_id 4567

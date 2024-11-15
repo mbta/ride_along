@@ -2,9 +2,11 @@ defmodule RideAlong.OpenRouteServiceTest do
   @moduledoc false
 
   use ExUnit.Case, async: true
+
   alias RideAlong.OpenRouteService
+  alias RideAlong.OpenRouteService.Location
+  alias RideAlong.OpenRouteService.Route
   alias RideAlong.OpenRouteServiceFixtures, as: Fixtures
-  alias RideAlong.OpenRouteService.{Location, Route}
 
   describe "directions/2" do
     test "basic route response" do
@@ -31,8 +33,7 @@ defmodule RideAlong.OpenRouteServiceTest do
       body = %{
         "error" => %{
           "code" => 2009,
-          "message" =>
-            "Route could not be found - Unable to find a route between points 1 (XXX XXX) and 2 (XXX XXX)."
+          "message" => "Route could not be found - Unable to find a route between points 1 (XXX XXX) and 2 (XXX XXX)."
         }
       }
 

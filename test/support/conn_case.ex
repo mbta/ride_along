@@ -19,22 +19,19 @@ defmodule RideAlongWeb.ConnCase do
 
   using do
     quote do
+      use RideAlongWeb, :verified_routes
+      # Import conveniences for testing with connections
+      import Phoenix.ConnTest
+      import Plug.Conn
+      import RideAlongWeb.ConnCase
       # The default endpoint for testing
       @endpoint RideAlongWeb.Endpoint
-
-      use RideAlongWeb, :verified_routes
-
-      # Import conveniences for testing with connections
-      import Plug.Conn
-      import Phoenix.ConnTest
-      import RideAlongWeb.ConnCase
     end
   end
 
   setup _tags do
     conn =
-      Phoenix.ConnTest.build_conn()
-      |> Plug.Conn.put_req_header("x-forwarded-proto", "https")
+      Plug.Conn.put_req_header(Phoenix.ConnTest.build_conn(), "x-forwarded-proto", "https")
 
     {:ok, conn: conn}
   end

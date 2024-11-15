@@ -13,7 +13,7 @@ defmodule RideAlongWeb.Api.TripController do
 
   def show(conn, %{"trip_id" => trip_id_bin}) do
     with {trip_id, ""} <- Integer.parse(trip_id_bin),
-         trip = %Adept.Trip{} <- RideAlong.Adept.get_trip(trip_id),
+         %Adept.Trip{} = trip <- RideAlong.Adept.get_trip(trip_id),
          token when is_binary(token) <- RideAlong.LinkShortener.get_token(trip_id) do
       vehicle = Adept.get_vehicle_by_route(trip.route_id)
 
@@ -23,8 +23,6 @@ defmodule RideAlongWeb.Api.TripController do
             {:ok, route} -> route
             {:error, _} -> nil
           end
-        else
-          nil
         end
 
       now = DateTime.utc_now()

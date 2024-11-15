@@ -26,15 +26,11 @@ defmodule RideAlong.EtaCalculatorTest do
             Fixtures.vehicle_fixture(%{
               timestamp: @now
             })
-          else
-            nil
           end
 
         route =
           if has_vehicle? and duration do
             %Route{duration: duration * 60, distance: 1.0}
-          else
-            nil
           end
 
         actual = EtaCalculator.calculate(trip, vehicle, route, @now)

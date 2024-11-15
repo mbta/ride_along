@@ -11,9 +11,10 @@ defmodule RideAlong.RiderNotifier do
   the consumer of the notifications to de-duplicate them in those situations.
   """
   use GenServer
-  require Logger
 
   alias RideAlong.Adept.Trip
+
+  require Logger
 
   @default_name __MODULE__
 

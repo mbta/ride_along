@@ -4,6 +4,7 @@ defmodule RideAlong.MqttConnection.PubSubHandler do
   messages via RideAlong.PubSub
   """
   @behaviour EmqttFailover.ConnectionHandler
+
   alias RideAlong.PubSub
 
   @impl true

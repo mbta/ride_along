@@ -3,10 +3,11 @@ defmodule RideAlong.MqttListener do
   Listens for updates from MQTT topics, parses them, and updates the relevant state module.
   """
   use GenServer
-  require Logger
 
   alias RideAlong.Adept
   alias RideAlong.MqttConnection
+
+  require Logger
 
   @default_name __MODULE__
   def start_link(opts) do
@@ -42,8 +43,7 @@ defmodule RideAlong.MqttListener do
     {:noreply, state}
   end
 
-  def handle_info({:DOWN, ref, :process, pid, :normal}, state)
-      when is_reference(ref) and is_pid(pid) do
+  def handle_info({:DOWN, ref, :process, pid, :normal}, state) when is_reference(ref) and is_pid(pid) do
     # async task stopped normally
     {:noreply, state}
   end

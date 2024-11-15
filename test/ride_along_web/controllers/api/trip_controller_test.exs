@@ -1,7 +1,9 @@
 defmodule RideAlongWeb.Api.TripControllerTest do
   use RideAlongWeb.ConnCase
+
   alias RideAlong.Adept
-  alias RideAlong.{AdeptFixtures, OpenRouteServiceFixtures}
+  alias RideAlong.AdeptFixtures
+  alias RideAlong.OpenRouteServiceFixtures
 
   describe "GET /api/trips/:trip_id" do
     setup do

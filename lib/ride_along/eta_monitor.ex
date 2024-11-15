@@ -6,11 +6,12 @@ defmodule RideAlong.EtaMonitor do
   ADEPT ETAs (pick time) compare to the ORS calculated ETAs.
   """
   use GenServer
-  require Logger
 
-  require Explorer.DataFrame, as: DF
   alias RideAlong.Adept
   alias RideAlong.EtaCalculator.Training
+
+  require Explorer.DataFrame, as: DF
+  require Logger
 
   @default_name __MODULE__
   def start_link(opts) do
@@ -79,8 +80,7 @@ defmodule RideAlong.EtaMonitor do
     state =
       clean_state(%{
         state
-        | trip_date_to_key:
-            Map.merge(Map.get(remote_state, :trip_date_to_key, %{}), state.trip_date_to_key),
+        | trip_date_to_key: Map.merge(Map.get(remote_state, :trip_date_to_key, %{}), state.trip_date_to_key),
           trip_predictions:
             Map.merge(
               Map.get(remote_state, :trip_predictions, %{}),
@@ -170,8 +170,6 @@ defmodule RideAlong.EtaMonitor do
     location_timestamp =
       if vehicle do
         vehicle.timestamp
-      else
-        nil
       end
 
     [
@@ -219,8 +217,6 @@ defmodule RideAlong.EtaMonitor do
         ors_eta =
           if vehicle.timestamp do
             DateTime.add(vehicle.timestamp, trunc(route.duration * 1000), :millisecond)
-          else
-            nil
           end
 
         {route,
@@ -240,8 +236,7 @@ defmodule RideAlong.EtaMonitor do
     {nil, []}
   end
 
-  defp calculated_metadata(status, trip, vehicle, route, now)
-       when status in [:enroute, :waiting] do
+  defp calculated_metadata(status, trip, vehicle, route, now) when status in [:enroute, :waiting] do
     {msec, calculated} =
       :timer.tc(
         RideAlong.EtaCalculator,

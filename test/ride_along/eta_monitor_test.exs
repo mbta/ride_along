@@ -1,6 +1,7 @@
 defmodule RideAlong.EtaMonitorTest do
   @moduledoc false
   use ExUnit.Case
+
   import ExUnit.CaptureLog
 
   alias RideAlong.Adept

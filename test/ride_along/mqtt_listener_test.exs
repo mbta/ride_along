@@ -2,7 +2,8 @@ defmodule RideAlong.MqttListenerTest do
   @moduledoc false
   use ExUnit.Case
 
-  alias EmqttFailover.{Connection, Message}
+  alias EmqttFailover.Connection
+  alias EmqttFailover.Message
   alias RideAlong.MqttConnection
   alias RideAlong.MqttListener
   alias RideAlong.PubSub

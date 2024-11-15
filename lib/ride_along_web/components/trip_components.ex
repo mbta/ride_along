@@ -3,10 +3,11 @@ defmodule RideAlongWeb.TripComponents do
   Components used by RideAlongWeb.TripLive
   """
   use Phoenix.Component
+  use Gettext, backend: RideAlongWeb.Gettext
+
+  import RideAlongWeb.CoreComponents
 
   alias Phoenix.LiveView.JS
-  import RideAlongWeb.CoreComponents
-  use Gettext, backend: RideAlongWeb.Gettext
 
   attr :id, :string
   attr :flash, :map, default: %{}

@@ -18,9 +18,10 @@ defmodule RideAlong.LinkShortener do
       - increment the last digit by 1 until it does not generate a duplicate
   """
   use GenServer
-  require Logger
 
   alias RideAlong.Adept.Trip
+
+  require Logger
 
   @default_name __MODULE__
 

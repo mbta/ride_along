@@ -6,6 +6,7 @@ defmodule RideAlong.Singleton do
   the smallest one.
   """
   use GenServer
+
   require Logger
 
   @default_name __MODULE__
@@ -51,8 +52,6 @@ defmodule RideAlong.Singleton do
   end
 
   defp log_singleton(value) do
-    Logger.info(
-      "#{__MODULE__} node=#{inspect(node())} others=#{inspect(Node.list())} singleton=#{inspect(value)}"
-    )
+    Logger.info("#{__MODULE__} node=#{inspect(node())} others=#{inspect(Node.list())} singleton=#{inspect(value)}")
   end
 end

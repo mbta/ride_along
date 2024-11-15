@@ -13,11 +13,14 @@ defmodule Mix.Tasks.TrainModel do
   There's a Splunk report (EtaMonitor results) which can generate a CSV in the right format.
   """
 
-  alias EXGBoost.Training.Callback
-  require Explorer.DataFrame, as: DF
-  alias Explorer.{Duration, Series}
-  alias RideAlong.EtaCalculator.Model
   import RideAlong.EtaCalculator.Training
+
+  alias EXGBoost.Training.Callback
+  alias Explorer.Duration
+  alias Explorer.Series
+  alias RideAlong.EtaCalculator.Model
+
+  require Explorer.DataFrame, as: DF
 
   def run(opts) do
     {parsed, [_ | _] = file_names, _} =
@@ -88,15 +91,14 @@ defmodule Mix.Tasks.TrainModel do
       end
 
     validate_df =
-      df
-      |> DF.tail(validation_size)
+      DF.tail(df, validation_size)
 
     x =
       train_df
       |> DF.select(training_fields)
       |> Nx.stack(axis: 1)
 
-    y = DF.select(train_df, :ors_to_add) |> Nx.concatenate()
+    y = train_df |> DF.select(:ors_to_add) |> Nx.concatenate()
 
     opts =
       training_params_from_opts(parsed, training_params(), validate_df)
@@ -136,9 +138,7 @@ defmodule Mix.Tasks.TrainModel do
 
       if not is_nil(model.best_iteration) and
            model.best_iteration != training_params()[:num_boost_rounds] do
-        IO.puts(
-          "Best iteration was #{model.best_iteration}: consider updating `num_boost_rounds` in Training."
-        )
+        IO.puts("Best iteration was #{model.best_iteration}: consider updating `num_boost_rounds` in Training.")
       end
     else
       EXGBoost.write_model(model, Model.model_path(), overwrite: true, format: :ubj)
@@ -173,24 +173,14 @@ defmodule Mix.Tasks.TrainModel do
         Keyword.put(acc, :tree_method, String.to_existing_atom(method))
 
       {:validate, _}, acc ->
-        acc
-        |> Keyword.put(:callbacks, [
-          Callback.new(
-            :after_iteration,
-            &callback_evaluate_accuracy/1,
-            :evaluate_accuracy,
-            %{
-              best_iteration: 0,
-              best_score: 0,
-              validate_df: validate_df,
-              verbose?: not not acc[:verbose_eval]
-            }
-          ),
-          Callback.new(
-            :after_training,
-            &callback_set_best_iteration/1,
-            :set_best_iteration
-          )
+        Keyword.put(acc, :callbacks, [
+          Callback.new(:after_iteration, &callback_evaluate_accuracy/1, :evaluate_accuracy, %{
+            best_iteration: 0,
+            best_score: 0,
+            validate_df: validate_df,
+            verbose?: not not acc[:verbose_eval]
+          }),
+          Callback.new(:after_training, &callback_set_best_iteration/1, :set_best_iteration)
         ])
 
       _, acc ->

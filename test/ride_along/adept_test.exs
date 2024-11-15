@@ -1,6 +1,7 @@
 defmodule RideAlong.AdeptTest do
   @moduledoc false
   use ExUnit.Case, async: true
+
   alias RideAlong.Adept
   alias RideAlong.AdeptFixtures
 

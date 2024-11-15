@@ -1,15 +1,19 @@
 defmodule RideAlongWeb.TripLive.Show do
+  @moduledoc false
   use RideAlongWeb, :live_view
-  require Logger
+
+  import RideAlongWeb.TripComponents
 
   alias Faker.Address, as: FakeAddress
   alias RideAlong.Adept
-  alias RideAlong.Adept.{Trip, Vehicle}
+  alias RideAlong.Adept.Trip
+  alias RideAlong.Adept.Vehicle
   alias RideAlong.EtaCalculator
   alias RideAlong.LinkShortener
   alias RideAlong.OpenRouteService.Route
   alias RideAlong.RouteCache
-  import RideAlongWeb.TripComponents
+
+  require Logger
 
   @impl true
   def mount(%{"token" => token} = params, session, socket) do
@@ -75,8 +79,7 @@ defmodule RideAlongWeb.TripLive.Show do
           |> assign_popup()
 
         nil ->
-          socket
-          |> assign(:status, :closed)
+          assign(socket, :status, :closed)
       end
 
     socket =
@@ -87,13 +90,13 @@ defmodule RideAlongWeb.TripLive.Show do
         connected?(socket) ->
           Logger.info("mounted controller=#{__MODULE__} params=#{inspect(params)}")
 
-          if socket.assigns.status != :picked_up do
+          if socket.assigns.status == :picked_up do
+            socket
+          else
             {:ok, ref} = :timer.send_interval(1_000, :countdown)
             RideAlong.PubSub.subscribe("vehicle:#{socket.assigns.vehicle.route_id}")
             RideAlong.PubSub.subscribe("trips:updated")
             assign(socket, :countdown_ref, ref)
-          else
-            socket
           end
 
         true ->
@@ -301,8 +304,6 @@ defmodule RideAlongWeb.TripLive.Show do
     stale =
       if diff >= 2 do
         diff
-      else
-        nil
       end
 
     assign(socket, :stale, stale)
@@ -332,16 +333,7 @@ defmodule RideAlongWeb.TripLive.Show do
     |> assign(:polyline, route.polyline)
   end
 
-  defp assign_route(
-         %{
-           assigns: %{
-             status: status,
-             vehicle: %{lat: vehicle_lat, lon: vehicle_lon},
-             route: nil
-           }
-         } =
-           socket
-       )
+  defp assign_route(%{assigns: %{status: status, vehicle: %{lat: vehicle_lat, lon: vehicle_lon}, route: nil}} = socket)
        when status in [:enroute, :arrived] and is_float(vehicle_lat) and is_float(vehicle_lon) do
     bbox =
       Jason.encode!([

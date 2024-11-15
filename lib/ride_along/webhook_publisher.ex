@@ -7,9 +7,10 @@ defmodule RideAlong.WebhookPublisher do
   The secret is used to generate an SHA256 HMAC signature for the recipient to validate.
   """
   use GenServer
-  require Logger
 
   alias RideAlong.Adept
+
+  require Logger
 
   @gregorian_date_epoch Date.to_gregorian_days(~D[2024-08-01])
 
@@ -35,9 +36,7 @@ defmodule RideAlong.WebhookPublisher do
   @impl GenServer
   def handle_continue(:initial_send, state) do
     for {webhook_url, {result, error}} <- send_data_to_webhooks(state, "{}") do
-      Logger.info(
-        "#{__MODULE__} initial_send webhook_url=#{inspect(webhook_url)} result=#{result} error=#{error}"
-      )
+      Logger.info("#{__MODULE__} initial_send webhook_url=#{inspect(webhook_url)} result=#{result} error=#{error}")
     end
 
     {:noreply, state}
@@ -69,8 +68,6 @@ defmodule RideAlong.WebhookPublisher do
           {:ok, route} -> route
           {:error, _} -> nil
         end
-      else
-        nil
       end
 
     status = Adept.Trip.status(trip, vehicle, now)

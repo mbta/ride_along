@@ -1,4 +1,5 @@
 defmodule RideAlongWeb.AdminLive.Index do
+  @moduledoc false
   use RideAlongWeb, :live_view
 
   alias RideAlong.Adept
@@ -118,7 +119,7 @@ defmodule RideAlongWeb.AdminLive.Index do
           vehicle = Adept.get_vehicle_by_route(trip.route_id),
           status = Adept.Trip.status(trip, vehicle, now),
           status != :closed,
-          status != :picked_up or DateTime.compare(earliest, trip.promise_time) == :lt do
+          status != :picked_up or DateTime.before?(earliest, trip.promise_time) do
         {trip, vehicle}
       end
 

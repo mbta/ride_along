@@ -51,12 +51,7 @@ defmodule RideAlong.MixProject do
       {:floki, ">= 0.30.0", only: :test},
       {:gettext, "~> 0.20"},
       # https://github.com/tailwindlabs/heroicons/releases
-      {:heroicons,
-       github: "tailwindlabs/heroicons",
-       tag: "v2.1.5",
-       sparse: "optimized",
-       app: false,
-       compile: false},
+      {:heroicons, github: "tailwindlabs/heroicons", tag: "v2.1.5", sparse: "optimized", app: false, compile: false},
       {:jason, "~> 1.2"},
       {:jsonapi, "~> 1.8"},
       {:lasso, "~> 0.1", only: :test},
@@ -70,6 +65,7 @@ defmodule RideAlong.MixProject do
       {:req, "~> 0.4"},
       {:sobelow, "~> 0.13.0", only: :dev, runtime: false},
       {:stream_data, "~> 1.0", only: :test},
+      {:styler, "~> 1.1"},
       {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
       {:tds, "~> 2.3"},
       {:telemetry_metrics, "~> 1.0"},
@@ -88,10 +84,10 @@ defmodule RideAlong.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     sentry_dsn_define =
-      if (sentry_dsn = System.get_env("SENTRY_DSN", "")) != "" do
-        "--define:SENTRY_DSN='\"#{sentry_dsn}\"'"
-      else
+      if (sentry_dsn = System.get_env("SENTRY_DSN", "")) == "" do
         "--define:SENTRY_DSN=false"
+      else
+        "--define:SENTRY_DSN='\"#{sentry_dsn}\"'"
       end
 
     [

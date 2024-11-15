@@ -16,17 +16,12 @@ import Config
 # Alternatively, you can use `mix phx.gen.release` to generate a `bin/server`
 # script that automatically sets the env var above.
 if System.get_env("PHX_SERVER") do
-  config :ride_along, RideAlongWeb.Endpoint, server: true
-
-  config :ride_along, RideAlong.MqttListener, start: true
-
   config :ride_along, RideAlong.EtaCalculator.Model, start: true
-
   config :ride_along, RideAlong.EtaMonitor, start: true
-
+  config :ride_along, RideAlong.MqttListener, start: true
   config :ride_along, RideAlong.RiderNotifier, start: true
-
   config :ride_along, RideAlong.WebhookPublisher, start: true
+  config :ride_along, RideAlongWeb.Endpoint, server: true
 end
 
 if System.get_env("SQLCMDSERVER") in [nil, ""] do
@@ -35,6 +30,8 @@ if System.get_env("SQLCMDSERVER") in [nil, ""] do
   end
 else
   if config_env() != :test do
+    config :ride_along, RideAlong.MqttListener, start: true
+
     config :ride_along, RideAlong.SqlPublisher,
       database: [
         hostname: System.fetch_env!("SQLCMDSERVER"),
@@ -44,8 +41,6 @@ else
         database: "ADEPT6_GCS"
       ],
       start: true
-
-    config :ride_along, RideAlong.MqttListener, start: true
   end
 end
 
@@ -65,14 +60,14 @@ if config_env() == :prod do
   host = System.get_env("PHX_HOST") || "example.com"
   port = String.to_integer(System.get_env("PORT") || "4000")
 
-  config :ride_along, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
+  mqtt_url = System.get_env("MQTT_BROKER_URL")
+
+  config :ride_along, RideAlong.LinkShortener, secret: secret_key_base
 
   config :ride_along, RideAlong.OpenRouteService,
     req_config: [
       base_url: System.get_env("ORS_BASE_URL")
     ]
-
-  config :ride_along, RideAlong.LinkShortener, secret: secret_key_base
 
   config :ride_along, RideAlong.WebhookPublisher, secret: secret_key_base
 
@@ -91,7 +86,7 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
-  mqtt_url = System.get_env("MQTT_BROKER_URL")
+  config :ride_along, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
   if mqtt_url not in [nil, ""] do
     topic_prefix = System.get_env("MQTT_TOPIC_PREFIX", "")

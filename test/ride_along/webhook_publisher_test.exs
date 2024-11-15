@@ -71,7 +71,8 @@ defmodule RideAlong.WebhookPublisherTest do
              } = Jason.decode!(body)
 
       expected_signature =
-        :crypto.mac(:hmac, :sha256, "secret", body)
+        :hmac
+        |> :crypto.mac(:sha256, "secret", body)
         |> Base.encode16()
         |> String.downcase()
 

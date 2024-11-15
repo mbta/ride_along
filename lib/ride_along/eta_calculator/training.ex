@@ -4,9 +4,11 @@ defmodule RideAlong.EtaCalculator.Training do
   """
 
   alias EXGBoost.Booster
-  require Explorer.DataFrame, as: DF
-  alias Explorer.{Duration, Series}
+  alias Explorer.Duration
+  alias Explorer.Series
   alias RideAlong.EtaCalculator.Model
+
+  require Explorer.DataFrame, as: DF
 
   def training_params do
     [
@@ -67,18 +69,20 @@ defmodule RideAlong.EtaCalculator.Training do
         _ -> slices
       end
 
-    for slice <- 0..slices do
-      Model.predict_from_tensor(
-        model,
-        df
-        |> DF.select(Model.feature_names())
-        |> DF.slice((slice * slice_size)..((slice + 1) * slice_size - 1))
-        |> Nx.stack(axis: 1),
-        opts
-      )
-      |> Series.from_tensor()
-    end
-    |> Series.concat()
+    for_result =
+      for slice <- 0..slices do
+        model
+        |> Model.predict_from_tensor(
+          df
+          |> DF.select(Model.feature_names())
+          |> DF.slice((slice * slice_size)..((slice + 1) * slice_size - 1))
+          |> Nx.stack(axis: 1),
+          opts
+        )
+        |> Series.from_tensor()
+      end
+
+    Series.concat(for_result)
   end
 
   def arrival_times(df) do
@@ -172,10 +176,7 @@ defmodule RideAlong.EtaCalculator.Training do
 
   def accuracy(series) do
     cat =
-      series
-      |> Explorer.Series.cut([3 * 60, 6 * 60, 12 * 60, 30 * 60],
-        labels: ["0-3", "3-6", "6-12", "12-30", "30+"]
-      )
+      Explorer.Series.cut(series, [3 * 60, 6 * 60, 12 * 60, 30 * 60], labels: ["0-3", "3-6", "6-12", "12-30", "30+"])
 
     bins =
       DF.new(
@@ -191,16 +192,12 @@ defmodule RideAlong.EtaCalculator.Training do
         }
       )
 
-    cat
-    |> DF.join(bins, how: :left, on: :category)
+    DF.join(cat, bins, how: :left, on: :category)
   end
 
   def transit_app_accuracy(series) do
     cat =
-      series
-      |> Explorer.Series.cut([3 * 60, 6 * 60, 10 * 60, 15 * 60],
-        labels: ["0-3", "3-6", "6-10", "10-15", "15+"]
-      )
+      Explorer.Series.cut(series, [3 * 60, 6 * 60, 10 * 60, 15 * 60], labels: ["0-3", "3-6", "6-10", "10-15", "15+"])
 
     bins =
       DF.new(
@@ -221,10 +218,7 @@ defmodule RideAlong.EtaCalculator.Training do
 
   def larger_bins_accuracy(series) do
     cat =
-      series
-      |> Explorer.Series.cut([5 * 60, 10 * 60, 20 * 60, 40 * 60],
-        labels: ["0-5", "5-10", "10-20", "20-40", "40+"]
-      )
+      Explorer.Series.cut(series, [5 * 60, 10 * 60, 20 * 60, 40 * 60], labels: ["0-5", "5-10", "10-20", "20-40", "40+"])
 
     bins =
       DF.new(
@@ -240,16 +234,12 @@ defmodule RideAlong.EtaCalculator.Training do
         }
       )
 
-    cat
-    |> DF.join(bins, how: :left, on: :category)
+    DF.join(cat, bins, how: :left, on: :category)
   end
 
   def on_time_performance_accuracy(series) do
     cat =
-      series
-      |> Explorer.Series.cut([5 * 60, 10 * 60, 20 * 60, 40 * 60],
-        labels: ["0-5", "5-10", "10-20", "20-40", "40+"]
-      )
+      Explorer.Series.cut(series, [5 * 60, 10 * 60, 20 * 60, 40 * 60], labels: ["0-5", "5-10", "10-20", "20-40", "40+"])
 
     bins =
       DF.new(
@@ -265,8 +255,7 @@ defmodule RideAlong.EtaCalculator.Training do
         }
       )
 
-    cat
-    |> DF.join(bins, how: :left, on: :category)
+    DF.join(cat, bins, how: :left, on: :category)
   end
 
   def duration_to_seconds(col) do
@@ -324,6 +313,5 @@ defmodule RideAlong.EtaCalculator.Training do
   end
 
   # these functions work, but the DF.summarize/2 macro confuses Dialyzer
-  @dialyzer {:nowarn_function,
-             overall_accuracy: 5, grouped_accuracy: 5, callback_evaluate_accuracy: 1}
+  @dialyzer {:nowarn_function, overall_accuracy: 5, grouped_accuracy: 5, callback_evaluate_accuracy: 1}
 end
