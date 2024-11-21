@@ -128,11 +128,11 @@ defmodule Mix.Tasks.TrainModel do
         predict_from_data_frame(model, validate_df, iteration_range: {0, model.best_iteration})
 
       overall =
-        (validate_df
-         |> DF.mutate(regression: time + %Duration{value: 1_000, precision: :millisecond} * ^pred)
-         |> overall_accuracy(:time, :arrival_time, :regression, &accuracy/1))[
-          :accuracy
-        ][0]
+        validate_df
+        |> DF.mutate(regression: time + %Duration{value: 1_000, precision: :millisecond} * ^pred)
+        |> overall_accuracy(:time, :arrival_time, :regression, &accuracy/1)
+        |> Access.get(:accuracy)
+        |> Access.get(0)
 
       IO.puts("Overall accuracy: #{overall}%")
 
