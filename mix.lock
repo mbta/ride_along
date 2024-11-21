@@ -70,7 +70,7 @@
   "sobelow": {:hex, :sobelow, "0.13.0", "218afe9075904793f5c64b8837cc356e493d88fddde126a463839351870b8d1e", [:mix], [{:jason, "~> 1.0", [hex: :jason, repo: "hexpm", optional: false]}], "hexpm", "cd6e9026b85fc35d7529da14f95e85a078d9dd1907a9097b3ba6ac7ebbe34a0d"},
   "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.7", "354c321cf377240c7b8716899e182ce4890c5938111a1296add3ec74cf1715df", [:make, :mix, :rebar3], [], "hexpm", "fe4c190e8f37401d30167c8c405eda19469f34577987c76dde613e838bbc67f8"},
   "stream_data": {:hex, :stream_data, "1.1.2", "05499eaec0443349ff877aaabc6e194e82bda6799b9ce6aaa1aadac15a9fdb4d", [:mix], [], "hexpm", "129558d2c77cbc1eb2f4747acbbea79e181a5da51108457000020a906813a1a9"},
-  "styler": {:hex, :styler, "1.1.2", "d5b14cd4f8f7cc45624d9485cd0edb277ec92583b118409cfcbcb7c78efa5f4b", [:mix], [], "hexpm", "b46edab1f129d0c839d426755e172cf92118e5fac877456d074156b335f1f80b"},
+  "styler": {:hex, :styler, "1.2.1", "28f9e3d4b065c22575c56b8ae03d05188add1b21bec5ae664fc1551e2dfcc41b", [:mix], [], "hexpm", "71dc33980e530d21ca54db9c2075e646faa6e7b744a9d4a3dfb0ff01f56595f0"},
   "table": {:hex, :table, "0.1.2", "87ad1125f5b70c5dea0307aa633194083eb5182ec537efc94e96af08937e14a8", [:mix], [], "hexpm", "7e99bc7efef806315c7e65640724bf165c3061cdc5d854060f74468367065029"},
   "table_rex": {:hex, :table_rex, "4.0.0", "3c613a68ebdc6d4d1e731bc973c233500974ec3993c99fcdabb210407b90959b", [:mix], [], "hexpm", "c35c4d5612ca49ebb0344ea10387da4d2afe278387d4019e4d8111e815df8f55"},
   "tailwind": {:hex, :tailwind, "0.2.4", "5706ec47182d4e7045901302bf3a333e80f3d1af65c442ba9a9eed152fb26c2e", [:mix], [{:castore, ">= 0.0.0", [hex: :castore, repo: "hexpm", optional: false]}], "hexpm", "c6e4a82b8727bab593700c998a4d98cf3d8025678bfde059aed71d0000c3e463"},

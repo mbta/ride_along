@@ -65,7 +65,7 @@ defmodule RideAlong.MixProject do
       {:req, "~> 0.4"},
       {:sobelow, "~> 0.13.0", only: :dev, runtime: false},
       {:stream_data, "~> 1.0", only: :test},
-      {:styler, "~> 1.1"},
+      {:styler, "~> 1.2"},
       {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
       {:tds, "~> 2.3"},
       {:telemetry_metrics, "~> 1.0"},

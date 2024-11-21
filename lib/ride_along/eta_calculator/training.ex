@@ -71,14 +71,14 @@ defmodule RideAlong.EtaCalculator.Training do
 
     for_result =
       for slice <- 0..slices do
-        model
-        |> Model.predict_from_tensor(
+        tensor =
           df
           |> DF.select(Model.feature_names())
           |> DF.slice((slice * slice_size)..((slice + 1) * slice_size - 1))
-          |> Nx.stack(axis: 1),
-          opts
-        )
+          |> Nx.stack(axis: 1)
+
+        model
+        |> Model.predict_from_tensor(tensor, opts)
         |> Series.from_tensor()
       end
 
@@ -279,11 +279,11 @@ defmodule RideAlong.EtaCalculator.Training do
     pred = predict_from_data_frame(state.booster, validate_df)
 
     overall =
-      (validate_df
-       |> DF.mutate(regression: time + %Duration{value: 1_000, precision: :millisecond} * ^pred)
-       |> overall_accuracy(:time, :arrival_time, :regression, &accuracy/1))[
-        :accuracy
-      ][0]
+      validate_df
+      |> DF.mutate(regression: time + %Duration{value: 1_000, precision: :millisecond} * ^pred)
+      |> overall_accuracy(:time, :arrival_time, :regression, &accuracy/1)
+      |> Access.get(:accuracy)
+      |> Access.get(0)
 
     if verbose? do
       IO.puts("Iteration #{state.iteration}: #{overall}%")
