@@ -1,12 +1,12 @@
 <.header>
-  <%= gettext("Ride Along Admin") %>
+  {gettext("Ride Along Admin")}
   <:actions>
-    <%= @uid %>
+    {@uid}
     <.link
       href={~p"/auth/logout"}
       class="inline-block rounded-lg bg-red-600 hover:bg-red-900 my-2 py-1 px-3 text-sm font-semibold leading-6 text-white active:text-white/80"
     >
-      <%= gettext("Logout") %>
+      {gettext("Logout")}
     </.link>
   </:actions>
 </.header>
@@ -17,7 +17,7 @@
       <div :if={@iframe_url} class="pb-1">
         URL:
         <.link navigate={@iframe_url} target="_blank" class="text-sky-500 hover:underline">
-          <%= @iframe_url %>
+          {@iframe_url}
         </.link>
       </div>
       <.simple_form for={@form} phx-submit="update" class="pr-4">
@@ -44,13 +44,13 @@
               patch={~p[/admin/?#{[trip_id: trip.trip_id]}]}
               class="text-sky-500 hover:underline"
             >
-              <%= trip.trip_id %>
+              {trip.trip_id}
             </.link>
           </td>
-          <td class="p-1"><%= Calendar.strftime(trip.promise_time, "%I:%M %p") %></td>
-          <td class="p-1"><%= RideAlong.Adept.Trip.status(trip, vehicle, @now) %></td>
-          <td class="p-1"><%= trip.route_id %></td>
-          <td class="p-1"><span :if={vehicle}><%= vehicle.vehicle_id %></span></td>
+          <td class="p-1">{Calendar.strftime(trip.promise_time, "%I:%M %p")}</td>
+          <td class="p-1">{RideAlong.Adept.Trip.status(trip, vehicle, @now)}</td>
+          <td class="p-1">{trip.route_id}</td>
+          <td class="p-1"><span :if={vehicle}>{vehicle.vehicle_id}</span></td>
         </tr>
       </tbody>
     </table>

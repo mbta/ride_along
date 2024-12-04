@@ -35,7 +35,7 @@ defmodule RideAlongWeb.TripComponents do
       {@rest}
     >
       <div class="flex flex-row group">
-        <div class="text-center flex-auto"><%= msg %></div>
+        <div class="text-center flex-auto">{msg}</div>
         <button type="button" class="flex-none" aria-label={gettext("close")}>
           <span aria-hidden="true">
             <.icon
@@ -66,7 +66,7 @@ defmodule RideAlongWeb.TripComponents do
       hidden
     >
       <.icon name="hero-signal-slash" class="h-4 w-4" />
-      <%= gettext("Live updates are temporarily unavailable.") %>
+      {gettext("Live updates are temporarily unavailable.")}
     </.trip_flash>
     """
   end
@@ -76,10 +76,10 @@ defmodule RideAlongWeb.TripComponents do
   def linkify_phone(assigns) do
     ~H"""
     <% [first | rest] = Regex.split(~r|\d{3}-\d{3}-\d{4}|, assigns[:text], include_captures: true) %>
-    <%= first %>
+    {first}
     <span :for={[phone, after_phone] <- Enum.chunk_every(rest, 2)}>
-      <.link class="underline" href={"tel:" <> phone}><%= phone %></.link>
-      <%= after_phone %>
+      <.link class="underline" href={"tel:" <> phone}>{phone}</.link>
+      {after_phone}
     </span>
     """
   end
@@ -103,12 +103,12 @@ defmodule RideAlongWeb.TripComponents do
   attr :title, :string, required: true
   attr :value, :any, default: []
   attr :rest, :global
-  slot :inner_block, default: []
+  slot :inner_block
 
   def labeled_field(assigns) do
     ~H"""
     <div {@rest}>
-      <span class="font-bold"><%= @title %>:</span> <%= @value %><%= render_slot(@inner_block) %>
+      <span class="font-bold">{@title}:</span> {@value}{render_slot(@inner_block)}
     </div>
     """
   end

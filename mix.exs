@@ -60,7 +60,7 @@ defmodule RideAlong.MixProject do
       {:phoenix_html, "~> 4.0"},
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.20.2"},
+      {:phoenix_live_view, "~> 1.0.0"},
       {:polyline, "~> 1.4"},
       {:req, "~> 0.4"},
       {:sobelow, "~> 0.13.0", only: :dev, runtime: false},
