@@ -2,101 +2,101 @@
   "bg-gray-100 max-w-lg h-full",
   Application.get_env(:ride_along, :dev_routes) || "mx-auto"
 ]}>
-  <h1 class="sr-only"><%= @page_title %></h1>
+  <h1 class="sr-only">{@page_title}</h1>
   <div id="status" class="sr-only" aria-live="assertive" aria-atomic="true">
-    <h2 class="sr-only"><%= gettext("Status") %></h2>
-    <%= @popup %>
+    <h2 class="sr-only">{gettext("Status")}</h2>
+    {@popup}
     <span :if={@status == :enqueued}>
-      <%= ngettext(
+      {ngettext(
         "There is one stop ahead of you.",
         "There are %{count} stops ahead of you.",
         @trip.pick_order - RideAlong.Adept.Vehicle.last_stop(@vehicle) - 1
-      ) %>
+      )}
     </span>
     <span :if={@eta && @status in [:enqueued, :enroute, :waiting]}>
-      <%= case @eta_text do
+      {case @eta_text do
         {:countdown, text} -> [gettext("Your vehicle will be arriving in:"), " ", text]
         {:time, text} -> [gettext("Estimated time of pick-up:"), " ", text]
-      end %>
+      end}
     </span>
     <span :if={@status == :arrived}>
-      <%= gettext("The driver will go to your door and wait %{time}.", %{time: @departure_text}) %>
-      <%= if @trip.client_trip_index != 0,
-        do: gettext("If you are going to be late, call TRAC as soon as possible at 844-427-7433.") %>
+      {gettext("The driver will go to your door and wait %{time}.", %{time: @departure_text})}
+      {if @trip.client_trip_index != 0,
+        do: gettext("If you are going to be late, call TRAC as soon as possible at 844-427-7433.")}
     </span>
     <span :if={@status in [:picked_up, :closed]}>
-      <%= gettext("You have been picked up!") %>
+      {gettext("You have been picked up!")}
     </span>
   </div>
   <div class="flex flex-col-reverse h-dvh-when-tall">
     <section class="p-4 rounded-t-xl basis-24 bg-slate-600 text-white">
-      <h2 class="sr-only"><%= gettext("Trip Information") %></h2>
+      <h2 class="sr-only">{gettext("Trip Information")}</h2>
       <div class="pb-4">
         <div class="text-center w-full">
           <div class="text-xl pb-2 font-bold">
-            <%= gettext("Vehicle #%{vehicle}", %{vehicle: @vehicle.vehicle_id}) %>
+            {gettext("Vehicle #%{vehicle}", %{vehicle: @vehicle.vehicle_id})}
           </div>
           <div class="text-xl font-bold">
             <span :if={@status == :enqueued}>
-              <%= ngettext(
+              {ngettext(
                 "There is one stop ahead of you.",
                 "There are %{count} stops ahead of you.",
                 @trip.pick_order - RideAlong.Adept.Vehicle.last_stop(@vehicle) - 1
-              ) %>
+              )}
             </span>
             <span :if={@status == :arrived}>
               <span
                 aria-hidden="true"
                 class="align-middle inline-block -mt-0.5 w-4 h-4 bg-green-400 rounded-full"
               />
-              <%= gettext("Your RIDE is here!") %>
+              {gettext("Your RIDE is here!")}
               <span class="block text-sm px-4 font-normal">
-                <%= gettext("The driver will go to your door and wait %{time}.", %{
+                {gettext("The driver will go to your door and wait %{time}.", %{
                   time: @departure_text
-                }) %>
+                })}
               </span>
             </span>
             <span :if={@status in [:picked_up, :closed]}>
-              <%= gettext("You have been picked up!") %>
+              {gettext("You have been picked up!")}
             </span>
           </div>
           <div :if={@eta && @status in [:enqueued, :enroute, :waiting]}>
             <%= case @eta_text do %>
               <% {:time, text} -> %>
-                <%= gettext("Estimated time of pick-up:") %>
+                {gettext("Estimated time of pick-up:")}
                 <time class="block text-2xl font-bold" datetime={@eta}>
-                  <%= text %>
+                  {text}
                 </time>
               <% {:countdown, text} -> %>
-                <%= gettext("Your vehicle will be arriving in:") %>
+                {gettext("Your vehicle will be arriving in:")}
                 <time class="block text-2xl font-bold" datetime={@eta}>
-                  <%= text %>
+                  {text}
                 </time>
             <% end %>
           </div>
           <time :if={@stale} class="block text-sm italic" datetime={@vehicle.timestamp}>
-            <%= gettext("Updated %{minutes} minutes ago", %{minutes: @stale}) %>
+            {gettext("Updated %{minutes} minutes ago", %{minutes: @stale})}
           </time>
           <time
             :if={@trip.promise_time && @status in [:enqueued, :enroute, :waiting]}
             class="block text-sm"
             datetime={@trip.promise_time}
           >
-            <%= gettext("Original promise time: %{time}", %{time: format_time(@trip.promise_time)}) %>
+            {gettext("Original promise time: %{time}", %{time: format_time(@trip.promise_time)})}
           </time>
         </div>
       </div>
       <div class="flex flex-row gap-x-3 pb-4">
         <div class="grow">
           <div class="font-bold">
-            <%= gettext("Pick-up address:") %>
+            {gettext("Pick-up address:")}
           </div>
           <div class="flex flex-row gap-x-1">
             <div class="grow-0" aria-hidden="true">
               <.icon name="hero-map-pin-solid" class="aspect-square w-5 h-5" />
             </div>
             <address class="grow-1 not-italic sentry-mask">
-              <%= RideAlong.Adept.Trip.address(@trip) %>
+              {RideAlong.Adept.Trip.address(@trip)}
             </address>
           </div>
         </div>
@@ -114,7 +114,7 @@
           <span aria-hidden="true">
             <.icon name="hero-phone-solid" class="aspect-square w-4 h-4" />
           </span>
-          <%= gettext("Call The RIDE Access Center (TRAC)") %>
+          {gettext("Call The RIDE Access Center (TRAC)")}
         </.link>
       </div>
     </section>
@@ -122,7 +122,7 @@
       <.trip_flash_group flash={@flash} />
     </section>
     <section class="flex-1">
-      <h2 class="sr-only"><%= gettext("Map") %></h2>
+      <h2 class="sr-only">{gettext("Map")}</h2>
       <div
         id="map"
         class="h-full min-h-80"
@@ -137,7 +137,7 @@
     </section>
     <section :if={@feedback_url} class="p-2 bg-blue-900 text-white">
       <span class="float-left border-2 p-1 border-blue-900">
-        <%= gettext("This site is in beta.") %>
+        {gettext("This site is in beta.")}
       </span>
       <.link
         class="float-right border-2 p-1 rounded-lg"
@@ -145,7 +145,7 @@
         target="_blank"
         rel="noopener"
       >
-        <%= gettext("Feedback") %>
+        {gettext("Feedback")}
       </.link>
     </section>
   </div>
