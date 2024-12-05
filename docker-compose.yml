@@ -1,10 +1,10 @@
 services:
   ors:
-    image: ghcr.io/paulswartz/ors:latest
+    image: ghcr.io/mbta/ors:latest
     ports:
       - "8082:8082"
   mq:
-    image: ghcr.io/paulswartz/activemq:5.17.6
+    image: ghcr.io/paulswartz/activemq:5.18.2
     environment:
       ACTIVEMQ_WEBADMIN_USERNAME: admin
       ACTIVEMQ_WEBADMIN_PASSWORD: admin
