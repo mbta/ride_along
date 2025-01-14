@@ -2,10 +2,10 @@
 ARG ELIXIR_VERSION=1.17.3
 ARG ERLANG_VERSION=27.2
 
-# https://gallery.ecr.aws/docker/library/node
+# https://hub.docker.com/_/node
 ARG NODE_VERSION=20.16.0
 
-# https://gallery.ecr.aws/docker/library/debian
+# https://hub.docker.com/_/debian
 ARG DEBIAN_RELEASE=bookworm
 ARG DEBIAN_VERSION=${DEBIAN_RELEASE}-20241202
 
@@ -36,7 +36,7 @@ mix deps.compile
 mix eval "Application.ensure_all_started(:tzdata); Tzdata.DataBuilder.load_and_save_table()"
 EOT
 
-FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-${DEBIAN_RELEASE} AS assets-builder
+FROM node:${NODE_VERSION}-${DEBIAN_RELEASE} AS assets-builder
 
 WORKDIR /app
 
@@ -59,7 +59,7 @@ COPY rel rel
 
 RUN mix release
 
-FROM public.ecr.aws/docker/library/debian:${DEBIAN_VERSION}-slim
+FROM debian:${DEBIAN_VERSION}-slim
 
 RUN apt-get update --allow-releaseinfo-change && \
   apt-get upgrade -y --no-install-recommends && \
