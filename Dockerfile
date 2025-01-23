@@ -1,5 +1,5 @@
 # https://hub.docker.com/r/hexpm/elixir
-ARG ELIXIR_VERSION=1.17.3
+ARG ELIXIR_VERSION=1.18.2
 ARG ERLANG_VERSION=27.2
 
 # https://gallery.ecr.aws/docker/library/node
@@ -7,7 +7,7 @@ ARG NODE_VERSION=20.16.0
 
 # https://gallery.ecr.aws/docker/library/debian
 ARG DEBIAN_RELEASE=bookworm
-ARG DEBIAN_VERSION=${DEBIAN_RELEASE}-20241202
+ARG DEBIAN_VERSION=${DEBIAN_RELEASE}-20250113
 
 FROM hexpm/elixir:$ELIXIR_VERSION-erlang-$ERLANG_VERSION-debian-$DEBIAN_VERSION AS elixir-builder
 
