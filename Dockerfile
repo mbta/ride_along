@@ -1,6 +1,6 @@
 # https://hub.docker.com/r/hexpm/elixir
 ARG ELIXIR_VERSION=1.18.2
-ARG ERLANG_VERSION=27.2
+ARG ERLANG_VERSION=27.2.1
 
 # https://gallery.ecr.aws/docker/library/node
 ARG NODE_VERSION=20.16.0
