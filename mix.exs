@@ -51,7 +51,7 @@ defmodule RideAlong.MixProject do
       {:floki, ">= 0.30.0", only: :test},
       {:gettext, "~> 0.20"},
       # https://github.com/tailwindlabs/heroicons/releases
-      {:heroicons, github: "tailwindlabs/heroicons", tag: "v2.1.5", sparse: "optimized", app: false, compile: false},
+      {:heroicons, github: "tailwindlabs/heroicons", tag: "v2.2.0", sparse: "optimized", app: false, compile: false},
       {:jason, "~> 1.2"},
       {:jsonapi, "~> 1.8"},
       {:lasso, "~> 0.1", only: :test},
