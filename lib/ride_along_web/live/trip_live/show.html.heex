@@ -1,6 +1,10 @@
+<noscript>
+  <% # refresh automatically if there's no JS running %>
+  <meta http-equiv="refresh" content="60" />
+</noscript>
 <main class={[
   "bg-gray-100 max-w-lg h-full",
-  Application.get_env(:ride_along, :dev_routes) || "mx-auto"
+  !!Application.get_env(:ride_along, :dev_routes) && "mx-auto"
 ]}>
   <h1 class="sr-only">{@page_title}</h1>
   <div id="status" class="sr-only" aria-live="assertive" aria-atomic="true">
