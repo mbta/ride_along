@@ -17,7 +17,7 @@ defmodule RideAlong.MqttConnection do
         name: name,
         configs: app_config[:broker_configs],
         client_id: EmqttFailover.client_id(prefix: app_config[:broker_client_prefix]),
-        backoff: {1_000, 60_000, :jitter},
+        backoff: {1_000, 300_000, :jitter},
         handler: {RideAlong.MqttConnection.PubSubHandler, topics: topics}
       )
     else
