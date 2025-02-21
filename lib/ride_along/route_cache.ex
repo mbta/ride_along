@@ -20,7 +20,7 @@ defmodule RideAlong.RouteCache do
     name = opts[:name] || @default_name
 
     Cachex.start_link(name,
-      expiration: expiration(default: :timer.minutes(5))
+      expiration: expiration(default: to_timeout(minute: 5))
     )
   end
 
