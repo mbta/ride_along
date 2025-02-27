@@ -75,6 +75,7 @@ defmodule RideAlong.SqlPublisher do
   end
 
   def handle_info({:connected, _connection}, state) do
+    Logger.info("#{__MODULE__} connected")
     state = %{state | connected?: true}
 
     for name <- Map.keys(state.results) do
@@ -85,6 +86,7 @@ defmodule RideAlong.SqlPublisher do
   end
 
   def handle_info({:disconnected, _connection, _reason}, state) do
+    Logger.info("#{__MODULE__} disconnected")
     {:noreply, %{state | connected?: false}}
   end
 
@@ -235,7 +237,9 @@ defmodule RideAlong.SqlPublisher do
     end
   end
 
-  defp publish(%{connected?: false}, _name) do
+  defp publish(%{connected?: false}, name) do
+    Logger.info("#{__MODULE__} not publishing because disconnected name=#{name}")
+
     :ok
   end
 end
