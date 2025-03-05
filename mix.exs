@@ -45,7 +45,7 @@ defmodule RideAlong.MixProject do
       {:cachex, "~> 4.0"},
       {:credo, "~> 1.7.7-rc", only: :dev, runtime: false},
       {:dialyxir, "~> 1.4", only: :dev, runtime: false},
-      {:dns_cluster, "~> 0.1.1"},
+      {:dns_cluster, "~> 0.2.0"},
       {:ehmon, github: "paulswartz/ehmon"},
       {:emqtt_failover, "~> 0.3.0"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
