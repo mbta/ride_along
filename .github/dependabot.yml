@@ -8,15 +8,15 @@ updates:
   - package-ecosystem: "mix" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
-      interval: "daily"
+      interval: "weekly"
       time: "09:00"
     reviewers:
       - "paulswartz"
     open-pull-requests-limit: 5
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "assets" # Location of package manifests
+  - package-ecosystem: "npm"
+    directory: "assets"
     schedule:
-      interval: "daily"
+      interval: "weekly"
       time: "09:00"
     open-pull-requests-limit: 5
     reviewers:
@@ -24,7 +24,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "artillery"
     schedule:
-      interval: "daily"
+      interval: "monthly"
       time: "09:00"
     open-pull-requests-limit: 5
     reviewers:
