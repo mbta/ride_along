@@ -6,11 +6,10 @@ A small pair of apps to enable paratransit riders to see the location and ETA of
 
 Install dependencies:
 
-
+  * Run `brew install libomp` to install a dynamic library that EXGBoost needs
   * Run `mise install` to install the correct versions of Elixir/Erlang/NodeJS
   * Run `npm i --prefix assets` to install NodeJS packages
   * Run `mix setup` to install and setup dependencies
-  * Run `brew install libomp` to install a dynamic library that EXGBoost needs
   * Run `docker-compose create` to create containers for the background services
 
 Then start your Phoenix server:
