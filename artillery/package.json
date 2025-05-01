@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@playwright/test": "^1.50.1",
+    "@playwright/test": "^1.52.0",
     "artillery": "^2.0.22"
   }
 }
