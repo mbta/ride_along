@@ -51,7 +51,7 @@ defmodule RideAlong.WebhookPublisherTest do
           send(parent, ref)
         end
 
-        Plug.Conn.send_resp(conn, :created, "")
+        Conn.send_resp(conn, :created, "")
       end)
 
       PubSub.publish("notification:trip", {:trip_notification, trip})

@@ -176,7 +176,7 @@ defmodule RideAlong.EtaCalculator.Training do
 
   def accuracy(series) do
     cat =
-      Explorer.Series.cut(series, [3 * 60, 6 * 60, 12 * 60, 30 * 60], labels: ["0-3", "3-6", "6-12", "12-30", "30+"])
+      Series.cut(series, [3 * 60, 6 * 60, 12 * 60, 30 * 60], labels: ["0-3", "3-6", "6-12", "12-30", "30+"])
 
     bins =
       DF.new(
@@ -197,7 +197,7 @@ defmodule RideAlong.EtaCalculator.Training do
 
   def transit_app_accuracy(series) do
     cat =
-      Explorer.Series.cut(series, [3 * 60, 6 * 60, 10 * 60, 15 * 60], labels: ["0-3", "3-6", "6-10", "10-15", "15+"])
+      Series.cut(series, [3 * 60, 6 * 60, 10 * 60, 15 * 60], labels: ["0-3", "3-6", "6-10", "10-15", "15+"])
 
     bins =
       DF.new(
@@ -218,7 +218,7 @@ defmodule RideAlong.EtaCalculator.Training do
 
   def larger_bins_accuracy(series) do
     cat =
-      Explorer.Series.cut(series, [5 * 60, 10 * 60, 20 * 60, 40 * 60], labels: ["0-5", "5-10", "10-20", "20-40", "40+"])
+      Series.cut(series, [5 * 60, 10 * 60, 20 * 60, 40 * 60], labels: ["0-5", "5-10", "10-20", "20-40", "40+"])
 
     bins =
       DF.new(
@@ -239,7 +239,7 @@ defmodule RideAlong.EtaCalculator.Training do
 
   def on_time_performance_accuracy(series) do
     cat =
-      Explorer.Series.cut(series, [5 * 60, 10 * 60, 20 * 60, 40 * 60], labels: ["0-5", "5-10", "10-20", "20-40", "40+"])
+      Series.cut(series, [5 * 60, 10 * 60, 20 * 60, 40 * 60], labels: ["0-5", "5-10", "10-20", "20-40", "40+"])
 
     bins =
       DF.new(
