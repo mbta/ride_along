@@ -10,7 +10,7 @@ defmodule RideAlongWeb.Api.TripControllerTest do
       trip = AdeptFixtures.trip_fixture()
       Adept.set_trips([trip])
 
-      OpenRouteServiceFixtures.stub(RideAlong.OpenRouteServiceFixtures.fixture())
+      OpenRouteServiceFixtures.stub(OpenRouteServiceFixtures.fixture())
 
       authorization = "Bearer testApiKey"
       path = ~p"/api/trips/#{trip.trip_id}"
@@ -108,8 +108,8 @@ defmodule RideAlongWeb.Api.TripControllerTest do
                "included" => included
              } = json_response(conn, 200)
 
-      assert Enum.find(included, &match?(%{"type" => "vehicles", "id" => ^vehicle_id}, &1))
-      assert Enum.find(included, &match?(%{"type" => "routes", "id" => ^route_id}, &1))
+      assert Enum.any?(included, &match?(%{"type" => "vehicles", "id" => ^vehicle_id}, &1))
+      assert Enum.any?(included, &match?(%{"type" => "routes", "id" => ^route_id}, &1))
     end
   end
 end

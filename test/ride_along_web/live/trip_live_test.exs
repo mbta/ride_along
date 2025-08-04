@@ -13,7 +13,7 @@ defmodule RideAlongWeb.TripLiveTest do
       {:ok, _show_live, html} = live(conn, ~p"/t/#{token}")
       {:ok, document} = Floki.parse_document(html)
       map = Floki.get_by_id(document, "map")
-      assert map != nil
+      assert map
       assert [_bbox] = Floki.attribute(map, "data-bbox")
       assert [_polyline] = Floki.attribute(map, "data-polyline")
     end
