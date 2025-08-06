@@ -60,6 +60,7 @@ defmodule RideAlong.MixProject do
       {:jason, "~> 1.2"},
       {:jsonapi, "~> 1.8"},
       {:lasso, "~> 0.1", only: :test},
+      {:lazy_html, "~> 0.1", only: :test},
       {:logster, "~> 2.0-rc"},
       {:phoenix, "~> 1.7.12"},
       {:phoenix_html, "~> 4.0"},
