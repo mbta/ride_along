@@ -11,18 +11,18 @@ defmodule RideAlongWeb.TripLiveTest do
 
     test "displays trip", %{conn: conn, token: token} do
       {:ok, _show_live, html} = live(conn, ~p"/t/#{token}")
-      {:ok, document} = Floki.parse_document(html)
-      map = Floki.get_by_id(document, "map")
+      document = LazyHTML.from_document(html)
+      map = LazyHTML.query_by_id(document, "map")
       assert map
-      assert [_bbox] = Floki.attribute(map, "data-bbox")
-      assert [_polyline] = Floki.attribute(map, "data-polyline")
+      assert [_bbox] = LazyHTML.attribute(map, "data-bbox")
+      assert [_polyline] = LazyHTML.attribute(map, "data-polyline")
     end
 
     test "ETA is in an aria-live region", %{conn: conn, token: token} do
       {:ok, _show_live, html} = live(conn, ~p"/t/#{token}")
-      {:ok, document} = Floki.parse_document(html)
-      elements = Floki.find(document, "[aria-live]")
-      assert Floki.text(elements) =~ "Status"
+      document = LazyHTML.from_document(html)
+      elements = LazyHTML.query(document, "[aria-live]")
+      assert LazyHTML.text(elements) =~ "Status"
     end
 
     test "shows a vehicle and the 5 minute departure when the trip has arrived", %{
@@ -35,16 +35,16 @@ defmodule RideAlongWeb.TripLiveTest do
       RideAlong.Adept.set_vehicles([vehicle])
 
       {:ok, _show_live, html} = live(conn, ~p"/t/#{token}")
-      {:ok, document} = Floki.parse_document(html)
+      document = LazyHTML.from_document(html)
 
-      map = Floki.get_by_id(document, "map")
-      assert [_bbox] = Floki.attribute(map, "data-bbox")
-      assert [_polyline] = Floki.attribute(map, "data-polyline")
-      assert [_heading] = Floki.attribute(map, "data-vehicle-heading")
+      map = LazyHTML.query_by_id(document, "map")
+      assert [_bbox] = LazyHTML.attribute(map, "data-bbox")
+      assert [_polyline] = LazyHTML.attribute(map, "data-polyline")
+      assert [_heading] = LazyHTML.attribute(map, "data-vehicle-heading")
 
-      status = Floki.get_by_id(document, "status")
+      status = LazyHTML.query_by_id(document, "status")
 
-      assert Floki.text(status) =~
+      assert LazyHTML.text(status) =~
                "The driver will go to your door and wait for up to five minutes."
     end
 
@@ -63,10 +63,10 @@ defmodule RideAlongWeb.TripLiveTest do
 
       RideAlong.Adept.set_trips([trip])
       {:ok, _show_live, html} = live(conn, ~p"/t/#{token}")
-      {:ok, document} = Floki.parse_document(html)
+      document = LazyHTML.from_document(html)
 
-      status = Floki.get_by_id(document, "status")
-      assert Floki.text(status) =~ "The driver will go to your door and wait until 12:33 PM."
+      status = LazyHTML.query_by_id(document, "status")
+      assert LazyHTML.text(status) =~ "The driver will go to your door and wait until 12:33 PM."
     end
 
     test "shows an Update X minutes ago message if the location is stale", %{
@@ -83,9 +83,9 @@ defmodule RideAlongWeb.TripLiveTest do
       RideAlong.Adept.set_vehicles([vehicle])
 
       {:ok, _show_live, html} = live(conn, ~p"/t/#{token}")
-      {:ok, document} = Floki.parse_document(html)
+      document = LazyHTML.from_document(html)
 
-      assert Floki.text(document) =~ "Updated 5 minutes ago"
+      assert LazyHTML.text(document) =~ "Updated 5 minutes ago"
     end
 
     test "shows a flash message if the vehicle changes but the route is the same", %{
@@ -106,9 +106,9 @@ defmodule RideAlongWeb.TripLiveTest do
 
       html = render_async(show_live)
 
-      {:ok, document} = Floki.parse_document(html)
-      flash = Floki.find(document, "[role=alert]:not([hidden])")
-      assert Floki.text(flash) =~ "vehicle have changed"
+      document = LazyHTML.from_document(html)
+      flash = LazyHTML.query(document, "[role=alert]:not([hidden])")
+      assert LazyHTML.text(flash) =~ "vehicle have changed"
     end
 
     @tag :capture_log
@@ -131,9 +131,9 @@ defmodule RideAlongWeb.TripLiveTest do
       trip = %{trip | promise_time: nil, pick_time: nil}
       RideAlong.Adept.set_trips([trip])
       {:ok, _show_live, html} = live(conn, ~p"/t/#{token}")
-      {:ok, document} = Floki.parse_document(html)
-      elements = Floki.find(document, "[aria-live]")
-      text = Floki.text(elements)
+      document = LazyHTML.from_document(html)
+      elements = LazyHTML.query(document, "[aria-live]")
+      text = LazyHTML.text(elements)
       refute text =~ "Estimated"
       refute text =~ "promise"
     end
