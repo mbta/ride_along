@@ -62,7 +62,7 @@ defmodule RideAlong.MixProject do
       {:lasso, "~> 0.1", only: :test},
       {:lazy_html, "~> 0.1", only: :test},
       {:logster, "~> 2.0-rc"},
-      {:phoenix, "~> 1.7.12"},
+      {:phoenix, "~> 1.8.0"},
       {:phoenix_html, "~> 4.0"},
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
