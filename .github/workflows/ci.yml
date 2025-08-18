@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       # cache the ASDF directory, using the values from .tool-versions
       - name: ASDF cache
         id: asdf-cache
@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: asdf
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: ASDF cache
         uses: actions/cache@v4
         with:
@@ -69,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/cache@v4
         with:
           path: ~/.asdf
@@ -92,7 +92,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           lfs: true
       - name: Fetch LFS objects
@@ -124,7 +124,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: asdf
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/cache@v4
         with:
           path: ~/.asdf
