@@ -34,7 +34,7 @@ jobs:
           echo "PR_NUMBER=$(cat PR_NUMBER)" >> $GITHUB_ENV
       - name: Setup LCOV
         uses: hrishikesh-kadam/setup-lcov@v1
-      - uses: actions/checkout@v4 # UNTRUSTED CODE - do not run scripts from it
+      - uses: actions/checkout@v5 # UNTRUSTED CODE - do not run scripts from it
         with:
           ref: ${{ env.PR_SHA }}
       - run: |
